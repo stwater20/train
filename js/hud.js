@@ -30,7 +30,7 @@ const el={clock:$('clock'),score:$('score'),next:$('roNext'),nextEn:$('roNextEn'
   limit:$('roLimit'),limitSub:$('roLimitSub'),sig:$('roSig'),sigSub:$('roSigSub'),ahead:$('roAhead'),sched:$('roSched'),slack:$('roSlack'),
   err:$('roErr'),ptr:$('errPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
   hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
-const SIGNAME={G:'綠燈',Y:'黃燈',R:'紅燈'};
+const SIGNAME={G:L('綠燈','Green','進行'),Y:L('黃燈','Yellow','注意'),R:L('紅燈','Red','停止')};
 let lastHud=0;
 function hud(now){
   const lim=currentLimit();
@@ -40,43 +40,43 @@ function hud(now){
   el.score.textContent=Math.round(S.score);
   const st=STATIONS[S.next];
   const dist=st ? st.pos-S.pos : 0;
-  if(S.doors){ el.nextLab.textContent='停車中'; el.next.textContent=st.name; el.nextEn.textContent='旅客上下車 · '+Math.ceil(S.dwell)+' 秒後關門'; }
-  else if(st){ el.nextLab.textContent=S.next===STATIONS.length-1?'下一站（終點）':'下一站'; el.next.textContent=st.name; el.nextEn.textContent=st.en; }
+  if(S.doors){ el.nextLab.textContent=L('停車中','Stopped at','停車中'); el.next.textContent=stName(st); el.nextEn.textContent=L('旅客上下車 · '+Math.ceil(S.dwell)+' 秒後關門','Boarding · doors close in '+Math.ceil(S.dwell)+' s','乗降中 · '+Math.ceil(S.dwell)+' 秒後にドア閉'); }
+  else if(st){ el.nextLab.textContent=S.next===STATIONS.length-1?L('下一站（終點）','Next stop (terminus)','次は終点'):L('下一站','Next stop','次の駅'); el.next.textContent=stName(st); el.nextEn.textContent=LANG==='en'?st.name:st.en; }
   if(st){
     const txt = dist>=100 ? Math.round(dist)+' m' : dist>=-15 ? (dist>=0?'':'+')+Math.abs(dist).toFixed(1)+' m' : '—';
     el.dist.textContent=txt; el.dist.classList.toggle('warn',dist<0);
-    el.distSub.textContent= dist<0 ? '已超過停車位置' : dist<300 ? '藍色「4」停車位置標' : '月台在左側';
+    el.distSub.textContent= dist<0 ? L('已超過停車位置','Past the stop mark','停止位置を超過') : dist<300 ? L('藍色「4」停車位置標','Blue “4” stop board','青い「4」停止位置目標') : L('月台在左側','Platform on the left','ホームは左側');
     el.hDist.textContent=txt;
     const err=-dist;
     if(dist<80 && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); el.err.classList.add('num'); }
-    else { el.ptr.hidden=true; el.err.textContent='接近時顯示'; el.err.classList.remove('num'); }
+    else { el.ptr.hidden=true; el.err.textContent=L('接近時顯示','shown near the mark','接近時に表示'); el.err.classList.remove('num'); }
     el.sched.textContent=fmtClock(BASE_CLOCK+st.arr);
     const slack=st.arr-S.t;
-    el.slack.textContent= slack>=0 ? '尚有 '+fmtDur(slack) : '已延誤 '+fmtDur(slack);
+    el.slack.textContent= slack>=0 ? L('尚有 ','Time left ','残り ')+fmtDur(slack) : L('已延誤 ','Late by ','遅れ ')+fmtDur(slack);
     el.slack.classList.toggle('warn',slack<0);
   }
   el.limit.textContent=lim; el.hLim.textContent=lim;
   let sub='km/h'; const p=S.pos;
-  for(const Lm of LIMITS) if(p>Lm.e && p<=Lm.e+TRAIN_LEN && Lm.v===lim){ sub='尾端通過還需 '+Math.ceil(Lm.e+TRAIN_LEN-p)+' m'; }
-  if(S.yellowUntil>0 && p<S.yellowUntil && lim===45) sub='黃燈注意運轉';
+  for(const Lm of LIMITS) if(p>Lm.e && p<=Lm.e+TRAIN_LEN && Lm.v===lim){ sub=L('尾端通過還需 ','Rear clears in ','最後尾通過まで ')+Math.ceil(Lm.e+TRAIN_LEN-p)+' m'; }
+  if(S.yellowUntil>0 && p<S.yellowUntil && lim===45) sub=L('黃燈注意運轉','Yellow: caution','注意運転');
   el.limitSub.textContent=sub;
   el.limit.classList.toggle('warn',S.v*3.6>lim+1);
   const dSig=SIGNAL_POS-p;
-  if(dSig>0 && dSig<1600){ el.sig.className='lamp '+S.sig.aspect; el.sig.lastChild.textContent=SIGNAME[S.sig.aspect]; el.sigSub.textContent='第 32 號閉塞號誌 · '+Math.round(dSig)+' m'; }
-  else { el.sig.className='lamp'; el.sig.lastChild.textContent='—'; el.sigSub.textContent= dSig<=0 ? '已通過' : '前方無號誌'; }
+  if(dSig>0 && dSig<1600){ el.sig.className='lamp '+S.sig.aspect; el.sig.lastChild.textContent=SIGNAME[S.sig.aspect]; el.sigSub.textContent=L('第 32 號閉塞號誌 · ','Block signal 32 · ','第32号閉塞信号 · ')+Math.round(dSig)+' m'; }
+  else { el.sig.className='lamp'; el.sig.lastChild.textContent='—'; el.sigSub.textContent= dSig<=0 ? L('已通過','Passed','通過済み') : L('前方無號誌','No signal ahead','前方に信号なし'); }
   const items=[];
-  LIMITS.forEach(Lm=>{ const d=Lm.s-p; if(Lm.s>0 && d>0 && d<900) items.push([d,'限速 '+Lm.v]); });
-  if(dSig>0 && dSig<900) items.push([dSig,'號誌 '+SIGNAME[S.sig.aspect]]);
-  CROSSINGS.forEach(c=>{ const d=c-p; if(d>0 && d<700) items.push([d,'平交道']); const dw=c-300-p; if(dw>0&&dw<500) items.push([dw,'鳴笛標']); });
-  GRADES.forEach((G,k)=>{ const d=G.s-p, pg=GRADES[k-1]; if(k>0 && d>0 && d<900 && pg.g!==G.g) items.push([d, G.g>0?'上坡 '+G.g+'‰':G.g<0?'下坡 '+(-G.g)+'‰':'坡度變水平']); });
+  LIMITS.forEach(Lm=>{ const d=Lm.s-p; if(Lm.s>0 && d>0 && d<900) items.push([d,L('限速 ','Limit ','制限 ')+Lm.v]); });
+  if(dSig>0 && dSig<900) items.push([dSig,L('號誌 ','Signal ','信号 ')+SIGNAME[S.sig.aspect]]);
+  CROSSINGS.forEach(c=>{ const d=c-p; if(d>0 && d<700) items.push([d,L('平交道','Level crossing','踏切')]); const dw=c-300-p; if(dw>0&&dw<500) items.push([dw,L('鳴笛標','Whistle board','汽笛標識')]); });
+  GRADES.forEach((G,k)=>{ const d=G.s-p, pg=GRADES[k-1]; if(k>0 && d>0 && d<900 && pg.g!==G.g) items.push([d, G.g>0?L('上坡 ','Up ','上り ')+G.g+'‰':G.g<0?L('下坡 ','Down ','下り ')+(-G.g)+'‰':L('坡度變水平','Level track','平坦')]); });
   items.sort((a,b)=>a[0]-b[0]);
-  el.ahead.innerHTML = items.length ? items.slice(0,2).map(([d,t])=>'<div>'+t+' · <span>'+Math.round(d)+' m</span></div>').join('') : '<div>線路淨空</div>';
-  el.door.textContent='車門 '+(S.doors?'開':'關'); el.door.classList.toggle('on',S.doors);
-  const atp=S.atpOver||S.atpSig||S.spad; el.atp.textContent= atp ? 'ATP 介入' : 'ATP 正常'; el.atp.classList.toggle('alert',atp);
+  el.ahead.innerHTML = items.length ? items.slice(0,2).map(([d,t])=>'<div>'+t+' · <span>'+Math.round(d)+' m</span></div>').join('') : '<div>'+L('線路淨空','Line clear','前方異常なし')+'</div>';
+  el.door.textContent=L('車門 ','Doors ','ドア ')+(S.doors?L('開','open','開'):L('關','closed','閉')); el.door.classList.toggle('on',S.doors);
+  const atp=S.atpOver||S.atpSig||S.spad; el.atp.textContent= atp ? L('ATP 介入','ATP active','ATP作動') : L('ATP 正常','ATP normal','ATP正常'); el.atp.classList.toggle('alert',atp);
   const bc=S.phase==='run'? Math.round(Math.max(0,-S.curF)/ROUTE.ebDecel*440) : 440; el.bc.textContent='BC '+bc+' kPa'; el.bc.classList.toggle('on',bc>20);
-  const gr=gradeAt(p); el.grade.textContent='坡度 '+(gr>0?'↗ ':gr<0?'↘ ':'')+Math.abs(gr)+'‰'+(ROUTE.key==='alishan'?' · 海拔 '+altitude(p).toLocaleString()+' m':''); el.grade.classList.toggle('on',gr!==0);
+  const gr=gradeAt(p); el.grade.textContent=L('坡度 ','Grade ','勾配 ')+(gr>0?'↗ ':gr<0?'↘ ':'')+Math.abs(gr)+'‰'+(ROUTE.key==='alishan'?L(' · 海拔 ',' · alt. ',' · 標高 ')+altitude(p).toLocaleString()+' m':''); el.grade.classList.toggle('on',gr!==0);
   el.slip.hidden=!S.slip; el.slip.classList.toggle('alert',!!S.slip);
-  el.pn.textContent='主控制器 '+nLabel(S.notch)+(S.eff!==S.notch && S.phase==='run' ? '（實際 '+nLabel(S.eff)+'）':'');
+  el.pn.textContent=L('主控制器 ','Controller ','マスコン ')+nLabel(S.notch)+(S.eff!==S.notch && S.phase==='run' ? L('（實際 ',' (actual ','（実際 ')+nLabel(S.eff)+L('）',')','）'):'');
   const acc=clamp(S.acc,-1.5,1.0);
   if(acc>=0){ el.acc.style.left='60%'; el.acc.style.width=(acc/1.0*40)+'%'; el.acc.style.background='var(--power)'; }
   else { el.acc.style.width=(-acc/1.5*60)+'%'; el.acc.style.left=(60+acc/1.5*60)+'%'; el.acc.style.background='var(--brake)'; }
@@ -84,7 +84,7 @@ function hud(now){
   el.done.style.width=(frac*100)+'%'; el.mark.style.left=(frac*100)+'%';
   stnEls.forEach((d,i)=>{ d.classList.toggle('done', i<S.next || (i===S.next && S.doors) || S.phase==='end'); d.classList.toggle('next', i===S.next && !S.doors && S.phase==='run'); });
   el.hSpd.textContent=Math.round(S.v*3.6);
-  el.bDoor.firstChild.textContent = S.doors ? '上下車中' : '開門';
+  el.bDoor.firstChild.textContent = S.doors ? L('上下車中','Boarding','乗降中') : L('開門','Doors','ドア開');
   renderLever();
 }
 

@@ -63,12 +63,12 @@ function drawFrame(){
 }
 
 function init3D(){
-  if(!window.THREE){ toast('3D 引擎載入失敗，請重新整理頁面','bad'); return; }
+  if(!window.THREE){ toast(L('3D 引擎載入失敗，請重新整理頁面','3D engine failed to load, please reload','3Dエンジンを読み込めません。再読み込みしてください'),'bad'); return; }
   const T=THREE;
   if(T.ColorManagement) T.ColorManagement.legacyMode=false;
   let renderer;
   try{ renderer=new T.WebGLRenderer({canvas:cv, antialias:true, powerPreference:'high-performance'}); }
-  catch(e){ toast('這個瀏覽器無法啟用 3D 畫面','bad'); return; }
+  catch(e){ toast(L('這個瀏覽器無法啟用 3D 畫面','This browser cannot show 3D','このブラウザでは3D表示ができません'),'bad'); return; }
   renderer.outputEncoding=T.sRGBEncoding;
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=T.PCFSoftShadowMap;
   const ANISO=Math.min(8,renderer.capabilities.getMaxAnisotropy());

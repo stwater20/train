@@ -11,6 +11,9 @@ function fresh(){
 let S = fresh();
 
 /* ---------- messages ---------- */
+/* 評價用語（內部用中文，顯示時翻譯） */
+const WORDS={'完美':['Perfect','パーフェクト'],'優秀':['Excellent','優秀'],'良好':['Good','良好'],'普通':['Fair','普通'],'勉強':['Rough','ギリギリ'],'早到':['Early','早着'],'準點':['On time','定時'],'延誤':['Late','遅延']};
+const trWord=w=> WORDS[w] ? L(w,WORDS[w][0],WORDS[w][1]) : w;
 const toastEl=document.getElementById('toast'); let toastTimer=0;
 function toast(msg, kind){ toastEl.textContent=msg; toastEl.className='toast'+(kind?' '+kind:''); toastEl.removeAttribute('data-off'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.setAttribute('data-off',''), 2800); }
 function penal(p,key,msg){ S.score-=p; S.pens[key]=(S.pens[key]||0)+p; toast(msg+' −'+p,'bad'); }
@@ -27,22 +30,22 @@ function step(dt){
   const prev=S.pos, sg=S.sig, dSig=SIGNAL_POS-S.pos;
   // block signal: a preceding train is still clearing the block toward 平和
   if(sg.phase===0 && dSig>0 && dSig<700 && (dSig<280 || (S.v<0.1 && S.pos>2700))){ sg.phase=1; sg.timer=12; }
-  else if(sg.phase===1){ sg.timer-=dt; if(sg.timer<=0){ sg.aspect='Y'; sg.phase=2; sg.timer=18; toast('號誌轉為黃燈：注意運轉，限速 45 km/h'); } }
+  else if(sg.phase===1){ sg.timer-=dt; if(sg.timer<=0){ sg.aspect='Y'; sg.phase=2; sg.timer=18; toast(L('號誌轉為黃燈：注意運轉，限速 45 km/h','Signal turned yellow: caution, limit 45 km/h','信号が注意現示に：制限 45 km/h')); } }
   else if(sg.phase===2){ sg.timer-=dt; if(sg.timer<=0){ sg.aspect='G'; sg.phase=3; } }
 
   const lim=currentLimit(), kmh=S.v*3.6;
   let forced=0;
   if(S.spad){ forced=-9; if(S.v<0.01) S.spad=false; }
   else{
-    if(!S.atpOver && kmh>lim+5){ S.atpOver=true; penal(30,'atp','ATP 介入：超過限速'); }
-    if(S.atpOver){ if(kmh<=lim-1){ S.atpOver=false; toast('ATP 解除，恢復手動'); } else forced=-8; }
+    if(!S.atpOver && kmh>lim+5){ S.atpOver=true; penal(30,'atp',L('ATP 介入：超過限速','ATP braking: overspeed','ATP作動：速度超過')); }
+    if(S.atpOver){ if(kmh<=lim-1){ S.atpOver=false; toast(L('ATP 解除，恢復手動','ATP released, manual control restored','ATP解除、手動に復帰')); } else forced=-8; }
     if(sg.aspect==='R' && dSig>0 && dSig<700){
       const allow=Math.sqrt(Math.max(0,2*1.0*(dSig-10)));
-      if(!S.atpSig && S.v>allow+0.6){ S.atpSig=true; penal(30,'atp','ATP 介入：前方紅燈'); }
+      if(!S.atpSig && S.v>allow+0.6){ S.atpSig=true; penal(30,'atp',L('ATP 介入：前方紅燈','ATP braking: red signal ahead','ATP作動：前方停止信号')); }
     }
     if(S.atpSig){ if(S.v<0.01 || sg.aspect!=='R') S.atpSig=false; else forced=-9; }
   }
-  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast('超過限速 '+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; S.score-=2; S.pens.over+=2; } }
+  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast(L('超過限速 ','Over the limit of ','制限速度超過 ')+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; S.score-=2; S.pens.over+=2; } }
   else S.overOn=false;
 
   let n=S.notch;
@@ -68,14 +71,14 @@ function step(dt){
   S.acc=a; S.pos+=S.v*dt;
 
   if(prev<SIGNAL_POS && S.pos>=SIGNAL_POS){
-    if(sg.aspect==='R'){ S.spad=true; penal(150,'spad','冒進號誌！緊急停車'); }
+    if(sg.aspect==='R'){ S.spad=true; penal(150,'spad',L('冒進號誌！緊急停車','Passed a red signal! Emergency stop','信号冒進！非常停止')); }
     else if(sg.aspect==='Y'){ S.yellowUntil=SIGNAL_POS+400; }
   }
   CROSSINGS.forEach((c,i)=>{
     if(prev<c && S.pos>=c && !S.crossDone[i]){
       S.crossDone[i]=true;
-      if(S.hornPos>=c-350 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast('平交道前鳴笛確認 +10','good'); }
-      else toast('通過平交道：下次記得在「鳴」標附近鳴笛');
+      if(S.hornPos>=c-350 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast(L('平交道前鳴笛確認 +10','Horn before the crossing +10','踏切前で警笛 +10'),'good'); }
+      else toast(L('通過平交道：下次記得在「鳴」標附近鳴笛','Level crossing passed: sound the horn after the 「鳴」 board next time','踏切通過：次は「鳴」標識の後で警笛を'));
     }
   });
 
@@ -84,14 +87,14 @@ function step(dt){
     if(S.dwell<=0){
       S.doors=false; doorSound(false);
       if(S.next>=STATIONS.length-1){ endGame(); return; }
-      S.next++; toast('車門關閉，可以發車','good'); extrasDepart();
+      S.next++; toast(L('車門關閉，可以發車','Doors closed, ready to depart','ドア閉、発車できます'),'good'); extrasDepart();
     }
   } else {
     const st=STATIONS[S.next];
     if(st && S.pos-st.pos>15){
       S.score-=60; S.pens.miss+=60;
       S.log.push({name:st.name, miss:true, pp:0, tp:0, total:-60});
-      toast('過站！未停靠 '+st.name+' −60','bad');
+      toast(L('過站！未停靠 ','Overran! Missed ','通過！停車せず ')+stName(st)+' −60','bad');
       if(S.next>=STATIONS.length-1){ endGame(); return; }
       S.next++; extrasDepart();
     }
@@ -102,18 +105,18 @@ function step(dt){
 function setNotch(n){
   if(S.phase!=='run' || S.paused) return;
   n=clamp(n,-9,5);
-  if(n>0 && S.doors){ toast('車門開啟中，無法加速'); return; }
-  if(n===-9 && S.notch!==-9 && S.v>2) penal(10,'eb','使用緊急煞車');
+  if(n>0 && S.doors){ toast(L('車門開啟中，無法加速','Doors are open, cannot power','ドア開扉中は力行できません')); return; }
+  if(n===-9 && S.notch!==-9 && S.v>2) penal(10,'eb',L('使用緊急煞車','Emergency brake used','非常ブレーキ使用'));
   S.notch=n; renderLever();
 }
 function action(){
   if(S.phase==='title'){ startGame(); return; }
   if(S.phase!=='run' || S.paused) return;
-  if(S.doors){ toast('旅客上下車中…'); return; }
+  if(S.doors){ toast(L('旅客上下車中…','Passengers boarding…','乗降中…')); return; }
   const st=STATIONS[S.next]; if(!st) return;
   const err=S.pos-st.pos;
-  if(err<-15){ toast(err>-400 ? '距停車位置還有 '+(-err).toFixed(1)+' m' : '還沒到 '+st.name+' 站'); return; }
-  if(S.v>0.01){ toast('列車尚未停妥'); return; }
+  if(err<-15){ toast(err>-400 ? L('距停車位置還有 ','Stop mark is still ','停止位置まであと ')+(-err).toFixed(1)+' m'+L('',' ahead','') : L('還沒到 '+stName(st)+' 站','Not at '+stName(st)+' yet',stName(st)+'駅はまだです')); return; }
+  if(S.v>0.01){ toast(L('列車尚未停妥','Train is not stopped yet','まだ停車していません')); return; }
   const ae=Math.abs(err); let pp, rank;
   if(ae<=0.5){pp=100;rank='完美';} else if(ae<=1){pp=80;rank='優秀';} else if(ae<=3){pp=55;rank='良好';} else if(ae<=8){pp=25;rank='普通';} else {pp=5;rank='勉強';}
   const late=S.t-st.arr; let tp, trank;
@@ -123,7 +126,7 @@ function action(){
   S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
-  toast(st.name+'｜誤差 '+fmtErr(err)+'・'+rank+' +'+pp+'｜'+trank+' +'+tp,'good');
+  toast(stName(st)+L('｜誤差 ',' | error ','｜誤差 ')+fmtErr(err)+'・'+trWord(rank)+' +'+pp+'｜'+trWord(trank)+' +'+tp,'good');
 }
 let actx=null;
 function horn(){
@@ -147,7 +150,7 @@ function startGame(tut){
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever();
   extrasStart();
   if(S.tut) tutStart();
-  else toast(fmtClock(BASE_CLOCK)+' '+STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）');
+  else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));
 }
 const startTutorial=()=>startGame(true);
 function endGame(){ tutStop(); S.phase='end'; S.doors=false; showOverlay('end'); }
@@ -166,7 +169,7 @@ function closeHelp(){
   if(helpReturn==='run'){ S.paused=false; hideOverlay(); }
   else showOverlay(helpReturn||'title');
 }
-const HELP_HTML=`<div class="helphead"><div><p class="eyebrow">區間車司機手冊</p><h2>操作說明</h2></div><button class="btn" id="ovClose" type="button" aria-label="關閉操作說明">關閉</button></div>
+const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手冊</p><h2>操作說明</h2></div><button class="btn" id="ovClose" type="button" aria-label="關閉操作說明">關閉</button></div>
 <div class="help">
 <section><h3>主控制器</h3>
   <div class="chips"><i class="p">P5</i><i class="p">P4</i><i class="p">P3</i><i class="p">P2</i><i class="p">P1</i><i class="n">N</i><i class="b">B1</i><i class="b">B2</i><i class="b">…</i><i class="b">B8</i><i class="e">EB</i></div>
@@ -240,40 +243,52 @@ const HELP_HTML=`<div class="helphead"><div><p class="eyebrow">區間車司機�
   </ul></section>
 <button class="btn door big" id="ovGo" type="button">回到駕駛</button>
 </div>`;
+const nameOf = zh => { const st=STATIONS.find(x=>x.name===zh); return st?stName(st):zh; };
+function langPickHTML(){
+  return `<div class="langpick" role="radiogroup" aria-label="Language">${Object.entries(LANGS).map(([k,v])=>`<button type="button" role="radio" aria-checked="${k===LANG}" class="langbtn${k===LANG?' on':''}" data-lang="${k}" lang="${k==='zh'?'zh-Hant':k}">${v}</button>`).join('')}</div>`;
+}
 function showOverlay(kind){
   ov.hidden=false;
   curOv=kind;
   if(kind==='help'){
-    ovCard.className='card wide'; ovCard.innerHTML=HELP_HTML;
-    document.getElementById('ovGo').textContent = helpReturn==='run'||helpReturn==='pause' ? '回到駕駛' : '回上一頁';
+    ovCard.className='card wide'; ovCard.innerHTML=L(HELP_ZH,HELP_EN,HELP_JA);
+    document.getElementById('ovGo').textContent = helpReturn==='run'||helpReturn==='pause' ? L('回到駕駛','Back to driving','運転に戻る') : L('回上一頁','Back','戻る');
     document.getElementById('ovGo').addEventListener('click',closeHelp);
     document.getElementById('ovClose').addEventListener('click',closeHelp);
     ov.scrollTop=0;
   } else if(kind==='title'){
     ovCard.className='card';
-    const AL=ROUTE.key==='alishan', first=STATIONS[0].name, last=STATIONS[STATIONS.length-1].name, mids=STATIONS.slice(1,-1).map(x=>x.name).join('、');
-    ovCard.innerHTML=`<div class="routepick" role="radiogroup" aria-label="選擇路線">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':'🚃'} ${r.name}</b><small>${r.stations[0].name} → ${r.stations[r.stations.length-1].name}</small></button>`).join('')}</div>
-      <p class="eyebrow">${ROUTE.train} · ${first} → ${last} · ${STATIONS.length} 站</p>
+    const AL=ROUTE.key==='alishan', first=stName(STATIONS[0]), last=stName(STATIONS[STATIONS.length-1]), mids=STATIONS.slice(1,-1).map(stName).join(L('、',', ','、')), hhmm=fmtClock(BASE_CLOCK).slice(0,5);
+    const story = AL
+      ? L(`你是${ENV.word} ${hhmm} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。`,
+          `You're driving the ${hhmm} Zhushan Line train out of Alishan ${ENV.word}, carrying passengers up the mountain via ${mids} to Zhushan, at 2,451 m the highest station in Taiwan. It's uphill all the way with tight curves: keep to the limits and stop on the mark.`,
+          `${ENV.word} ${hhmm} 阿里山発の祝山線列車の運転士として、乗客を山の上へ運びます。${mids}を経て、終点は標高 2,451 m、台湾で最も高い祝山駅。ずっと上り勾配で急カーブも多いので、制限速度を守りつつ停止位置にぴたりと止めましょう。`)
+      : L(`你是${ENV.word} ${hhmm} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
+          `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “4” board on each platform — the closer, the higher your score — and keep to the timetable.`,
+          `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「4」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
+    ovCard.innerHTML=`${langPickHTML()}
+      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
+      <p class="eyebrow">${ROUTE.train} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p>
       <h2>${ROUTE.title}</h2>
-      ${AL
-        ? `<p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。</p>`
-        : `<p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。</p>`}
+      <p>${story}</p>
       <ul class="howto">
-        <li><kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8</li>
-        <li>速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）</li>
-        ${AL ? '<li>全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車</li>' : '<li>紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分</li>'}
-        <li>停妥後按 <kbd class="kbd-cjk">空白鍵</kbd> 開門；經過「鳴」標時按 <kbd>H</kbd> 鳴笛有加分</li>
+        <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
+        <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
+        <li>${AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
+                 : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
+        <li>${L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「鳴」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「鳴」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「鳴」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点')}</li>
       </ul>
-      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">操作說明</button><button class="btn big tut" id="ovTut" type="button">🔰 新手教學${ROUTE.key==='alishan'?'<small>在花東線進行</small>':''}</button><button class="btn door big" id="ovGo" type="button">開始駕駛</button></div>
+      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}${AL?`<small>${L('在花東線進行','on the Hualien line','花東線で実施')}</small>`:''}</button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       ${titleExtrasHTML()}`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTut').addEventListener('click',()=>{ if(ROUTE.key!=='hualien'){ try{ localStorage.setItem('cabAutoTut','1'); }catch(e){} setRoute('hualien'); } else startTutorial(); });
     document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
+    document.querySelectorAll('.langbtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.lang!==LANG) setLang(b.dataset.lang); }));
     document.getElementById('ovHelp').addEventListener('click',openHelp);
     bindTitleExtras();
   } else if(kind==='pause'){
     ovCard.className='card';
-    ovCard.innerHTML=`<p class="eyebrow">暫停中</p><h2>列車暫停</h2><p>時刻表也一起停住了。</p><div class="btnrow"><button class="btn big" id="ovHelp" type="button">操作說明</button><button class="btn door big" id="ovGo" type="button">繼續駕駛</button></div>`;
+    ovCard.innerHTML=`<p class="eyebrow">${L('暫停中','Paused','一時停止中')}</p><h2>${L('列車暫停','Train paused','列車停止中')}</h2><p>${L('時刻表也一起停住了。','The timetable is paused too.','時刻表も止まっています。')}</p><div class="btnrow"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn door big" id="ovGo" type="button">${L('繼續駕駛','Resume','運転再開')}</button></div>`;
     document.getElementById('ovGo').addEventListener('click',togglePause);
     document.getElementById('ovHelp').addEventListener('click',openHelp);
   } else {
@@ -281,17 +296,17 @@ function showOverlay(kind){
     const max=(STATIONS.length-1)*140;
     const sc=S.score, g = sc>=max*0.86?'S':sc>=max*0.72?'A':sc>=max*0.54?'B':sc>=max*0.32?'C':'D';
     const rows=S.log.map(r=> r.miss
-      ? `<tr><td>${r.name}</td><td class="num">過站</td><td>—</td><td>—</td><td class="num">−60</td></tr>`
-      : `<tr><td>${r.name}</td><td class="num">${fmtErr(r.err)}</td><td>${r.rank}</td><td>${r.trank} ${r.late>0?'+':'−'}${fmtDur(r.late)}</td><td class="num">+${r.total}</td></tr>`).join('');
+      ? `<tr><td>${nameOf(r.name)}</td><td class="num">${L('過站','Overran','通過')}</td><td>—</td><td>—</td><td class="num">−60</td></tr>`
+      : `<tr><td>${nameOf(r.name)}</td><td class="num">${fmtErr(r.err)}</td><td>${trWord(r.rank)}</td><td>${trWord(r.trank)} ${r.late>0?'+':'−'}${fmtDur(r.late)}</td><td class="num">+${r.total}</td></tr>`).join('');
     const P=S.pens, info=S.endInfo||(S.endInfo=extrasEnd(g));
-    ovCard.innerHTML=`<p class="eyebrow">本班次結束 · 抵達${STATIONS[STATIONS.length-1].name} ${fmtClock(BASE_CLOCK+S.t)}</p>
-      <div class="grade"><b>${g}</b><span>${Math.round(sc)} 分</span></div>
-      <div class="tbl"><table><thead><tr><th>站名</th><th class="num">停車誤差</th><th>停車評價</th><th>時刻</th><th class="num">得分</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="pen"><span>超速 <b>−${P.over}</b></span><span>ATP 介入 <b>−${P.atp}</b></span><span>冒進號誌 <b>−${P.spad}</b></span><span>緊急煞車 <b>−${P.eb}</b></span><span>平交道鳴笛 <b>+${S.bonus}</b></span></div>
-      <p>滿分約 ${max} 分（每站停車 100 + 準點 40），另有平交道鳴笛加分。</p>
+    ovCard.innerHTML=`<p class="eyebrow">${L('本班次結束 · 抵達','Run complete · arrived at ','運行終了 · 到着 ')}${stName(STATIONS[STATIONS.length-1])} ${fmtClock(BASE_CLOCK+S.t)}</p>
+      <div class="grade"><b>${g}</b><span>${Math.round(sc)} ${L('分','pts','点')}</span></div>
+      <div class="tbl"><table><thead><tr><th>${L('站名','Station','駅')}</th><th class="num">${L('停車誤差','Stop error','停止誤差')}</th><th>${L('停車評價','Stop','停止評価')}</th><th>${L('時刻','Time','時刻')}</th><th class="num">${L('得分','Points','得点')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="pen"><span>${L('超速','Overspeed','速度超過')} <b>−${P.over}</b></span><span>${L('ATP 介入','ATP','ATP作動')} <b>−${P.atp}</b></span><span>${L('冒進號誌','Red signal','信号冒進')} <b>−${P.spad}</b></span><span>${L('緊急煞車','Emergency brake','非常ブレーキ')} <b>−${P.eb}</b></span><span>${L('平交道鳴笛','Crossing horn','踏切警笛')} <b>+${S.bonus}</b></span></div>
+      <p>${L(`滿分約 ${max} 分（每站停車 100 + 準點 40），另有平交道鳴笛加分。`,`A perfect run is about ${max} points (100 for the stop + 40 for timing at each station), plus horn bonuses.`,`満点は約 ${max} 点（各駅 停止 100 ＋ 定時 40）、ほかに踏切警笛のボーナス。`)}</p>
       ${endExtrasHTML(info,g)}
-      <div class="btnrow"><button class="btn big" id="ovShare" type="button">分享成績</button><button class="btn door big" id="ovGo" type="button">再開一班</button></div>
-      <button class="btn" id="ovTitle" type="button">回標題畫面</button>`;
+      <div class="btnrow"><button class="btn big" id="ovShare" type="button">${L('分享成績','Share result','結果をシェア')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
+      <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); showOverlay('title'); });
     bindEndExtras(g);
@@ -305,7 +320,7 @@ const leverEl=document.getElementById('lever');
 NOTCHES.forEach(n=>{
   const b=document.createElement('button'); b.type='button';
   b.className='notch '+(n===-9?'eb':n>0?'p':n<0?'b':'n'); b.textContent=nLabel(n); b.dataset.n=n;
-  b.setAttribute('aria-label','主控制器 '+nLabel(n));
+  b.setAttribute('aria-label',L('主控制器 ','Master controller ','マスコン ')+nLabel(n));
   b.addEventListener('click',()=>setNotch(n)); leverEl.appendChild(b);
 });
 function renderLever(){
@@ -340,5 +355,5 @@ window.addEventListener('keydown',e=>{
 
 /* ---------- route strip ---------- */
 const routeEl=document.getElementById('route');
-const stnEls=STATIONS.map((st,i)=>{ const d=document.createElement('div'); d.className='stn'; d.style.left=(st.pos/END*100)+'%'; d.innerHTML='<i></i><span>'+st.name+'</span>'; routeEl.appendChild(d); return d; });
+const stnEls=STATIONS.map((st,i)=>{ const d=document.createElement('div'); d.className='stn'; d.style.left=(st.pos/END*100)+'%'; d.innerHTML='<i></i><span>'+stName(st)+'</span>'; routeEl.appendChild(d); return d; });
 
