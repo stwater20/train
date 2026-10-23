@@ -175,5 +175,5 @@ function showFact(st){
 /* ---------- 作者的其他作品 ---------- */
 function promoHTML(){
   return `<a class="promo" href="https://sectools.tw/?utm_source=train-game&utm_medium=referral" target="_blank" rel="noopener">
-    <span>🛡️</span><span><b>SecTools.tw 資安工具站</b><small>推薦：免安裝的線上資安工具</small></span><span aria-hidden="true">↗</span></a>`;
+    <span>🛡️</span><span><small>本遊戲由</small><b>SecTools.tw 製作與維護</b><small>也來看看我們的線上資安工具</small></span><span aria-hidden="true">↗</span></a>`;
 }

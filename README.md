@@ -98,4 +98,4 @@ js/main.js        主迴圈與啟動
 
 ---
 
-推薦：[SecTools.tw 資安工具站](https://sectools.tw/?utm_source=train-game&utm_medium=referral)
+由 [SecTools.tw](https://sectools.tw/?utm_source=train-game&utm_medium=referral) 製作與維護。
