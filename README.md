@@ -7,7 +7,7 @@
 
 遊戲內的距離與坡度為示意，比實際路線短。
 
-線上遊玩：https://stwater20.github.io/train/
+線上遊玩：https://train.sectools.tw/
 
 ## 新手教學
 
