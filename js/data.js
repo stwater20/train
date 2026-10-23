@@ -2,50 +2,69 @@
 'use strict';
 
 /* ---------- route data ---------- */
-const TRAIN_LEN = 80;
-const STATIONS = [
-  {name:'花蓮', en:'Hualien',  pos:0},
-  {name:'吉安', en:"Ji'an",    pos:1150, leg:95},
-  {name:'志學', en:'Zhixue',   pos:2650, leg:120},
-  {name:'平和', en:'Pinghe',   pos:3850, leg:115},
-  {name:'壽豐', en:'Shoufeng', pos:5550, leg:135},
-];
+/* 兩條路線：花東線區間車、阿里山林業鐵路祝山線。用 localStorage 記住選擇，切換時重新載入頁面 */
+const ROUTES = {
+  hualien:{
+    key:'hualien', name:'花東線', title:'花東線駕駛室', train:'區間車 4 輛編成', desc:'單線電化區間',
+    trainLen:80, lineMax:90, gauge:1.067, electric:true, elev0:20, elevScale:1, railLen:25,
+    power:0.95, ebDecel:1.45, brakeStep:0.13,
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'花蓮', en:'Hualien',  pos:0},
+      {name:'吉安', en:"Ji'an",    pos:1150, leg:125},
+      {name:'志學', en:'Zhixue',   pos:2650, leg:135},
+      {name:'平和', en:'Pinghe',   pos:3850, leg:135},
+      {name:'壽豐', en:'Shoufeng', pos:5550, leg:140},
+    ],
+    limits:[ {s:0,e:300,v:45}, {s:1700,e:2050,v:65}, {s:2650,e:2900,v:50}, {s:4300,e:4750,v:70}, {s:5300,e:5600,v:60} ],
+    curves:[ {s:850,e:1050,k:0.0016}, {s:1700,e:2050,k:0.0032}, {s:2250,e:2450,k:-0.0020}, {s:3150,e:3400,k:0.0018}, {s:4300,e:4750,k:-0.0030}, {s:5000,e:5200,k:0.0012} ],
+    crossings:[780, 3120, 4920],
+    signal:3480,
+    grades:[ {s:-800,e:200,g:0}, {s:200,e:900,g:5}, {s:900,e:1250,g:0}, {s:1250,e:2100,g:8}, {s:2100,e:2700,g:0}, {s:2700,e:3300,g:-6}, {s:3300,e:3950,g:0}, {s:3950,e:4800,g:10}, {s:4800,e:5150,g:-4}, {s:5150,e:99999,g:0} ],
+  },
+  alishan:{
+    key:'alishan', name:'阿里山祝山線', title:'阿里山小火車', train:'柴油機車 + 3 節客車', desc:'762 mm 窄軌登山鐵道',
+    trainLen:52, lineMax:30, gauge:0.762, electric:false, elev0:2216, elevScale:1.475, railLen:12,
+    power:0.9, ebDecel:1.25, brakeStep:0.13,
+    envs:['dawn','clear','mist'],
+    stations:[
+      {name:'阿里山', en:'Alishan',   pos:0},
+      {name:'對高岳', en:'Duigaoyue', pos:2500, leg:450},
+      {name:'祝山',   en:'Zhushan',   pos:3600, leg:225},
+    ],
+    limits:[ {s:0,e:220,v:15}, {s:520,e:760,v:20}, {s:1180,e:1420,v:18}, {s:1900,e:2120,v:20}, {s:2380,e:2560,v:20}, {s:2860,e:3080,v:18}, {s:3420,e:3700,v:15} ],
+    curves:[ {s:300,e:420,k:0.004}, {s:520,e:760,k:-0.0065}, {s:900,e:1050,k:0.004}, {s:1180,e:1420,k:0.0055}, {s:1560,e:1700,k:-0.004}, {s:1900,e:2120,k:-0.0065},
+             {s:2700,e:2800,k:0.004}, {s:2860,e:3080,k:0.0065}, {s:3200,e:3330,k:-0.005} ],
+    crossings:[1640],
+    signal:null,
+    grades:[ {s:-800,e:150,g:0}, {s:150,e:900,g:45}, {s:900,e:1500,g:60}, {s:1500,e:2300,g:50}, {s:2300,e:2600,g:0}, {s:2600,e:3400,g:62}, {s:3400,e:99999,g:0} ],
+  },
+};
+let ROUTE = ROUTES.hualien;
+try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
+function setRoute(key){ try{ localStorage.setItem('cabRoute',JSON.stringify(key)); }catch(e){} location.reload(); }
+
+const TRAIN_LEN = ROUTE.trainLen;
+const STATIONS = ROUTE.stations;
 (function(){ let t=0; STATIONS[0].dep=0; for(let i=1;i<STATIONS.length;i++){ t+=STATIONS[i].leg; STATIONS[i].arr=t; t+=15; STATIONS[i].dep=t; } })();
 const END = STATIONS[STATIONS.length-1].pos;
-const LINE_MAX = 90;
-const LIMITS = [
-  {s:0,    e:300,  v:45},
-  {s:1700, e:2050, v:65},
-  {s:2650, e:2900, v:50},
-  {s:4300, e:4750, v:70},
-  {s:5300, e:5600, v:60},
-];
-const CURVES = [
-  {s:850,  e:1050, k:0.0016},
-  {s:1700, e:2050, k:0.0032},
-  {s:2250, e:2450, k:-0.0020},
-  {s:3150, e:3400, k:0.0018},
-  {s:4300, e:4750, k:-0.0030},
-  {s:5000, e:5200, k:0.0012},
-];
-const CROSSINGS = [780, 3120, 4920];
-const SIGNAL_POS = 3480;
+const LINE_MAX = ROUTE.lineMax;
+const LIMITS = ROUTE.limits;
+const CURVES = ROUTE.curves;
+const CROSSINGS = ROUTE.crossings;
+const SIGNAL_POS = ROUTE.signal==null ? 1e9 : ROUTE.signal;
 /* 坡度（‰，正值為上坡）。車站一帶保持水平 */
-const GRADES = [
-  {s:-800, e:200,  g:0},
-  {s:200,  e:900,  g:5},
-  {s:900,  e:1250, g:0},
-  {s:1250, e:2100, g:8},
-  {s:2100, e:2700, g:0},
-  {s:2700, e:3300, g:-6},
-  {s:3300, e:3950, g:0},
-  {s:3950, e:4800, g:10},
-  {s:4800, e:5150, g:-4},
-  {s:5150, e:END+1200, g:0},
-];
+const GRADES = ROUTE.grades;
 function gradeAt(p){ for(const G of GRADES) if(p>=G.s && p<G.e) return G.g; return 0; }
 /* 列車平均坡度：取車頭到車尾幾個點平均 */
 function trainGrade(p){ let t=0; for(let k=0;k<5;k++) t+=gradeAt(p-k*TRAIN_LEN/4); return t/5; }
+/* 軌道高程（公尺，相對起點）；花東線畫面保持平地，阿里山線真的爬升 */
+const EL_STEP=2, EL_MIN=-800, EL_N=Math.ceil((END+2000-EL_MIN)/EL_STEP)+2, ELEV=new Float32Array(EL_N);
+(function(){ const i0=-EL_MIN/EL_STEP; for(let i=i0+1;i<EL_N;i++) ELEV[i]=ELEV[i-1]+gradeAt(EL_MIN+(i-0.5)*EL_STEP)/1000*EL_STEP; for(let i=i0-1;i>=0;i--) ELEV[i]=ELEV[i+1]-gradeAt(EL_MIN+(i+0.5)*EL_STEP)/1000*EL_STEP; })();
+function elevAt(p){ const x=clamp((p-EL_MIN)/EL_STEP,0,EL_N-1.001), i=Math.floor(x); return ELEV[i]+(ELEV[i+1]-ELEV[i])*(x-i); }
+const visElev = p => ROUTE.key==='alishan' ? elevAt(p) : 0;
+/* 顯示用海拔（遊戲距離有壓縮，阿里山線依比例換算成真實高差 2216 → 2451 m） */
+const altitude = p => Math.round(ROUTE.elev0 + elevAt(p)*ROUTE.elevScale);
 
 /* 天氣與時段 */
 const ENVS = {
@@ -53,8 +72,16 @@ const ENVS = {
   dusk:   {key:'dusk',    name:'黃昏',     icon:'🌇', clock:17*3600+32*60, word:'傍晚'},
   night:  {key:'night',   name:'夜間',     icon:'🌙', clock:20*3600+12*60, word:'今晚', night:true},
   rain:   {key:'rain',    name:'雨天',     icon:'🌧️', clock:8*3600+12*60,  word:'下雨的早上', rain:true},
+  dawn:   {key:'dawn',    name:'日出列車', icon:'🌄', clock:4*3600+50*60,  word:'清晨', night:true},
+  clear:  {key:'clear',   name:'晴朗',     icon:'🌲', clock:9*3600+30*60,  word:'早上'},
+  mist:   {key:'mist',    name:'雲霧',     icon:'🌫️', clock:14*3600+10*60, word:'起霧的午後'},
 };
-let ENV = ENVS.morning;
+let ENV = ENVS[ROUTE.envs[0]];
+/* 車站附近的觀光景點指示牌 */
+const SIGHTS = {
+  '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],
+  '阿里山':['神木群 →'], '祝山':['觀日平台 →'],
+};
 let BASE_CLOCK = ENV.clock;
 
 function kAt(p){ let k=0; for(const c of CURVES){ if(p>c.s && p<c.e){ k+=c.k*Math.min(1,(p-c.s)/40,(c.e-p)/40); } } return k; }

@@ -8,7 +8,9 @@ function save(key,v){ try{ localStorage.setItem(key,JSON.stringify(v)); }catch(e
 /* ---------- achievements ---------- */
 const ACHS=[
   {id:'grad',    icon:'🎓', name:'新手畢業',   desc:'完成新手教學'},
-  {id:'first',   icon:'🚃', name:'首航',       desc:'第一次開到壽豐'},
+  {id:'first',   icon:'🚃', name:'首航',       desc:'第一次把花東線開到壽豐'},
+  {id:'zhushan', icon:'⛰️', name:'登上祝山',   desc:'把阿里山小火車開到海拔 2,451 m 的祝山'},
+  {id:'sunrise', icon:'🌄', name:'祝山看日出', desc:'開日出列車準點抵達祝山'},
   {id:'perfect', icon:'🎯', name:'一公分都不差', desc:'任一站停車誤差 0.5 m 以內'},
   {id:'sniper',  icon:'📏', name:'人體尺規',   desc:'每一站停車誤差都在 1 m 以內'},
   {id:'ontime',  icon:'⏱️', name:'台灣之光準點', desc:'每一站都準點到達'},
@@ -60,13 +62,15 @@ function chime(){
 function extrasStart(){
   lastNew=[];
   const st=STATIONS[1];
-  announce('本列車開往壽豐。下一站，'+st.name+'。','Next station, '+st.en+'.');
+  const last=STATIONS[STATIONS.length-1];
+  announce('本列車開往'+last.name+'。下一站，'+st.name+'。','This train is bound for '+last.en+'. Next station, '+st.en+'.');
 }
 function extrasStop(st,err){
   chime();
   if(Math.abs(err)<=0.5) unlockAch('perfect');
   const last=S.next>=STATIONS.length-1;
-  announce(last?'壽豐到了，本列車終點站，謝謝搭乘。':st.name+'到了。', last?'This is the terminal station, '+st.en+'. Thank you.':st.en+'.');
+  announce(last?st.name+'到了，本列車終點站，謝謝搭乘。':st.name+'到了。', last?'This is the terminal station, '+st.en+'. Thank you.':st.en+'.');
+  showFact(st);
 }
 function extrasDepart(){
   const st=STATIONS[S.next]; if(!st) return;
@@ -75,7 +79,9 @@ function extrasDepart(){
 }
 function extrasEnd(grade){
   const log=S.log, P=S.pens;
-  unlockAch('first');
+  const stopsAll=S.log.filter(r=>!r.miss);
+  if(ROUTE.key==='alishan'){ unlockAch('zhushan'); const z=stopsAll.find(r=>r.name==='祝山'); if(ENV.key==='dawn' && z && z.trank!=='延誤') unlockAch('sunrise'); }
+  else unlockAch('first');
   const stops=log.filter(r=>!r.miss);
   if(stops.length===STATIONS.length-1 && stops.every(r=>Math.abs(r.err)<=1)) unlockAch('sniper');
   if(stops.length===STATIONS.length-1 && stops.every(r=>r.trank==='準點')) unlockAch('ontime');
@@ -84,9 +90,9 @@ function extrasEnd(grade){
   if(grade==='S') unlockAch('gradeS');
   if(P.spad>0) unlockAch('redrun');
   if(P.miss>0) unlockAch('skip');
-  const best=load('cabBest',null), sc=Math.round(S.score);
+  const bk=bestKey(), best=load(bk,null), sc=Math.round(S.score);
   const isBest = !best || sc>best.score;
-  if(isBest) save('cabBest',{score:sc, grade, at:Date.now()});
+  if(isBest) save(bk,{score:sc, grade, at:Date.now()});
   const runs=load('cabRuns',0)+1; save('cabRuns',runs);
   return {isBest, best:isBest?{score:sc,grade}:best, runs};
 }
@@ -101,7 +107,7 @@ function passengerSays(grade){
     S:['「停得比我停機車還準，這司機是機器人吧？」','通勤的高中生'],
     A:['「很穩，連咖啡都沒晃到。」','趕上班的工程師'],
     B:['「還可以啦，今天沒遲到就好。」','去市場的阿伯'],
-    C:['「有點晃，但風景很漂亮。」','來花蓮玩的觀光客'],
+    C:['「有點晃，但風景很漂亮。」', ROUTE.key==='alishan'?'上山看日出的背包客':'來花蓮玩的觀光客'],
     D:['「司機是不是第一天上班？」','抱著小孩的媽媽'],
   }[grade];
   out.push(ok);
@@ -110,12 +116,13 @@ function passengerSays(grade){
 
 /* ---------- overlay fragments ---------- */
 function titleExtrasHTML(){
-  const best=load('cabBest',null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length;
+  const best=load(bestKey(),null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length;
   return `<div class="recs"><span>最佳紀錄 <b>${best?best.score+' 分（'+best.grade+'）':'—'}</b></span><span>已開 <b>${runs}</b> 班</span><span>成就 <b>${n}/${ACHS.length}</b></span></div>
     <details class="achbox"><summary>查看成就徽章</summary>${achGridHTML()}</details>
-    <div class="envpick" role="radiogroup" aria-label="天氣與時段">${Object.values(ENVS).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
+    <div class="envpick" role="radiogroup" aria-label="天氣與時段">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
     <div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> 列車音效</label>
-    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> 車內語音廣播</label></div>`;
+    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> 車內語音廣播</label></div>
+    ${promoHTML()}`;
 }
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
@@ -126,11 +133,12 @@ function endExtrasHTML(info,grade){
   const got=lastNew.map(id=>ACHS.find(a=>a.id===id)).filter(Boolean);
   return `${passengerSays(grade)}
     <div class="recs">${info.isBest?'<span class="nb">🎉 新紀錄！</span>':'<span>最佳紀錄 <b>'+info.best.score+' 分（'+info.best.grade+'）</b></span>'}<span>第 <b>${info.runs}</b> 班</span></div>
-    ${got.length?`<div class="newach"><p class="eyebrow">本班解鎖成就</p>${achGridHTML(lastNew).replace('class="achs"','class="achs only-new"')}</div>`:''}`;
+    ${got.length?`<div class="newach"><p class="eyebrow">本班解鎖成就</p>${achGridHTML(lastNew).replace('class="achs"','class="achs only-new"')}</div>`:''}
+    ${promoHTML()}`;
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${r.name} 過站`:`${r.name} ${fmtErr(r.err)} ${r.trank}`).join('\n');
-  return `🚃 花東線駕駛室｜花蓮→壽豐（${ENV.name}）\n評價 ${grade}・${Math.round(S.score)} 分\n${rows}\n${location.href.split('#')[0]}`;
+  return `${ROUTE.key==='alishan'?'🌲':'🚃'} ${ROUTE.title}｜${STATIONS[0].name}→${STATIONS[STATIONS.length-1].name}（${ENV.name}）\n評價 ${grade}・${Math.round(S.score)} 分\n${rows}\n${location.href.split('#')[0]}`;
 }
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;
@@ -141,4 +149,31 @@ function bindEndExtras(grade){
       await navigator.clipboard.writeText(txt); b.firstChild.textContent='已複製成績！';
     }catch(e){ b.firstChild.textContent='複製失敗'; }
   });
+}
+
+/* ---------- 每條路線各自的最佳紀錄（舊紀錄屬於花東線） ---------- */
+function bestKey(){ return ROUTE.key==='hualien' ? 'cabBest' : 'cabBest_'+ROUTE.key; }
+
+/* ---------- 到站小知識 ---------- */
+const FACTS={
+  '吉安':'吉安舊稱「七腳川」，日治時期在這裡設立吉野移民村。附近的慶修院是當年留下的日式佛寺。',
+  '志學':'國立東華大學的校園就在志學一帶。',
+  '平和':'壽豐鄉的小站，四周是稻田，往西望就是中央山脈。',
+  '壽豐':'壽豐鄉有鯉魚潭、雲山水，還有以黃金蜆出名的立川漁場。',
+  '對高岳':'對高岳在祝山線上，四周是高大的柳杉和紅檜林，空氣裡都是木頭香。',
+  '祝山':'祝山車站海拔 2,451 公尺，是全台灣海拔最高的火車站。天氣好時可以在觀日平台看玉山日出與雲海。',
+};
+const factEl=document.createElement('div'); factEl.className='fact'; factEl.hidden=true; factEl.setAttribute('role','status');
+document.querySelector('.stage').appendChild(factEl);
+let factTimer=0;
+function showFact(st){
+  const f=FACTS[st.name]; if(!f) return;
+  factEl.innerHTML=`<span class="eyebrow">到站小知識 · ${st.name}</span><p>${f}</p>`;
+  factEl.hidden=false; clearTimeout(factTimer); factTimer=setTimeout(()=>factEl.hidden=true, 9000);
+}
+
+/* ---------- 作者的其他作品 ---------- */
+function promoHTML(){
+  return `<a class="promo" href="https://sectools.tw/?utm_source=train-game&utm_medium=referral" target="_blank" rel="noopener">
+    <span>🛡️</span><span><b>SecTools.tw 資安工具站</b><small>推薦：免安裝的線上資安工具</small></span><span aria-hidden="true">↗</span></a>`;
 }

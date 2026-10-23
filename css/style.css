@@ -9,15 +9,15 @@ img{max-width:100%}
   --amber:#ffb23e; --amber-ink:#1b1305;
   --power:#7fb8ff; --brake:#ff8a70; --eb:#7a1c14;
   --go:#46d483; --caution:#ffd03a; --stop:#ff4a3d;
-  --f-display:"Huninn","Noto Sans TC","PingFang TC",system-ui,sans-serif;
+  --f-display:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-  --f-digit:"Share Tech Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --f-digit:"Share Tech Mono","Noto Sans TC","PingFang TC","Microsoft JhengHei",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{background:var(--panel);color:var(--ink)}
-body{font-family:var(--f-body);font-size:15px;line-height:1.5;
+body{font-family:var(--f-body);font-size:15px;line-height:1.6;line-break:strict;-webkit-font-smoothing:antialiased;
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:14px 28px}
 .app{max-width:1180px;margin:0 auto;display:grid;gap:12px}
 button{font:inherit;touch-action:manipulation}
@@ -25,7 +25,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 
 .top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 20px;flex-wrap:wrap}
 .brand h1{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3vw,30px);margin:0;letter-spacing:.06em;line-height:1.1;text-wrap:balance}
-.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:13px;text-wrap:balance}
 .meters{display:flex;gap:22px}
 .meter{display:grid;gap:2px}
 .lab{font-size:11px;letter-spacing:.14em;color:var(--muted)}
@@ -33,7 +33,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 
 .stage{position:relative;border-radius:14px;overflow:hidden;background:var(--panel-3);box-shadow:0 0 0 1px var(--line)}
 #view{display:block;width:100%;height:clamp(230px, min(48vw, 58vh), 520px)}
-#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#fx{position:absolute;left:0;top:0;width:100%;height:clamp(230px, min(48vw, 58vh), 520px);pointer-events:none}
 #view.pix,#fx.pix{image-rendering:crisp-edges;image-rendering:pixelated}
 .modebtn{align-self:end;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer;min-height:36px}
 .modebtn span{color:var(--amber);font-family:var(--f-digit);font-weight:400;margin-left:4px}
@@ -98,7 +98,7 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .notch.on{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
 .notch.forced{outline:2px dashed var(--stop);outline-offset:-2px}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.btn{display:grid;justify-items:center;gap:0;border-radius:10px;border:1px solid var(--line);background:#25313a;color:var(--ink);padding:9px 8px;min-height:48px;font-weight:700;cursor:pointer;line-height:1.25}
+.btn{display:grid;justify-items:center;align-content:center;gap:2px;text-align:center;border-radius:10px;border:1px solid var(--line);background:#25313a;color:var(--ink);padding:9px 8px;min-height:48px;font-weight:700;cursor:pointer;line-height:1.25}
 .btn kbd{font-family:var(--f-digit);font-weight:400;font-size:11px;color:var(--muted)}
 .btn:hover{background:#2c3a44}
 .btn.power{color:var(--power)} .btn.brake{color:var(--brake)}
@@ -217,3 +217,35 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .envbtn.on{border-color:var(--amber);color:var(--ink);background:#2a2618}
 .toggles{display:flex;flex-wrap:wrap;gap:6px 18px}
 .pill[hidden]{display:none}
+
+/* ---------- 文字排版 ---------- */
+.errval{color:var(--ink);font-family:var(--f-body)}
+.errval.num{font-family:var(--f-digit)}
+.btn small{font-size:11px;font-weight:500;color:var(--muted)}
+.card p,.coach p,.fact p,.help li{text-wrap:pretty}
+kbd{line-height:1.3;vertical-align:.08em}
+.ro .name{letter-spacing:.04em}
+
+/* ---------- 路線選擇 ---------- */
+.routepick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.routebtn{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel-3);color:var(--muted);cursor:pointer;font:inherit}
+.routebtn b{font-size:15px;color:var(--ink)}
+.routebtn small{font-size:12px}
+.routebtn.on{border-color:var(--amber);background:#2a2618}
+.routebtn:hover{border-color:#5a6a72}
+
+/* ---------- 到站小知識 ---------- */
+.fact{position:absolute;z-index:4;left:12px;top:64px;max-width:min(360px,calc(100% - 24px));background:rgba(15,21,24,.92);border:1px solid #6b3f22;border-left:4px solid #c9874a;border-radius:10px;padding:10px 14px;display:grid;gap:4px;animation:coachIn .25s ease-out}
+.fact p{margin:0;font-size:14px;color:var(--ink);line-height:1.55}
+.fact .eyebrow{color:#e7a76a!important}
+@media (max-width:640px){ .hud{bottom:auto;top:calc(clamp(230px, min(48vw, 58vh), 520px) - 64px)} .fact{position:static;max-width:none;border-radius:0;border-width:1px 0 0 4px} .fact p{font-size:13px} .routebtn{padding:8px 10px} }
+
+/* ---------- 推薦連結 ---------- */
+.promo{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel-3);color:var(--ink);text-decoration:none}
+.promo:hover{border-color:var(--amber)}
+.promo b{display:block;font-size:14px}
+.promo small{display:block;font-size:12px;color:var(--muted)}
+.promo > span:first-child{font-size:22px}
+.promo > span:last-child{color:var(--amber)}
+.foot{margin:0;color:var(--muted);font-size:12.5px}
+.foot a{color:var(--amber)}

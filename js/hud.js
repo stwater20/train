@@ -8,14 +8,14 @@ function drawGauge(lim){
   const dpr=Math.min(2,window.devicePixelRatio||1);
   if(gcv.width!==Math.round(s*dpr)){ gcv.width=gcv.height=Math.round(s*dpr); }
   g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,s,s);
-  const cx=s/2, cy=s/2, R=s*0.46, A0=Math.PI*0.75, A1=Math.PI*2.25, ang=v=>A0+(A1-A0)*clamp(v/120,0,1);
+  const cx=s/2, cy=s/2, R=s*0.46, A0=Math.PI*0.75, A1=Math.PI*2.25, GM=ROUTE.lineMax<=40?40:120, TS=GM===40?1:5, TM=GM===40?5:10, TL=GM===40?10:20, ang=v=>A0+(A1-A0)*clamp(v/GM,0,1);
   g.fillStyle='#0c1215'; g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fill();
   g.strokeStyle='#2d3a42'; g.lineWidth=2; g.stroke();
   g.strokeStyle='rgba(255,74,61,0.85)'; g.lineWidth=R*0.07; g.beginPath(); g.arc(cx,cy,R*0.86,ang(lim),A1); g.stroke();
-  for(let v=0; v<=120; v+=5){ const a=ang(v), major=v%10===0, r1=R*0.92, r0=R*(major?0.78:0.84);
+  for(let v=0; v<=GM; v+=TS){ const a=ang(v), major=v%TM===0, r1=R*0.92, r0=R*(major?0.78:0.84);
     g.strokeStyle= major?'#e6ebe9':'#7d8d94'; g.lineWidth= major?2:1;
     g.beginPath(); g.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0); g.lineTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); g.stroke();
-    if(v%20===0){ g.fillStyle='#c9d3d6'; g.font=(R*0.13).toFixed(1)+'px "Share Tech Mono",monospace'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(v,cx+Math.cos(a)*R*0.64,cy+Math.sin(a)*R*0.64); }
+    if(v%TL===0){ g.fillStyle='#c9d3d6'; g.font=(R*0.13).toFixed(1)+'px "Share Tech Mono",monospace'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(v,cx+Math.cos(a)*R*0.64,cy+Math.sin(a)*R*0.64); }
   }
   const kmh=S.v*3.6, a=ang(kmh);
   g.strokeStyle='#ffb23e'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); g.moveTo(cx-Math.cos(a)*R*0.12,cy-Math.sin(a)*R*0.12); g.lineTo(cx+Math.cos(a)*R*0.82,cy+Math.sin(a)*R*0.82); g.stroke();
@@ -48,8 +48,8 @@ function hud(now){
     el.distSub.textContent= dist<0 ? '已超過停車位置' : dist<300 ? '藍色「4」停車位置標' : '月台在左側';
     el.hDist.textContent=txt;
     const err=-dist;
-    if(dist<80 && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); }
-    else { el.ptr.hidden=true; el.err.textContent='接近時顯示'; }
+    if(dist<80 && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); el.err.classList.add('num'); }
+    else { el.ptr.hidden=true; el.err.textContent='接近時顯示'; el.err.classList.remove('num'); }
     el.sched.textContent=fmtClock(BASE_CLOCK+st.arr);
     const slack=st.arr-S.t;
     el.slack.textContent= slack>=0 ? '尚有 '+fmtDur(slack) : '已延誤 '+fmtDur(slack);
@@ -73,8 +73,8 @@ function hud(now){
   el.ahead.innerHTML = items.length ? items.slice(0,2).map(([d,t])=>'<div>'+t+' · <span>'+Math.round(d)+' m</span></div>').join('') : '<div>線路淨空</div>';
   el.door.textContent='車門 '+(S.doors?'開':'關'); el.door.classList.toggle('on',S.doors);
   const atp=S.atpOver||S.atpSig||S.spad; el.atp.textContent= atp ? 'ATP 介入' : 'ATP 正常'; el.atp.classList.toggle('alert',atp);
-  const bc=S.phase==='run'? Math.round(Math.max(0,-S.curF)/1.45*440) : 440; el.bc.textContent='BC '+bc+' kPa'; el.bc.classList.toggle('on',bc>20);
-  const gr=gradeAt(p); el.grade.textContent='坡度 '+(gr>0?'↗ ':gr<0?'↘ ':'')+Math.abs(gr)+'‰'; el.grade.classList.toggle('on',gr!==0);
+  const bc=S.phase==='run'? Math.round(Math.max(0,-S.curF)/ROUTE.ebDecel*440) : 440; el.bc.textContent='BC '+bc+' kPa'; el.bc.classList.toggle('on',bc>20);
+  const gr=gradeAt(p); el.grade.textContent='坡度 '+(gr>0?'↗ ':gr<0?'↘ ':'')+Math.abs(gr)+'‰'+(ROUTE.key==='alishan'?' · 海拔 '+altitude(p).toLocaleString()+' m':''); el.grade.classList.toggle('on',gr!==0);
   el.slip.hidden=!S.slip; el.slip.classList.toggle('alert',!!S.slip);
   el.pn.textContent='主控制器 '+nLabel(S.notch)+(S.eff!==S.notch && S.phase==='run' ? '（實際 '+nLabel(S.eff)+'）':'');
   const acc=clamp(S.acc,-1.5,1.0);

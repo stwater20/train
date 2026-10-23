@@ -24,7 +24,7 @@ function auInit(){
   AU.rain=loop(AU.white,'highpass',2500);       // 雨聲
   AU.hiss=loop(AU.white,'highpass',1800);       // 排氣聲（煞車缸）
   // VVVF 馬達：兩個鋸齒波經帶通
-  AU.motG=c.createGain(); AU.motG.gain.value=0; const mf=c.createBiquadFilter(); mf.type='bandpass'; mf.frequency.value=900; mf.Q.value=0.8;
+  AU.motG=c.createGain(); AU.motG.gain.value=0; const mf=c.createBiquadFilter(); mf.type=DIESEL?'lowpass':'bandpass'; mf.frequency.value=900; mf.Q.value=0.8;
   AU.mot=[0,1].map(k=>{ const o=c.createOscillator(); o.type='sawtooth'; o.frequency.value=200; o.connect(mf); o.start(); return o; });
   mf.connect(AU.motG); AU.motG.connect(AU.master); AU.motF=mf;
   // 煞車摩擦尖音
@@ -48,7 +48,8 @@ function ping(freq,dur,vol,type,delay){
 function puff(dur,vol){ AU.hissUntil=actx.currentTime+dur; ramp(AU.hiss.g.gain,vol,0.03); }
 
 /* 鋼軌每 25 m 一個接縫；駕駛室在第一節車的前轉向架上方，聽到的是一輪一輪的「喀噠—喀噠」 */
-const RAIL=25, AXLES=[0,2.1,15.9,18.0, 20+0,20+2.1, 20+15.9,20+18.0];
+const RAIL=ROUTE.railLen, AXLES= ROUTE.key==='alishan' ? [0,1.4,9.6,11.0] : [0,2.1,15.9,18.0, 20+0,20+2.1, 20+15.9,20+18.0];
+const DIESEL=!ROUTE.electric;
 function audioTick(dt){
   if(!AU.ready || !sfxOn) return;
   const run=S.phase==='run' && !S.paused && !S.coachHold, v=run?S.v:0, kmh=v*3.6;
@@ -60,9 +61,16 @@ function audioTick(dt){
 
   // 馬達：加速時明顯，回生煞車時較小
   const eff=run?S.eff:0;
+  if(DIESEL){
+    // 柴油引擎：怠速一直在響，轉速跟著檔位，不跟車速
+    const rpm=Math.max(0,eff);
+    ramp(AU.motG.gain, run? 0.05+0.022*rpm : (S.phase==='title'?0:0.03), 0.4);
+    const base=34+rpm*9+Math.sin(S.t*3.1)*0.6; AU.mot[0].frequency.setTargetAtTime(base,actx.currentTime,0.5); AU.mot[1].frequency.setTargetAtTime(base*2.01,actx.currentTime,0.5); AU.motF.frequency.value=260+rpm*60;
+  } else {
   const motVol = eff>0 ? 0.025+0.012*eff : (eff<0 && eff>-9 && v>2 ? 0.02 : 0);
   ramp(AU.motG.gain, motVol, 0.12);
   const base=120+kmh*14; AU.mot[0].frequency.value=base; AU.mot[1].frequency.value=base*1.5+3; AU.motF.frequency.value=500+kmh*20;
+  }
 
   // 煞車排氣：加大煞車或鬆開煞車時「噗嘶」
   if(run && eff!==AU.lastEff){
@@ -74,8 +82,11 @@ function audioTick(dt){
   if(actx.currentTime>AU.hissUntil) ramp(AU.hiss.g.gain,0,0.15);
 
   // 低速煞車摩擦聲
-  const sq = run && S.curF<-0.25 && v>0.15 && v<4 ? 0.012*(1-v/4)+0.004 : 0;
-  ramp(AU.sqG.gain, sq, 0.1); AU.sq.frequency.value=2600+Math.sin(S.t*23)*40;
+  let sq = run && S.curF<-0.25 && v>0.15 && v<4 ? 0.012*(1-v/4)+0.004 : 0, sqF=2600;
+  // 急彎時輪緣摩擦鋼軌的尖叫聲（登山鐵道很常聽到）
+  const kk=Math.abs(kAt(S.pos));
+  if(run && kk>0.0052 && v>1.2){ sq=Math.max(sq, 0.01+0.012*Math.min(1,(kk-0.0052)/0.002)*(0.6+0.4*Math.sin(S.t*7.3))); sqF=3300; }
+  ramp(AU.sqG.gain, sq, 0.1); AU.sq.frequency.value=sqF+Math.sin(S.t*23)*40;
 
   // 鋼軌接縫
   if(run && v>0.8){

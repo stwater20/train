@@ -50,11 +50,11 @@ function step(dt){
   if(S.doors && n>0) n=-4;
   S.eff=n;
   let target; S.slip=false;
-  if(n>0){ const amax=0.95*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01));
+  if(n>0){ const amax=ROUTE.power*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01));
     // 雨天軌面濕滑：低速大檔位容易空轉
     if(ENV.rain && n>=4 && S.v<12){ S.slip = Math.sin(S.t*5.3)+Math.sin(S.t*2.1)>0.6; target*=S.slip?0.55:0.8; } }
   else if(n===0) target=0;
-  else target=-(n===-9?1.45:0.13*(-n))*(ENV.rain?0.85:1);
+  else target=-(n===-9?ROUTE.ebDecel:ROUTE.brakeStep*(-n))*(ENV.rain?0.85:1);
   S.curF += (target-S.curF)*Math.min(1, dt/(target<S.curF?0.45:0.7));
   const res = S.v>0.01 ? 0.015+0.0005*S.v+0.00009*S.v*S.v : 0;
   S.grade=trainGrade(S.pos);
@@ -147,7 +147,7 @@ function startGame(tut){
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever();
   extrasStart();
   if(S.tut) tutStart();
-  else toast(fmtClock(BASE_CLOCK)+' 花蓮發車。把主控制器推到動力檔（W / ↑）');
+  else toast(fmtClock(BASE_CLOCK)+' '+STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）');
 }
 const startTutorial=()=>startGame(true);
 function endGame(){ tutStop(); S.phase='end'; S.doors=false; showOverlay('end'); }
@@ -209,7 +209,13 @@ const HELP_HTML=`<div class="helphead"><div><p class="eyebrow">區間車司機�
     <li><b>黃燈</b>：注意運轉，通過後限速 45 km/h，一直到平和站。</li>
     <li><b>紅燈</b>：前方有列車，必須在號誌前停車等待，燈號會轉黃。衝太快時 ATP 會緊急煞車並扣 30 分，闖過紅燈扣 150 分。</li>
   </ul>
-  <p>志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。</p></section>
+  <p>花東線志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。阿里山祝山線沒有這架號誌。</p></section>
+<section><h3>阿里山小火車</h3>
+  <ul>
+    <li>762 mm 窄軌、柴油機車，全線上坡，最陡 62‰。線路最高 30 km/h，急彎限速 15–20 km/h。</li>
+    <li>上坡放 N 會很快停下來，進站可以晚一點再煞車；停在半路上要用 P3 以上才爬得動。</li>
+    <li>急彎時會聽到車輪與鋼軌摩擦的尖銳聲，這是登山鐵道的特色。</li>
+  </ul></section>
 <section><h3>坡度</h3>
   <ul>
     <li>右側路旁的<b>坡度標</b>寫著千分比（‰），例如 8‰ 代表每走 1000 m 升高 8 m。「前方」也會提醒坡度變化。</li>
@@ -245,19 +251,24 @@ function showOverlay(kind){
     ov.scrollTop=0;
   } else if(kind==='title'){
     ovCard.className='card';
-    ovCard.innerHTML=`<p class="eyebrow">區間車 · 花蓮 → 壽豐 · 5.55 km · 4 站</p>
-      <h2>花東線駕駛室</h2>
-      <p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從花蓮開出的區間車司機。沿途停靠吉安、志學、平和，終點壽豐。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。</p>
+    const AL=ROUTE.key==='alishan', first=STATIONS[0].name, last=STATIONS[STATIONS.length-1].name, mids=STATIONS.slice(1,-1).map(x=>x.name).join('、');
+    ovCard.innerHTML=`<div class="routepick" role="radiogroup" aria-label="選擇路線">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':'🚃'} ${r.name}</b><small>${r.stations[0].name} → ${r.stations[r.stations.length-1].name}</small></button>`).join('')}</div>
+      <p class="eyebrow">${ROUTE.train} · ${first} → ${last} · ${STATIONS.length} 站</p>
+      <h2>${ROUTE.title}</h2>
+      ${AL
+        ? `<p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。</p>`
+        : `<p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。</p>`}
       <ul class="howto">
         <li><kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8</li>
-        <li>速限要等整列車尾端通過限速區才解除（列車長 80 m）</li>
-        <li>紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分</li>
-        <li>停妥後按 <kbd>空白鍵</kbd> 開門；經過「鳴」標時按 <kbd>H</kbd> 鳴笛有加分</li>
+        <li>速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）</li>
+        ${AL ? '<li>全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車</li>' : '<li>紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分</li>'}
+        <li>停妥後按 <kbd class="kbd-cjk">空白鍵</kbd> 開門；經過「鳴」標時按 <kbd>H</kbd> 鳴笛有加分</li>
       </ul>
-      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">操作說明</button><button class="btn big tut" id="ovTut" type="button">🔰 新手教學</button><button class="btn door big" id="ovGo" type="button">開始駕駛</button></div>
+      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">操作說明</button><button class="btn big tut" id="ovTut" type="button">🔰 新手教學${ROUTE.key==='alishan'?'<small>在花東線進行</small>':''}</button><button class="btn door big" id="ovGo" type="button">開始駕駛</button></div>
       ${titleExtrasHTML()}`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
-    document.getElementById('ovTut').addEventListener('click',startTutorial);
+    document.getElementById('ovTut').addEventListener('click',()=>{ if(ROUTE.key!=='hualien'){ try{ localStorage.setItem('cabAutoTut','1'); }catch(e){} setRoute('hualien'); } else startTutorial(); });
+    document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
     document.getElementById('ovHelp').addEventListener('click',openHelp);
     bindTitleExtras();
   } else if(kind==='pause'){
@@ -273,7 +284,7 @@ function showOverlay(kind){
       ? `<tr><td>${r.name}</td><td class="num">過站</td><td>—</td><td>—</td><td class="num">−60</td></tr>`
       : `<tr><td>${r.name}</td><td class="num">${fmtErr(r.err)}</td><td>${r.rank}</td><td>${r.trank} ${r.late>0?'+':'−'}${fmtDur(r.late)}</td><td class="num">+${r.total}</td></tr>`).join('');
     const P=S.pens, info=S.endInfo||(S.endInfo=extrasEnd(g));
-    ovCard.innerHTML=`<p class="eyebrow">本班次結束 · 抵達壽豐 ${fmtClock(BASE_CLOCK+S.t)}</p>
+    ovCard.innerHTML=`<p class="eyebrow">本班次結束 · 抵達${STATIONS[STATIONS.length-1].name} ${fmtClock(BASE_CLOCK+S.t)}</p>
       <div class="grade"><b>${g}</b><span>${Math.round(sc)} 分</span></div>
       <div class="tbl"><table><thead><tr><th>站名</th><th class="num">停車誤差</th><th>停車評價</th><th>時刻</th><th class="num">得分</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="pen"><span>超速 <b>−${P.over}</b></span><span>ATP 介入 <b>−${P.atp}</b></span><span>冒進號誌 <b>−${P.spad}</b></span><span>緊急煞車 <b>−${P.eb}</b></span><span>平交道鳴笛 <b>+${S.bonus}</b></span></div>
