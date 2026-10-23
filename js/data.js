@@ -30,7 +30,32 @@ const CURVES = [
 ];
 const CROSSINGS = [780, 3120, 4920];
 const SIGNAL_POS = 3480;
-const BASE_CLOCK = 8*3600 + 12*60;
+/* 坡度（‰，正值為上坡）。車站一帶保持水平 */
+const GRADES = [
+  {s:-800, e:200,  g:0},
+  {s:200,  e:900,  g:5},
+  {s:900,  e:1250, g:0},
+  {s:1250, e:2100, g:8},
+  {s:2100, e:2700, g:0},
+  {s:2700, e:3300, g:-6},
+  {s:3300, e:3950, g:0},
+  {s:3950, e:4800, g:10},
+  {s:4800, e:5150, g:-4},
+  {s:5150, e:END+1200, g:0},
+];
+function gradeAt(p){ for(const G of GRADES) if(p>=G.s && p<G.e) return G.g; return 0; }
+/* 列車平均坡度：取車頭到車尾幾個點平均 */
+function trainGrade(p){ let t=0; for(let k=0;k<5;k++) t+=gradeAt(p-k*TRAIN_LEN/4); return t/5; }
+
+/* 天氣與時段 */
+const ENVS = {
+  morning:{key:'morning', name:'晴天早晨', icon:'☀️', clock:8*3600+12*60,  word:'今天早上'},
+  dusk:   {key:'dusk',    name:'黃昏',     icon:'🌇', clock:17*3600+32*60, word:'傍晚'},
+  night:  {key:'night',   name:'夜間',     icon:'🌙', clock:20*3600+12*60, word:'今晚', night:true},
+  rain:   {key:'rain',    name:'雨天',     icon:'🌧️', clock:8*3600+12*60,  word:'下雨的早上', rain:true},
+};
+let ENV = ENVS.morning;
+let BASE_CLOCK = ENV.clock;
 
 function kAt(p){ let k=0; for(const c of CURVES){ if(p>c.s && p<c.e){ k+=c.k*Math.min(1,(p-c.s)/40,(c.e-p)/40); } } return k; }
 const HSTEP=5, HN=Math.ceil((END+800)/HSTEP)+2, HEAD=new Float32Array(HN);

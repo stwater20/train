@@ -29,7 +29,7 @@ const $=id=>document.getElementById(id);
 const el={clock:$('clock'),score:$('score'),next:$('roNext'),nextEn:$('roNextEn'),nextLab:$('roNextLab'),dist:$('roDist'),distSub:$('roDistSub'),
   limit:$('roLimit'),limitSub:$('roLimitSub'),sig:$('roSig'),sigSub:$('roSigSub'),ahead:$('roAhead'),sched:$('roSched'),slack:$('roSlack'),
   err:$('roErr'),ptr:$('errPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
-  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),bDoor:$('bDoor')};
+  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
 const SIGNAME={G:'綠燈',Y:'黃燈',R:'紅燈'};
 let lastHud=0;
 function hud(now){
@@ -68,10 +68,14 @@ function hud(now){
   LIMITS.forEach(Lm=>{ const d=Lm.s-p; if(Lm.s>0 && d>0 && d<900) items.push([d,'限速 '+Lm.v]); });
   if(dSig>0 && dSig<900) items.push([dSig,'號誌 '+SIGNAME[S.sig.aspect]]);
   CROSSINGS.forEach(c=>{ const d=c-p; if(d>0 && d<700) items.push([d,'平交道']); const dw=c-300-p; if(dw>0&&dw<500) items.push([dw,'鳴笛標']); });
+  GRADES.forEach((G,k)=>{ const d=G.s-p, pg=GRADES[k-1]; if(k>0 && d>0 && d<900 && pg.g!==G.g) items.push([d, G.g>0?'上坡 '+G.g+'‰':G.g<0?'下坡 '+(-G.g)+'‰':'坡度變水平']); });
   items.sort((a,b)=>a[0]-b[0]);
   el.ahead.innerHTML = items.length ? items.slice(0,2).map(([d,t])=>'<div>'+t+' · <span>'+Math.round(d)+' m</span></div>').join('') : '<div>線路淨空</div>';
   el.door.textContent='車門 '+(S.doors?'開':'關'); el.door.classList.toggle('on',S.doors);
   const atp=S.atpOver||S.atpSig||S.spad; el.atp.textContent= atp ? 'ATP 介入' : 'ATP 正常'; el.atp.classList.toggle('alert',atp);
+  const bc=S.phase==='run'? Math.round(Math.max(0,-S.curF)/1.45*440) : 440; el.bc.textContent='BC '+bc+' kPa'; el.bc.classList.toggle('on',bc>20);
+  const gr=gradeAt(p); el.grade.textContent='坡度 '+(gr>0?'↗ ':gr<0?'↘ ':'')+Math.abs(gr)+'‰'; el.grade.classList.toggle('on',gr!==0);
+  el.slip.hidden=!S.slip; el.slip.classList.toggle('alert',!!S.slip);
   el.pn.textContent='主控制器 '+nLabel(S.notch)+(S.eff!==S.notch && S.phase==='run' ? '（實際 '+nLabel(S.eff)+'）':'');
   const acc=clamp(S.acc,-1.5,1.0);
   if(acc>=0){ el.acc.style.left='60%'; el.acc.style.width=(acc/1.0*40)+'%'; el.acc.style.background='var(--power)'; }

@@ -113,10 +113,14 @@ function titleExtrasHTML(){
   const best=load('cabBest',null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length;
   return `<div class="recs"><span>最佳紀錄 <b>${best?best.score+' 分（'+best.grade+'）':'—'}</b></span><span>已開 <b>${runs}</b> 班</span><span>成就 <b>${n}/${ACHS.length}</b></span></div>
     <details class="achbox"><summary>查看成就徽章</summary>${achGridHTML()}</details>
-    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> 車內語音廣播（「下一站，吉安」）</label>`;
+    <div class="envpick" role="radiogroup" aria-label="天氣與時段">${Object.values(ENVS).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
+    <div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> 列車音效</label>
+    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> 車內語音廣播</label></div>`;
 }
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
+  const f=document.getElementById('sfxTog'); if(f) f.addEventListener('change',()=>setSfx(f.checked));
+  document.querySelectorAll('.envbtn').forEach(b=>b.addEventListener('click',()=>{ setEnv(b.dataset.env); showOverlay('title'); const nb=document.querySelector('.envbtn[data-env="'+b.dataset.env+'"]'); if(nb) nb.focus({preventScroll:true}); }));
 }
 function endExtrasHTML(info,grade){
   const got=lastNew.map(id=>ACHS.find(a=>a.id===id)).filter(Boolean);
@@ -126,7 +130,7 @@ function endExtrasHTML(info,grade){
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${r.name} 過站`:`${r.name} ${fmtErr(r.err)} ${r.trank}`).join('\n');
-  return `🚃 花東線駕駛室｜花蓮→壽豐\n評價 ${grade}・${Math.round(S.score)} 分\n${rows}\n${location.href.split('#')[0]}`;
+  return `🚃 花東線駕駛室｜花蓮→壽豐（${ENV.name}）\n評價 ${grade}・${Math.round(S.score)} 分\n${rows}\n${location.href.split('#')[0]}`;
 }
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;

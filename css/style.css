@@ -209,3 +209,11 @@ button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .toggle input{accent-color:var(--amber);width:16px;height:16px}
 @media (prefers-reduced-motion:reduce){ .coach,.coach-hi{animation:none} }
+
+/* ---------- 天氣與時段 ---------- */
+.envpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.envbtn{display:grid;justify-items:center;gap:2px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel-3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer}
+.envbtn span{font-size:20px;line-height:1}
+.envbtn.on{border-color:var(--amber);color:var(--ink);background:#2a2618}
+.toggles{display:flex;flex-wrap:wrap;gap:6px 18px}
+.pill[hidden]{display:none}

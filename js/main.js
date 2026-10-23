@@ -7,7 +7,7 @@ function frame(now){
   const dt=Math.min(0.1,(now-last)/1000); last=now;
   if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt; while(accum>=1/60){ step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
   else accum=0;
-  tutTick(); render(dt); hud(now);
+  tutTick(); audioTick(dt); render(dt); hud(now);
   requestAnimationFrame(frame);
 }
 function boot(data){

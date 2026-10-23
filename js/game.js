@@ -49,13 +49,20 @@ function step(dt){
   if(forced){ n = S.notch<forced ? S.notch : forced; }
   if(S.doors && n>0) n=-4;
   S.eff=n;
-  let target;
-  if(n>0){ const amax=0.95*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01)); }
+  let target; S.slip=false;
+  if(n>0){ const amax=0.95*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01));
+    // 雨天軌面濕滑：低速大檔位容易空轉
+    if(ENV.rain && n>=4 && S.v<12){ S.slip = Math.sin(S.t*5.3)+Math.sin(S.t*2.1)>0.6; target*=S.slip?0.55:0.8; } }
   else if(n===0) target=0;
-  else target=-(n===-9?1.45:0.13*(-n));
+  else target=-(n===-9?1.45:0.13*(-n))*(ENV.rain?0.85:1);
   S.curF += (target-S.curF)*Math.min(1, dt/(target<S.curF?0.45:0.7));
   const res = S.v>0.01 ? 0.015+0.0005*S.v+0.00009*S.v*S.v : 0;
-  let a=S.curF-res;
+  S.grade=trainGrade(S.pos);
+  const gravity = 9.81*S.grade/1000;
+  // 靜止時只要有煞車就不會溜動
+  const held = S.v<0.01 && S.curF<=0.02 && (n<0 || gravity>0);
+  let a = held ? 0 : S.curF-res-gravity;
+  if(held) S.v=0;
   S.v+=a*dt; if(S.v<0){ S.v=0; }
   if(S.v===0 && a<0) a=0;
   S.acc=a; S.pos+=S.v*dt;
@@ -75,7 +82,7 @@ function step(dt){
   if(S.doors){
     S.dwell-=dt;
     if(S.dwell<=0){
-      S.doors=false;
+      S.doors=false; doorSound(false);
       if(S.next>=STATIONS.length-1){ endGame(); return; }
       S.next++; toast('車門關閉，可以發車','good'); extrasDepart();
     }
@@ -113,7 +120,7 @@ function action(){
   if(late<-20){tp=20;trank='早到';} else if(late<=5){tp=40;trank='準點';} else {tp=Math.max(0,Math.round(40-(late-5)*1.5));trank='延誤';}
   S.score+=pp+tp;
   S.log.push({name:st.name, err, rank, pp, late, trank, tp, total:pp+tp});
-  S.doors=true; S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
+  S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
   toast(st.name+'｜誤差 '+fmtErr(err)+'・'+rank+' +'+pp+'｜'+trank+' +'+tp,'good');
@@ -140,7 +147,7 @@ function startGame(tut){
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever();
   extrasStart();
   if(S.tut) tutStart();
-  else toast('08:12:00 花蓮發車。把主控制器推到動力檔（W / ↑）');
+  else toast(fmtClock(BASE_CLOCK)+' 花蓮發車。把主控制器推到動力檔（W / ↑）');
 }
 const startTutorial=()=>startGame(true);
 function endGame(){ tutStop(); S.phase='end'; S.doors=false; showOverlay('end'); }
@@ -203,6 +210,16 @@ const HELP_HTML=`<div class="helphead"><div><p class="eyebrow">區間車司機�
     <li><b>紅燈</b>：前方有列車，必須在號誌前停車等待，燈號會轉黃。衝太快時 ATP 會緊急煞車並扣 30 分，闖過紅燈扣 150 分。</li>
   </ul>
   <p>志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。</p></section>
+<section><h3>坡度</h3>
+  <ul>
+    <li>右側路旁的<b>坡度標</b>寫著千分比（‰），例如 8‰ 代表每走 1000 m 升高 8 m。「前方」也會提醒坡度變化。</li>
+    <li><b>上坡</b>加速變慢、滑行會很快掉速；<b>下坡</b>放 N 也會越跑越快，進站要提早煞車。</li>
+  </ul></section>
+<section><h3>天氣與時段</h3>
+  <ul>
+    <li>標題畫面可以選晴天、黃昏、夜間或雨天。夜間要靠頭燈看前方號誌與標誌。</li>
+    <li><b>雨天軌面濕滑</b>：煞車力約少 15%，低速時用 P4–P5 容易<b>空轉</b>（儀表會亮「空轉」），起步改用 P2–P3 比較順。</li>
+  </ul></section>
 <section><h3>準點</h3>
   <p>每一站都有預定到達時刻，顯示在「預定到達」。晚 5 秒以內算準點 <b>+40</b>，之後每晚 1 秒少 1.5 分；提早 20 秒以上到站只有 +20。</p></section>
 <section><h3>平交道</h3>
@@ -230,7 +247,7 @@ function showOverlay(kind){
     ovCard.className='card';
     ovCard.innerHTML=`<p class="eyebrow">區間車 · 花蓮 → 壽豐 · 5.55 km · 4 站</p>
       <h2>花東線駕駛室</h2>
-      <p>你是今天早上 08:12 從花蓮開出的區間車司機。沿途停靠吉安、志學、平和，終點壽豐。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。</p>
+      <p>你是${ENV.word} ${fmtClock(BASE_CLOCK).slice(0,5)} 從花蓮開出的區間車司機。沿途停靠吉安、志學、平和，終點壽豐。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。</p>
       <ul class="howto">
         <li><kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8</li>
         <li>速限要等整列車尾端通過限速區才解除（列車長 80 m）</li>
