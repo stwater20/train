@@ -41,7 +41,7 @@ function applyStaticText(){
 function boot(data){
   applyStaticText();
   if(data && data.S && typeof data.S==='object'){ S=Object.assign(fresh(),data.S); }
-  document.title=ROUTE.title; document.getElementById('hTitle').textContent=ROUTE.title;
+  document.getElementById('hTitle').textContent=ROUTE.title;
   document.getElementById('hSub').textContent=ROUTE.train+' · '+stName(STATIONS[0])+' → '+stName(STATIONS[STATIONS.length-1])+' · '+ROUTE.desc;
   let autoTut=false; try{ autoTut=localStorage.getItem('cabAutoTut')==='1'; localStorage.removeItem('cabAutoTut'); }catch(e){}
   if(autoTut && ROUTE.key==='hualien') startTutorial();

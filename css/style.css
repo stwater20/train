@@ -274,3 +274,10 @@ html[lang="en"] .btns .btn{white-space:nowrap;font-size:14px}
 .routepick{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:640px){ .routepick{grid-template-columns:1fr} }
 html[lang="ja"] .btns .btn{white-space:nowrap;font-size:13.5px}
+
+/* ---------- 頁面底部介紹（給搜尋引擎與第一次來的人） ---------- */
+.about{display:grid;gap:8px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);color:#c6d0d3;font-size:14px}
+.about h2{margin:0;font-size:17px;color:var(--ink);font-weight:700}
+.about p{margin:0}
+.about ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.about b{color:var(--ink)}

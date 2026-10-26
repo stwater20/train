@@ -196,7 +196,7 @@ function endExtrasHTML(info,grade){
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${nameOf(r.name)} ${L('過站','overran','通過')}`:`${nameOf(r.name)} ${fmtErr(r.err)} ${trWord(r.trank)}`).join('\n');
-  return `${ROUTE.key==='alishan'?'🌲':ROUTE.japan?'🌊':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\n${location.origin+location.pathname}${LANG==='zh'?'':'?lang='+LANG}`;
+  return `${ROUTE.key==='alishan'?'🌲':ROUTE.japan?'🌊':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\nhttps://train.sectools.tw${LANG_PATH[LANG]}`;
 }
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;

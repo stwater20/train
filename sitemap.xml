@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://train.sectools.tw/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://train.sectools.tw/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://train.sectools.tw/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://train.sectools.tw/ja/"/>
+  </url>
+  <url>
+    <loc>https://train.sectools.tw/en/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://train.sectools.tw/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://train.sectools.tw/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://train.sectools.tw/ja/"/>
+  </url>
+  <url>
+    <loc>https://train.sectools.tw/ja/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://train.sectools.tw/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://train.sectools.tw/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://train.sectools.tw/ja/"/>
+  </url>
+</urlset>

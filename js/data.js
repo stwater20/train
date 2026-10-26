@@ -3,13 +3,16 @@
 
 /* ---------- 語言：?lang=zh|en|ja，其次是上次選擇，再其次看瀏覽器語言 ---------- */
 const LANGS={zh:'中文',en:'English',ja:'日本語'};
-const LANG=(()=>{ try{ const q=new URLSearchParams(location.search).get('lang'); if(LANGS[q]){ localStorage.setItem('cabLang',q); return q; }
+const LANG=(()=>{ try{ if(LANGS[window.FORCE_LANG]){ localStorage.setItem('cabLang',window.FORCE_LANG); return window.FORCE_LANG; }
+  const q=new URLSearchParams(location.search).get('lang'); if(LANGS[q]){ localStorage.setItem('cabLang',q); return q; }
   const s=localStorage.getItem('cabLang'); if(LANGS[s]) return s; }catch(e){}
   const n=(navigator.language||'zh').toLowerCase(); return n.startsWith('ja')?'ja' : n.startsWith('zh')?'zh' : 'en'; })();
 document.documentElement.lang = LANG==='zh'?'zh-Hant':LANG;
 /* 依語言挑字串：L('中文','English','日本語') */
 const L=(zh,en,ja)=> LANG==='en'?en : LANG==='ja'?(ja??en) : zh;
-function setLang(l){ try{ localStorage.setItem('cabLang',l); }catch(e){} const u=new URL(location.href); u.searchParams.set('lang',l); location.href=u.toString(); }
+/* 每個語言有自己的網址：/、/en/、/ja/（方便搜尋引擎收錄） */
+const LANG_PATH={zh:'/',en:'/en/',ja:'/ja/'};
+function setLang(l){ try{ localStorage.setItem('cabLang',l); }catch(e){} location.href=LANG_PATH[l]; }
 const stName = st => L(st.name, st.en, st.ja||st.name);
 
 /* ---------- route data ---------- */
@@ -70,7 +73,7 @@ const ROUTES = {
     grades:[ {s:-800,e:250,g:0}, {s:250,e:850,g:-6}, {s:850,e:1250,g:0}, {s:1250,e:1800,g:5}, {s:1800,e:2200,g:0}, {s:2200,e:2800,g:-4}, {s:2800,e:99999,g:0} ],
   },
 };
-let ROUTE = ROUTES.hualien;
+let ROUTE = LANG==='ja' ? ROUTES.enoden : ROUTES.hualien; // 日文版預設先開江之電
 try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
 function setRoute(key){ try{ localStorage.setItem('cabRoute',JSON.stringify(key)); }catch(e){} location.reload(); }
 
