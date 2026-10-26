@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap">
-<link rel="stylesheet" href="../css/style.css?v=20261026212849">
+<link rel="stylesheet" href="../css/style.css?v=20261026213425">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
       <p id="hSub">區間車 4 輛編成 · 花蓮 → 壽豐 · 單線電化區間</p>
     </div>
     <div class="meters">
+      <button class="helpbtn mpause" id="bPause2" type="button" aria-label="暫停">❚❚</button>
       <button class="helpbtn" id="bHelp" type="button">操作說明 <kbd style="font-family:var(--f-digit);font-weight:400;color:var(--muted)">?</kbd></button>
       <div class="meter"><span class="lab">時刻</span><b id="clock">08:12:00</b></div>
       <div class="meter"><span class="lab">得分</span><b id="score">0</b></div>
@@ -49,9 +50,16 @@
     <canvas id="fx" aria-hidden="true"></canvas>
     <div class="toast" id="toast" data-off role="status" aria-live="polite"></div>
     <div class="hud" aria-hidden="true">
-      <div class="hud-spd"><b id="hSpd">0</b><small>km/h</small></div>
-      <div class="hud-lim" id="hLim">45</div>
-      <div class="hud-dist"><small>停車位置</small><b id="hDist">—</b></div>
+      <div class="hud-row">
+        <div class="hud-spd"><b id="hSpd">0</b><small>km/h</small></div>
+        <div class="hud-lim" id="hLim">45</div>
+        <div class="hud-dist"><small id="hDistLab">停車位置</small><b id="hDist">—</b></div>
+        <div class="hud-notch" id="hNotch">B8</div>
+      </div>
+      <div class="hud-row hud-row2">
+        <div class="hud-next"><small id="hNextLab">下一站</small><b id="hNext">—</b></div>
+        <div class="hud-err" id="hErrBox"><div class="bar"><div class="tick"></div><div class="ptr pred" id="hPred" hidden></div><div class="ptr" id="hErr" hidden></div></div></div>
+      </div>
     </div>
   </div>
 
@@ -122,14 +130,14 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <!--FORCE-->
 <script>window.FORCE_ROUTE="alishan";</script>
-<script src="../js/data.js?v=20261026212849"></script>
-<script src="../js/help.js?v=20261026212849"></script>
-<script src="../js/game.js?v=20261026212849"></script>
-<script src="../js/extras.js?v=20261026212849"></script>
-<script src="../js/tutorial.js?v=20261026212849"></script>
-<script src="../js/audio.js?v=20261026212849"></script>
-<script src="../js/render3d.js?v=20261026212849"></script>
-<script src="../js/hud.js?v=20261026212849"></script>
-<script src="../js/main.js?v=20261026212849"></script>
+<script src="../js/data.js?v=20261026213425"></script>
+<script src="../js/help.js?v=20261026213425"></script>
+<script src="../js/game.js?v=20261026213425"></script>
+<script src="../js/extras.js?v=20261026213425"></script>
+<script src="../js/tutorial.js?v=20261026213425"></script>
+<script src="../js/audio.js?v=20261026213425"></script>
+<script src="../js/render3d.js?v=20261026213425"></script>
+<script src="../js/hud.js?v=20261026213425"></script>
+<script src="../js/main.js?v=20261026213425"></script>
 </body>
 </html>

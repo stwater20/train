@@ -161,13 +161,15 @@ function togglePause(){
 function startGame(tut){
   tutStop();
   if(tut!==true && DIFF.guide && !tutSeen()) tut=true; // 新手模式：這條路線第一次開會自動帶教學
-  S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever();
+  S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever(); setPlaying(true);
   extrasStart();
   if(S.tut) tutStart();
   else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));
 }
 const startTutorial=()=>startGame(true);
-function endGame(){ tutStop(); S.phase='end'; S.doors=false; showOverlay('end'); }
+/* 駕駛中：手機版鎖成一個畫面，不用上下捲動 */
+function setPlaying(on){ document.body.classList.toggle('playing',on); if(on) window.scrollTo(0,0); }
+function endGame(){ tutStop(); setPlaying(false); S.phase='end'; S.doors=false; showOverlay('end'); }
 
 /* ---------- overlay ---------- */
 const ov=document.getElementById('ov'), ovCard=document.getElementById('ovCard');
@@ -343,7 +345,7 @@ function showOverlay(kind){
       <div class="btnrow"><button class="btn big" id="ovShare" type="button">${L('分享成績','Share result','結果をシェア')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
       <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
-    document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); showOverlay('title'); });
+    document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); setPlaying(false); showOverlay('title'); });
     bindEndExtras(g);
   }
   const b=document.getElementById('ovGo'); if(b) setTimeout(()=>{ try{b.focus({preventScroll:true});}catch(e){} },30);
@@ -369,6 +371,7 @@ document.getElementById('bDoor').addEventListener('click',action);
 document.getElementById('bEB').addEventListener('click',()=>setNotch(-9));
 document.getElementById('bHorn').addEventListener('click',horn);
 document.getElementById('bPause').addEventListener('click',togglePause);
+document.getElementById('bPause2').addEventListener('click',togglePause);
 document.getElementById('bN').addEventListener('click',()=>setNotch(0));
 document.getElementById('bHelp').addEventListener('click',openHelp);
 window.addEventListener('keydown',e=>{

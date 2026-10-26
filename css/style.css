@@ -316,3 +316,111 @@ html[lang="ja"] .btns .btn{white-space:nowrap;font-size:13.5px}
 .seolinks ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
 .seolinks a{color:var(--amber);text-decoration:none}
 .seolinks a:hover{text-decoration:underline}
+
+/* ======================================================================
+   手機駕駛版面：開車時鎖成一個畫面，不用上下捲動
+   上：精簡標題列｜中：3D 視野（疊上速度、限速、距離、下一站、檔位、停車誤差）｜下：大按鈕
+   ====================================================================== */
+.hud{flex-direction:column;align-items:stretch}
+.hud-row{display:flex;gap:10px;align-items:center}
+.hud-row2,.hud-notch,.mpause{display:none}
+.hud-notch{font-family:var(--f-digit);font-size:16px;padding:2px 8px;border-radius:6px;background:var(--panel-3);color:var(--ink);min-width:38px;text-align:center}
+.hud-notch.p{color:var(--power)} .hud-notch.b{color:var(--brake)} .hud-notch.e{background:var(--eb);color:#ffd9d2}
+.hud-next small{display:block;font-size:10px;color:var(--muted);letter-spacing:.1em}
+.hud-next b{font-family:var(--f-display);font-weight:400;font-size:18px;line-height:1.1;white-space:nowrap}
+.hud-err{flex:1;opacity:.35;transition:opacity .2s}
+.hud-err.on{opacity:1}
+.hud-err .bar{position:relative;height:14px;border-radius:4px;background:linear-gradient(90deg,var(--panel-2) 0 36.67%,#3b3418 36.67% 46.67%,#1f4a33 46.67% 53.33%,#3b3418 53.33% 63.33%,var(--panel-2) 63.33%)}
+.hud-err .tick{position:absolute;top:0;bottom:0;width:2px;left:calc(50% - 1px);background:#2f6bd8}
+.hud-err .ptr{position:absolute;top:-5px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--amber);margin-left:-6px;left:0}
+.hud-err .ptr.pred{border-top-color:var(--go)}
+
+@media (max-width:640px){
+  body.playing{height:100%;overflow:hidden;overscroll-behavior:none;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+  html:has(body.playing){height:100%;overflow:hidden}
+  body.playing .app{height:calc(100dvh - 12px - env(safe-area-inset-bottom,0px));grid-template-rows:auto minmax(0,1fr) auto auto;gap:6px}
+  body.playing .top{flex-wrap:nowrap;align-items:center;gap:8px}
+  body.playing .brand p{display:none}
+  body.playing .brand h1{font-size:16px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.playing .brand{min-width:0}
+  body.playing .meters{gap:10px;align-items:center;flex:none}
+  body.playing .meter .lab{font-size:9px}
+  body.playing .meter b{font-size:16px}
+  body.playing .helpbtn{min-height:34px;padding:4px 9px}
+  body.playing #bHelp kbd{display:none}
+  body.playing .mpause{display:inline-flex;align-items:center;justify-content:center;min-width:38px}
+  body.playing .stage{min-height:0;height:100%}
+  body.playing #view,body.playing #fx{height:100%}
+  body.playing .route{height:30px;margin:0 16px}
+  body.playing .route .rail,body.playing .route .done{top:8px}
+  body.playing .stn{top:2px;font-size:10px}
+  body.playing .stn i{width:12px;height:12px;border-width:2px}
+  body.playing .trainmark{top:-1px}
+  body.playing .console{display:block}
+  body.playing .readouts,body.playing .gaugebox,body.playing .keys,body.playing .foot,body.playing .about,body.playing .seolinks,body.playing .lever{display:none}
+  body.playing .sec.controls{padding:6px;display:block}
+  body.playing .btns{grid-template-columns:1.25fr 1fr 1fr 1.25fr;grid-template-rows:repeat(3,46px);gap:6px}
+  body.playing .btn{min-height:0;padding:4px;font-size:15px}
+  body.playing .btn kbd{display:none}
+  body.playing #bUp{grid-column:1;grid-row:1/4;font-size:18px}
+  body.playing #bDown{grid-column:4;grid-row:1/4;font-size:18px}
+  body.playing #bDoor{grid-column:2/4;grid-row:1}
+  body.playing #bHorn{grid-column:2;grid-row:2}
+  body.playing #bN{grid-column:3;grid-row:2}
+  body.playing #bEB{grid-column:2/4;grid-row:3}
+  body.playing #bPause{display:none}
+  body.playing .hud{display:flex;left:8px;right:8px;top:auto;bottom:8px;gap:6px;padding:6px 8px}
+  body.playing .hud-row{justify-content:space-between}
+  body.playing .hud-row2,body.playing .hud-notch{display:flex}
+  body.playing .hud-row2{align-items:center;gap:12px}
+  body.playing .hud-spd b{font-size:26px}
+  body.playing .toast{top:8px;font-size:13px;padding:5px 12px}
+  body.playing .fact,body.playing .ann{position:absolute;left:8px;right:8px;top:44px;max-width:none;border-radius:10px;border-width:1px;font-size:12.5px;padding:7px 10px}
+  body.playing .ann{top:auto;bottom:126px}
+  body.playing .fact p{font-size:12.5px}
+  body.playing .coach{bottom:126px}
+}
+
+/* 橫拿手機：視野在左、按鈕在右 */
+@media (max-height:500px) and (orientation:landscape){
+  body.playing{height:100%;overflow:hidden;overscroll-behavior:none;padding:6px 10px}
+  html:has(body.playing){height:100%;overflow:hidden}
+  body.playing .app{max-width:none;height:calc(100dvh - 12px);grid-template-columns:minmax(0,1fr) 230px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top" "stage ctrl" "route ctrl";gap:6px 10px}
+  body.playing .top{grid-area:top;flex-wrap:nowrap;align-items:center}
+  body.playing .brand p{display:none}
+  body.playing .brand h1{font-size:16px}
+  body.playing .meter b{font-size:16px}
+  body.playing .mpause{display:inline-flex;align-items:center;justify-content:center;min-width:38px}
+  body.playing .stage{grid-area:stage;min-height:0;height:100%}
+  body.playing #view,body.playing #fx{height:100%}
+  body.playing .route{grid-area:route;height:30px}
+  body.playing .stn{font-size:10px}
+  body.playing .console{grid-area:ctrl;display:block;align-self:stretch}
+  body.playing .readouts,body.playing .gaugebox,body.playing .keys,body.playing .foot,body.playing .about,body.playing .seolinks,body.playing .lever,body.playing #bPause{display:none}
+  body.playing .sec.controls{display:block;padding:6px;height:100%}
+  body.playing .btns{height:100%;grid-template-columns:1fr 1fr;grid-template-rows:2fr 1fr 1fr 1fr;gap:6px}
+  body.playing .btn{min-height:0;font-size:14px}
+  body.playing .btn kbd{display:none}
+  body.playing #bUp{grid-column:1;grid-row:1;font-size:17px}
+  body.playing #bDown{grid-column:2;grid-row:1;font-size:17px}
+  body.playing #bDoor{grid-column:1/3;grid-row:2}
+  body.playing #bHorn{grid-column:1;grid-row:3}
+  body.playing #bN{grid-column:2;grid-row:3}
+  body.playing #bEB{grid-column:1/3;grid-row:4}
+  body.playing .hud{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;left:8px;right:8px;top:auto;bottom:8px;padding:4px 8px;gap:4px 12px}
+  body.playing .hud-row{flex:none;gap:8px}
+  body.playing .hud-row2{flex:1 1 220px}
+  body.playing .hud-spd b{font-size:22px}
+  body.playing .hud-lim{width:30px;height:30px;font-size:13px}
+  body.playing .hud-next small{display:none}
+  body.playing .hud-next b{font-size:15px}
+  body.playing .route{height:18px}
+  body.playing .stn span{display:none}
+  body.playing .route .rail,body.playing .route .done{top:7px}
+  body.playing .stn{top:1px}
+  body.playing .hud-row{justify-content:space-between}
+  body.playing .hud-row2,body.playing .hud-notch{display:flex}
+  body.playing .hud-row2{align-items:center;gap:12px}
+  body.playing .fact,body.playing .ann{left:8px;right:auto;max-width:55%;top:40px;bottom:auto;font-size:12px}
+  body.playing .ann{top:auto;bottom:62px}
+}

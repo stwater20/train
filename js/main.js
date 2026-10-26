@@ -13,9 +13,9 @@ function frame(now){
 /* 頁面上固定的文字：[選擇器, 屬性, English, 日本語] */
 const STATIC_TEXT=[
   ['#bHelp','html','How to drive <kbd>?</kbd>','操作説明 <kbd>?</kbd>'],
-  ['.meter:nth-child(2) .lab','text','Time','時刻'], ['.meter:nth-child(3) .lab','text','Score','得点'],
+  ['#clock','prev','Time','時刻'], ['#score','prev','Score','得点'],
   ['#view','aria-label','View from the cab','運転台からの前方視界'],
-  ['.hud-dist small','text','Stop mark','停止位置'], ['#route','aria-label','Route progress','路線の進捗'],
+  ['#hDistLab','text','To stop','停止位置'], ['#bPause2','aria-label','Pause','一時停止'], ['#route','aria-label','Route progress','路線の進捗'],
   ['#gauge','aria-label','Speedometer','速度計'], ['.accbar .lab','text','Acceleration m/s²','加減速度 m/s²'],
   ['#roDist','prev','Distance to stop','停止位置まで'], ['#roLimit','prev','Speed limit','制限速度'], ['#roSig','prev','Signal','信号'],
   ['#roAhead','prev','Ahead','前方'], ['#roSched','prev','Scheduled arrival','到着予定'],
