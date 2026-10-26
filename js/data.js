@@ -50,6 +50,25 @@ const ROUTES = {
     signal:null,
     grades:[ {s:-800,e:150,g:0}, {s:150,e:900,g:45}, {s:900,e:1500,g:60}, {s:1500,e:2300,g:50}, {s:2300,e:2600,g:0}, {s:2600,e:3400,g:62}, {s:3400,e:99999,g:0} ],
   },
+  enoden:{
+    key:'enoden', name:L('江之電','Enoden','江ノ電'), title:L('江之電駕駛室','Enoden Cab','江ノ電運転台'), train:L('江之電 4 輛編成','4-car Enoden EMU','江ノ電 4両編成'), desc:L('沿海單線・路面併用軌道','coastal single track with street running','海沿いの単線・併用軌道'),
+    trainLen:50, lineMax:45, gauge:1.067, electric:true, elev0:5, elevScale:1, railLen:25,
+    power:0.9, ebDecel:1.4, brakeStep:0.13, platLen:95, japan:true,
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'稻村崎',   en:'Inamuragasaki',    ja:'稲村ヶ崎',   pos:0},
+      {name:'七里濱',   en:'Shichirigahama',   ja:'七里ヶ浜',   pos:1100, leg:150},
+      {name:'鎌倉高校前', en:'Kamakura-Kōkōmae', ja:'鎌倉高校前', pos:2000, leg:118},
+      {name:'腰越',     en:'Koshigoe',         ja:'腰越',       pos:3000, leg:128},
+      {name:'江之島',   en:'Enoshima',         ja:'江ノ島',     pos:3750, leg:158},
+    ],
+    limits:[ {s:0,e:160,v:25}, {s:560,e:800,v:35}, {s:1880,e:2080,v:30}, {s:2880,e:3080,v:30}, {s:3120,e:3600,v:25}, {s:3600,e:3780,v:15} ],
+    curves:[ {s:560,e:800,k:-0.0035}, {s:1450,e:1650,k:0.0025}, {s:2350,e:2550,k:-0.003}, {s:3600,e:3700,k:0.008} ],
+    crossings:[450, 1380, 2045, 2640],
+    street:{s:3120, e:3600},
+    signal:null,
+    grades:[ {s:-800,e:250,g:0}, {s:250,e:850,g:-6}, {s:850,e:1250,g:0}, {s:1250,e:1800,g:5}, {s:1800,e:2200,g:0}, {s:2200,e:2800,g:-4}, {s:2800,e:99999,g:0} ],
+  },
 };
 let ROUTE = ROUTES.hualien;
 try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
@@ -92,6 +111,7 @@ let ENV = ENVS[ROUTE.envs[0]];
 const SIGHTS = {
   '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],
   '阿里山':['神木群 →'], '祝山':['觀日平台 →'],
+  '七里濱':['七里ヶ浜海岸 →'], '鎌倉高校前':['踏切 撮影はマナーを守って'], '腰越':['腰越漁港 →'], '江之島':['江の島 →','江島神社 →'],
 };
 let BASE_CLOCK = ENV.clock;
 

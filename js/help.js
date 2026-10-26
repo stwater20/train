@@ -45,6 +45,12 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
     <li><b>Red</b>: a train is ahead. Stop before the signal and wait for it to change. Approaching too fast triggers ATP (−30); passing it costs 150.</li>
   </ul>
   <p>On the Hualien line there is block signal No. 32 between Zhixue and Pinghe. The Alishan line has no signal.</p></section>
+<section><h3>Enoden</h3>
+  <ul>
+    <li>The Enoden runs from Inamuragasaki to Enoshima with Sagami Bay on your left. Stations are close together and there are many level crossings; the 「笛」 board is the whistle board.</li>
+    <li>From Koshigoe to Enoshima the line runs <b>down the street</b>, sharing the road with cars at 25 km/h; the sharp curve into Enoshima is 15 km/h.</li>
+    <li>Platforms are short — barely longer than the train — so stop precisely.</li>
+  </ul></section>
 <section><h3>Alishan Forest Railway</h3>
   <ul>
     <li>762 mm narrow gauge, diesel locomotive, uphill all the way at up to 62‰. Top speed 30 km/h; sharp curves 15–20 km/h.</li>
@@ -120,6 +126,12 @@ const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンド�
     <li><b>赤（停止）</b>：前方に列車あり。信号の手前で停車して変わるのを待ちます。速すぎると ATP 作動（−30）、冒進は −150。</li>
   </ul>
   <p>花東線の志学〜平和間に第32号閉塞信号機があります。阿里山線には信号機はありません。</p></section>
+<section><h3>江ノ電</h3>
+  <ul>
+    <li>江ノ電は稲村ヶ崎から江ノ島へ、左手に相模湾を見ながら走ります。駅間が短く踏切が多いので、「笛」標識で警笛を。</li>
+    <li>腰越〜江ノ島は<b>併用軌道</b>。車と道路を共有し 25 km/h、江ノ島駅手前の急カーブは 15 km/h。</li>
+    <li>ホームは列車よりわずかに長いだけなので、停止位置は正確に。</li>
+  </ul></section>
 <section><h3>阿里山森林鉄道</h3>
   <ul>
     <li>軌間 762 mm、ディーゼル機関車。終点まで上り勾配で最急 62‰。最高 30 km/h、急カーブは 15–20 km/h。</li>

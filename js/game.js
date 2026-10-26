@@ -78,7 +78,7 @@ function step(dt){
     if(prev<c && S.pos>=c && !S.crossDone[i]){
       S.crossDone[i]=true;
       if(S.hornPos>=c-350 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast(L('平交道前鳴笛確認 +10','Horn before the crossing +10','踏切前で警笛 +10'),'good'); }
-      else toast(L('通過平交道：下次記得在「鳴」標附近鳴笛','Level crossing passed: sound the horn after the 「鳴」 board next time','踏切通過：次は「鳴」標識の後で警笛を'));
+      else { const w=ROUTE.japan?'笛':'鳴'; toast(L('通過平交道：下次記得在「'+w+'」標附近鳴笛','Level crossing passed: sound the horn after the 「'+w+'」 board next time','踏切通過：次は「'+w+'」標識の後で警笛を')); }
     }
   });
 
@@ -213,6 +213,12 @@ const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手�
     <li><b>紅燈</b>：前方有列車，必須在號誌前停車等待，燈號會轉黃。衝太快時 ATP 會緊急煞車並扣 30 分，闖過紅燈扣 150 分。</li>
   </ul>
   <p>花東線志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。阿里山祝山線沒有這架號誌。</p></section>
+<section><h3>江之電</h3>
+  <ul>
+    <li>江之電從稻村崎往江之島，左手邊是相模灣。站距短、平交道多，平交道前的「笛」標就是鳴笛標。</li>
+    <li>腰越到江之島是<b>路面併用軌道</b>，電車和汽車共用道路，限速 25 km/h；進江之島站前的急彎限速 15 km/h。</li>
+    <li>月台很短，只比列車長一點，停車位置要抓準。</li>
+  </ul></section>
 <section><h3>阿里山小火車</h3>
   <ul>
     <li>762 mm 窄軌、柴油機車，全線上坡，最陡 62‰。線路最高 30 km/h，急彎限速 15–20 km/h。</li>
@@ -259,7 +265,12 @@ function showOverlay(kind){
   } else if(kind==='title'){
     ovCard.className='card';
     const AL=ROUTE.key==='alishan', first=stName(STATIONS[0]), last=stName(STATIONS[STATIONS.length-1]), mids=STATIONS.slice(1,-1).map(stName).join(L('、',', ','、')), hhmm=fmtClock(BASE_CLOCK).slice(0,5);
-    const story = AL
+    const JP=!!ROUTE.japan;
+    const story = JP
+      ? L(`你是${ENV.word} ${hhmm} 從稻村崎開往江之島的江之電司機。左手邊是相模灣，天氣好時前方看得到江之島和富士山。途經${mids}；腰越之後是和汽車共用道路的路面區間，速度要放慢。`,
+          `You're driving the ${hhmm} Enoden train from Inamuragasaki to Enoshima ${ENV.word}. Sagami Bay is on your left, and on a clear day Enoshima and Mt Fuji rise ahead. You'll call at ${mids}; after Koshigoe the line runs down the middle of the street alongside cars, so take it slow.`,
+          `${ENV.word} ${hhmm} 稲村ヶ崎発 江ノ島行きの江ノ電を運転します。左手には相模湾、晴れていれば前方に江の島と富士山。${mids}に停車し、腰越の先は車と道路を共有する併用軌道なので、速度を落として進みましょう。`)
+      : AL
       ? L(`你是${ENV.word} ${hhmm} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。`,
           `You're driving the ${hhmm} Zhushan Line train out of Alishan ${ENV.word}, carrying passengers up the mountain via ${mids} to Zhushan, at 2,451 m the highest station in Taiwan. It's uphill all the way with tight curves: keep to the limits and stop on the mark.`,
           `${ENV.word} ${hhmm} 阿里山発の祝山線列車の運転士として、乗客を山の上へ運びます。${mids}を経て、終点は標高 2,451 m、台湾で最も高い祝山駅。ずっと上り勾配で急カーブも多いので、制限速度を守りつつ停止位置にぴたりと止めましょう。`)
@@ -267,18 +278,19 @@ function showOverlay(kind){
           `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “4” board on each platform — the closer, the higher your score — and keep to the timetable.`,
           `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「4」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
     ovCard.innerHTML=`${langPickHTML()}
-      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
+      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
       <p class="eyebrow">${ROUTE.train} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p>
       <h2>${ROUTE.title}</h2>
       <p>${story}</p>
       <ul class="howto">
         <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
         <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
-        <li>${AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
+        <li>${JP ? L('最高 45 km/h，路面區間 25 km/h；鎌倉高校前站旁就是知名的平交道，記得鳴笛','Top speed 45 km/h, 25 km/h on the street section; the famous level crossing is right by Kamakura-Kōkōmae — sound the horn','最高 45 km/h、併用軌道は 25 km/h。鎌倉高校前駅のすぐ横に有名な踏切があるので警笛を')
+             : AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
-        <li>${L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「鳴」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「鳴」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「鳴」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点')}</li>
+        <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))(JP?'笛':'鳴')}</li>
       </ul>
-      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}${AL?`<small>${L('在花東線進行','on the Hualien line','花東線で実施')}</small>`:''}</button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
+      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}${ROUTE.key!=='hualien'?`<small>${L('在花東線進行','on the Hualien line','花東線で実施')}</small>`:''}</button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       ${titleExtrasHTML()}`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTut').addEventListener('click',()=>{ if(ROUTE.key!=='hualien'){ try{ localStorage.setItem('cabAutoTut','1'); }catch(e){} setRoute('hualien'); } else startTutorial(); });

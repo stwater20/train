@@ -10,6 +10,7 @@ const ACHS=[
   {id:'grad',    icon:'🎓', name:L('新手畢業','Graduate','卒業'),   desc:L('完成新手教學','Finish the tutorial','チュートリアルを完了')},
   {id:'first',   icon:'🚃', name:L('首航','Maiden run','初乗務'),       desc:L('第一次把花東線開到壽豐','Drive the Hualien line all the way to Shoufeng','花東線で寿豊まで走り切る')},
   {id:'zhushan', icon:'⛰️', name:L('登上祝山','Summit','祝山到達'),   desc:L('把阿里山小火車開到海拔 2,451 m 的祝山','Take the Alishan train up to Zhushan at 2,451 m','阿里山の列車で標高 2,451 m の祝山へ')},
+  {id:'enoshima', icon:'🌊', name:L('抵達江之島','Made it to Enoshima','江ノ島到着'), desc:L('把江之電開到江之島','Drive the Enoden all the way to Enoshima','江ノ電で江ノ島まで走り切る')},
   {id:'sunrise', icon:'🌄', name:L('祝山看日出','Sunrise at Zhushan','祝山のご来光'), desc:L('開日出列車準點抵達祝山','Reach Zhushan on time with the sunrise train','ご来光列車で祝山に定時到着')},
   {id:'perfect', icon:'🎯', name:L('一公分都不差','Spot on','ピタ止め'), desc:L('任一站停車誤差 0.5 m 以內','Stop within 0.5 m at any station','どこかの駅で誤差 0.5 m 以内')},
   {id:'sniper',  icon:'📏', name:L('人體尺規','Human ruler','人間定規'),   desc:L('每一站停車誤差都在 1 m 以內','Stop within 1 m at every station','全駅で誤差 1 m 以内')},
@@ -82,7 +83,8 @@ function extrasDepart(){
 function extrasEnd(grade){
   const log=S.log, P=S.pens;
   const stopsAll=S.log.filter(r=>!r.miss);
-  if(ROUTE.key==='alishan'){ unlockAch('zhushan'); const z=stopsAll.find(r=>r.name==='祝山'); if(ENV.key==='dawn' && z && z.trank!=='延誤') unlockAch('sunrise'); }
+  if(ROUTE.japan) unlockAch('enoshima');
+  else if(ROUTE.key==='alishan'){ unlockAch('zhushan'); const z=stopsAll.find(r=>r.name==='祝山'); if(ENV.key==='dawn' && z && z.trank!=='延誤') unlockAch('sunrise'); }
   else unlockAch('first');
   const stops=log.filter(r=>!r.miss);
   if(stops.length===STATIONS.length-1 && stops.every(r=>Math.abs(r.err)<=1)) unlockAch('sniper');
@@ -124,6 +126,9 @@ const LINKS={
   ndhu:   {zh:'https://www.ndhu.edu.tw/', en:'https://www.ndhu.edu.tw/', ja:'https://www.ndhu.edu.tw/', name:L('國立東華大學','National Dong Hwa University','国立東華大学')},
   alinsa: {zh:'https://www.ali-nsa.net/', en:'https://www.ali-nsa.net/en/', ja:'https://www.ali-nsa.net/ja/', name:L('阿里山國家風景區','Alishan National Scenic Area','阿里山国家風景区')},
   afrch:  {zh:'https://afrch.forest.gov.tw/', en:'https://afrch.forest.gov.tw/En', ja:'https://afrch.forest.gov.tw/Ja', name:L('阿里山林業鐵路及文化資產管理處','Alishan Forest Railway','阿里山林業鉄道')},
+  enoden: {zh:'https://www.enoden.co.jp/tc/', en:'https://www.enoden.co.jp/en/', ja:'https://www.enoden.co.jp/', name:L('江之電官方網站','Enoden official site','江ノ電 公式サイト')},
+  kamakura:{zh:'https://www.japan.travel/tw/', en:'https://www.japan.travel/en/', ja:'https://www.trip-kamakura.com/', name:L('日本國家旅遊局','Japan National Tourism Organization','鎌倉市観光協会')},
+  fujisawa:{zh:'https://www.japan.travel/tw/', en:'https://www.japan.travel/en/', ja:'https://www.fujisawa-kanko.jp/', name:L('日本國家旅遊局','Japan National Tourism Organization','藤沢市観光協会')},
   tra:    {zh:'https://www.railway.gov.tw/', en:'https://www.railway.gov.tw/tra-tip-web/tip?lang=en_US', ja:'https://www.railway.gov.tw/tra-tip-web/tip?lang=en_US', name:L('臺鐵','Taiwan Railway','台湾鉄道')},
 };
 const linkOf=k=>LINKS[k][LANG]||LINKS[k].zh;
@@ -135,6 +140,11 @@ const FACTS={
   '志學':{link:'ndhu', t:L('國立東華大學的校園就在志學一帶。','The campus of National Dong Hwa University is right around Zhixue.','志学駅の周辺には国立東華大学のキャンパスがあります。')},
   '平和':{link:'erv', t:L('壽豐鄉的小站，四周是稻田，往西望就是中央山脈。','A small station in Shoufeng Township surrounded by rice paddies, with the Central Mountain Range to the west.','寿豊郷の小さな駅。周りは田んぼで、西には中央山脈が見えます。')},
   '壽豐':{link:'erv', t:L('壽豐鄉有鯉魚潭、雲山水，還有以黃金蜆出名的立川漁場。','Shoufeng Township is home to Liyu Lake, the Yunshanshui ponds and Lichuan Aquafarm, famous for golden clams.','寿豊郷には鯉魚潭や雲山水、黄金シジミで知られる立川漁場があります。')},
+  '稻村崎':{link:'kamakura', t:L('稻村崎是突出海面的岬角，從這裡隔著相模灣可以望見江之島，天氣好時還有富士山，夕陽很有名。','Inamuragasaki is a cape jutting into the sea. From here you look across Sagami Bay to Enoshima — and Mt Fuji on clear days. Famous for sunsets.','稲村ヶ崎は海に突き出た岬。相模湾越しに江の島、晴れた日には富士山も見え、夕日の名所です。')},
+  '七里濱':{link:'kamakura', t:L('七里濱有一整片長長的沙灘，衝浪的人很多。江之電和臺鐵平溪線在 2013 年簽了觀光合作協定，後來也升級為友好協定。','Shichirigahama is a long beach popular with surfers. Enoden and Taiwan’s Pingxi Line signed a tourism partnership in 2013, later upgraded to a friendship agreement.','七里ヶ浜は長い砂浜でサーファーに人気。江ノ電と台湾の平渓線は2013年に観光連携協定を結び、のちに友好協定へと発展しました。')},
+  '鎌倉高校前':{link:'enoden', t:L('車站旁的平交道因為《灌籃高手》動畫片頭而出名，月台就面對大海。拍照時請注意安全、別擋到交通。','The level crossing by this station became famous from the Slam Dunk anime opening, and the platform faces the sea. If you take photos, stay safe and keep clear of traffic.','駅横の踏切はアニメ『SLAM DUNK』のオープニングで有名に。ホームは海に面しています。撮影は安全と交通マナーを守って。')},
+  '腰越':{link:'fujisawa', t:L('腰越漁港以魩仔魚（しらす）出名。從這站往江之島，電車會開進大街和汽車一起走。','Koshigoe fishing port is known for shirasu (whitebait). From here to Enoshima the train runs right down the street with the cars.','腰越漁港はしらすで有名。ここから江ノ島までは、電車が道路の真ん中を車と一緒に走ります。')},
+  '江之島':{link:'fujisawa', t:L('走過弁天橋就是江之島，可以參拜江島神社、登上江之島展望燈塔（Sea Candle）。','Cross the Benten Bridge to Enoshima island for Enoshima Shrine and the Sea Candle observation tower.','弁天橋を渡れば江の島。江島神社への参拝や、展望灯台「シーキャンドル」へどうぞ。')},
   '阿里山':{link:'alinsa', t:L('阿里山車站海拔 2,216 公尺，是前往森林遊樂區、巨木群與春天賞櫻的起點。','Alishan station (2,216 m) is the gateway to the forest recreation area, the giant trees and the spring cherry blossoms.','標高 2,216 m の阿里山駅は、森林遊楽区や巨木群、春の桜めぐりの起点です。')},
   '對高岳':{link:'afrch', t:L('對高岳在祝山線上，四周是高大的柳杉和紅檜林，空氣裡都是木頭香。','Duigaoyue sits on the Zhushan Line among tall cedars and Taiwan red cypress — the air smells of wood.','対高岳は祝山線の駅。スギやタイワンベニヒノキの森に囲まれ、木の香りが漂います。')},
   '祝山':{link:'alinsa', t:L('祝山車站海拔 2,451 公尺，是全台灣海拔最高的火車站。天氣好時可以在觀日平台看玉山日出與雲海。','At 2,451 m, Zhushan is Taiwan’s highest railway station. On clear mornings the viewing platform looks over a sea of clouds to sunrise above Yushan.','標高 2,451 m の祝山駅は台湾で最も高い駅。晴れた朝は展望台から雲海と玉山のご来光が望めます。')},
@@ -155,9 +165,9 @@ function sightsHTML(){
 }
 /* 結算畫面：去現場搭一次 */
 function rideRealHTML(){
-  const AL=ROUTE.key==='alishan', k=AL?'afrch':'tra';
-  return `<a class="promo ride" href="${linkOf(k)}" target="_blank" rel="noopener"><span>${AL?'🌄':'🚉'}</span>
-    <span><b>${L('到現場搭一次！','Ride it for real','実際に乗ってみよう')}</b><small>${AL?L('阿里山林鐵的時刻與訂票','Alishan Forest Railway timetables and tickets','阿里山林業鉄道の時刻表ときっぷ'):L('臺鐵花東線的時刻與訂票','Taiwan Railway timetables and tickets','台湾鉄道の時刻表ときっぷ')}</small></span><span aria-hidden="true">↗</span></a>`;
+  const AL=ROUTE.key==='alishan', JPR=!!ROUTE.japan, k=JPR?'enoden':AL?'afrch':'tra';
+  return `<a class="promo ride" href="${linkOf(k)}" target="_blank" rel="noopener"><span>${JPR?'🌊':AL?'🌄':'🚉'}</span>
+    <span><b>${L('到現場搭一次！','Ride it for real','実際に乗ってみよう')}</b><small>${JPR?L('江之電的路線、車票與沿線景點','Enoden routes, tickets and sights','江ノ電の路線・きっぷ・沿線観光'):AL?L('阿里山林鐵的時刻與訂票','Alishan Forest Railway timetables and tickets','阿里山林業鉄道の時刻表ときっぷ'):L('臺鐵花東線的時刻與訂票','Taiwan Railway timetables and tickets','台湾鉄道の時刻表ときっぷ')}</small></span><span aria-hidden="true">↗</span></a>`;
 }
 
 /* ---------- overlay fragments ---------- */
@@ -186,7 +196,7 @@ function endExtrasHTML(info,grade){
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${nameOf(r.name)} ${L('過站','overran','通過')}`:`${nameOf(r.name)} ${fmtErr(r.err)} ${trWord(r.trank)}`).join('\n');
-  return `${ROUTE.key==='alishan'?'🌲':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\n${location.origin+location.pathname}${LANG==='zh'?'':'?lang='+LANG}`;
+  return `${ROUTE.key==='alishan'?'🌲':ROUTE.japan?'🌊':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\n${location.origin+location.pathname}${LANG==='zh'?'':'?lang='+LANG}`;
 }
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;

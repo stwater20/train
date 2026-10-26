@@ -9,7 +9,8 @@ let W=0,H=0, R3=null;
 /* track centreline integrated from curvature: s → (x,z,heading) */
 const PMIN=-700, PMAX=END+1000, PN=PMAX-PMIN+1;
 const PXa=new Float64Array(PN), PZa=new Float64Array(PN), PTa=new Float64Array(PN), PYa=new Float64Array(PN);
-const AL = ROUTE.key==='alishan';
+const AL = ROUTE.key==='alishan', JP = !!ROUTE.japan, PL = ROUTE.platLen||215;
+const signName = st => JP ? st.ja : st.name;
 /* 阿里山線地形：左側是往上的山壁，右側是往下的山谷；車站一帶整平 */
 function terrainH(s,lat){
   let d=1e9; for(const st of STATIONS){ const a=st.pos-260, b=st.pos+90; d=Math.min(d, s<a?a-s : s>b?s-b : 0); }
@@ -168,6 +169,94 @@ function init3D(){
   function board(w,h,d,map,frame){ const side=frame||M.white; return new T.Mesh(new T.BoxGeometry(w,h,d),[side,side,side,side,new T.MeshStandardMaterial({map,roughness:0.6}),side]); }
   function postMesh(h,r,mat){ const m=new T.Mesh(new T.CylinderGeometry(r,r,h,8),mat||M.post); m.position.y=h/2; m.castShadow=true; return m; }
 
+  /* ---------- 江之電沿線：相模灣、海灘、134 號國道、日式民宅、電線桿、路面併用軌道、富士山與江之島 ---------- */
+  function buildJapan(){
+    const S0=PMIN+30, S1=PMAX-30, mid={...fr(END/2)}, st=ROUTE.street;
+    // 海：一大片海面，陸地蓋在上面
+    const waveTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#3f7fa6'; x.fillRect(0,0,w,h); speck(x,w,h,2600,['#5592b8','#3a7398','#6aa3c4','#2f6a8f'],2,6); x.strokeStyle='rgba(255,255,255,.18)'; x.lineWidth=2; for(let i=0;i<14;i++){ const y=Math.random()*h; x.beginPath(); x.moveTo(0,y); x.bezierCurveTo(w*0.3,y-6,w*0.6,y+6,w,y); x.stroke(); } },true);
+    waveTex.repeat.set(160,160); const seaM=std({map:waveTex,roughness:0.25,metalness:0.15}); M.sea=seaM;
+    const seaMesh=new T.Mesh(new T.PlaneGeometry(26000,26000),seaM); seaMesh.rotation.x=-Math.PI/2; seaMesh.position.set(mid.x,-0.35,mid.z); seaMesh.receiveShadow=true; scene.add(seaMesh);
+    // 陸地：右側（北）一路延伸，遠處是鎌倉的丘陵
+    const landTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#7d9a62'; x.fillRect(0,0,w,h); speck(x,w,h,4000,['#6f8d55','#8aa66c','#9a9a86','#7a8a68'],1,4); },true);
+    const landM=std({map:landTex}); landM.side=T.DoubleSide;
+    const hill=(lat)=> lat>260 ? Math.min(140,(lat-260)*0.22) : 0;
+    const mesh=(lats,hfn,mat,uvk)=>{ const step=4, ns=Math.ceil((S1-S0)/step)+1, nl=lats.length, pos=[], uv=[], idx=[];
+      for(let i=0;i<ns;i++){ const sv=S0+i*step; let km=0; for(let q=-200;q<=200;q+=10) km=Math.max(km,Math.abs(kAt(sv+q)));
+        const lim=km>0.0005?0.8/km:1e9, kin=kAt(sv)+kAt(sv-60)+kAt(sv+60), f=fr(sv);
+        for(let j=0;j<nl;j++){ let Lt=lats[j]; if((kin>0&&Lt>0)||(kin<0&&Lt<0)) Lt=Math.sign(Lt)*Math.min(Math.abs(Lt),lim); pos.push(f.x+f.rx*Lt, f.y+hfn(Lt), f.z+f.rz*Lt); uv.push(Lt*(uvk||0.08), sv*(uvk||0.08)); } }
+      for(let i=0;i<ns-1;i++) for(let j=0;j<nl-1;j++){ const k=i*nl+j; idx.push(k,k+nl,k+1, k+1,k+nl,k+nl+1); }
+      const g=new T.BufferGeometry(); g.setAttribute('position',new T.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new T.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+      const m=new T.Mesh(g,mat); m.receiveShadow=true; scene.add(m); return m; };
+    mesh([-13,-6,-2.6,2.6,6,12,20,40,80,160,260,400,700,1100],L=>hill(L)+0.01,landM);
+    // 134 號國道、海堤、沙灘
+    ribbon(S0,S1,4,[[-22.5,0.03],[-13.5,0.03]],M.road,{u:1/9,v:1/12});
+    ribbon(S0,S1,4,[[-24.5,0.9],[-22.5,0.9]],M.concrete,{}); ribbon(S0,S1,4,[[-24.5,-0.2],[-24.5,0.9]],M.concrete,{});
+    const sandTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#d9c7a0'; x.fillRect(0,0,w,h); speck(x,w,h,3000,['#cdb98f','#e6d6b2','#bfa97d'],1,3); },true);
+    ribbon(S0,S1,4,[[-62,-0.6],[-24.5,-0.15]],std({map:sandTex}),{u:0.1,v:0.1});
+    // 浪花
+    ribbon(S0,S1,4,[[-52,-0.32],[-49,-0.32]],new T.MeshBasicMaterial({color:0xf4f8fa,transparent:true,opacity:0.7}),{});
+    // 電線桿與電線（右側）
+    const jp=[], ja=[]; for(let s=Math.ceil(S0/32)*32; s<S1; s+=32){ if(CROSSINGS.some(c=>Math.abs(c-s)<8)) continue; jp.push({s,lat:7.5,h:4.5}); ja.push({s,lat:7.5,h:8.4}); }
+    inst(new T.CylinderGeometry(0.13,0.17,9,7),M.pole,jp,{cast:true}); inst(new T.BoxGeometry(1.4,0.1,0.1),M.pole,ja,{cast:true});
+    for(const lat of [6.9,8.1]){ const pts=[]; for(let s=S0;s<=S1;s+=4){ const f=fr(s), u=((s%32)+32)%32/32, sag=0.45*4*u*(1-u); pts.push(new T.Vector3(f.x+f.rx*lat,8.45-sag+f.y,f.z+f.rz*lat)); } line(pts); }
+    // 日式民宅：右側一排排，屋頂是深灰瓦
+    const hs=[], rf=[], pines=[], ptops=[];
+    const nearSt=p=>STATIONS.some(x=>p>x.pos-PL-10 && p<x.pos+40);
+    const inStreet=p=>st && p>st.s-20 && p<st.e+20;
+    for(let c=Math.floor(S0/11); c*11<S1; c++) for(let row=0; row<6; row++){
+      const key=c*13+row*7+3; if(rnd(key)<(row<2?0.12:0.3)) continue;
+      const s=c*11+rnd(key+1)*5, lat=row===0?11.5+rnd(key+2)*3 : 16+row*13+rnd(key+2)*8;
+      if(row===0 && (nearSt(s) || CROSSINGS.some(x=>Math.abs(x-s)<12))) continue;
+      const w=6+rnd(key+3)*4, d=6+rnd(key+4)*3, two=rnd(key+5)<0.55;
+      hs.push({s,lat,h:0,sx:d,sy:two?5.6:3.2,sz:w,c:[0xf1ece2,0xe6dfd2,0xd9d4c8,0xefe7d6,0xc9c2b4][(rnd(key+6)*5)|0]});
+      rf.push({s,lat,h:two?5.6:3.2,sx:d+0.9,sy:1.5,sz:w+0.8,c:[0x3b4248,0x4a5058,0x5a4b42,0x34404a][(rnd(key+7)*4)|0]});
+    }
+    // 路面併用軌道：兩側緊貼的商店、柏油路面
+    if(st){
+      ribbon(st.s,st.e,2,[[-7.5,RT-0.015],[7.5,RT-0.015]],M.asphalt,{});
+      for(const e of [-7.2,7.2]) ribbon(st.s,st.e,2,[[e-0.08,RT-0.01],[e+0.08,RT-0.01]],M.white,{});
+      for(const g of [-ROUTE.gauge/2,ROUTE.gauge/2]) ribbon(st.s,st.e,2,[[g-0.07,RT-0.012],[g+0.07,RT-0.012]],M.dark,{});
+      for(let s=st.s+6; s<st.e-6; s+=9) for(const sd of [-1,1]){ const key=Math.round(s)*3+(sd>0?1:0);
+        hs.push({s,lat:sd*(10.5+rnd(key)*1.5),h:0,sx:7,sy:5.4+rnd(key+1)*2,sz:8.4,c:[0xf3efe6,0xe2dccf,0xd8cfbf,0xece4d0][(rnd(key+2)*4)|0]});
+        rf.push({s,lat:sd*(10.5+rnd(key)*1.5),h:5.4+rnd(key+1)*2,sx:7.6,sy:1.0,sz:8.8,c:0x3e454b}); }
+    }
+    // 海岸邊的黑松
+    for(let s=Math.ceil(S0/18)*18; s<S1; s+=18){ const key=s|0; if(rnd(key)<0.35 || inStreet(s)) continue; const h=7+rnd(key+1)*5, lat=-26-rnd(key+2)*3;
+      pines.push({s,lat,h:0,sy:h}); ptops.push({s,lat,h:h-0.6,sx:2.4+rnd(key+3),sy:1.6,sz:2.2,ry:rnd(key+4)*6,c:[0x2f4a32,0x34503a,0x2a4430][(rnd(key+5)*3)|0]}); }
+    const hg=new T.BoxGeometry(1,1,1); hg.translate(0,0.5,0); inst(hg,M.wall,hs,{cast:true,receive:true});
+    const rm=M.metalRoof.clone(); rm.side=T.DoubleSide; rm.roughness=0.75; inst(roofG2(),rm,rf,{cast:true});
+    const tg=new T.CylinderGeometry(0.16,0.26,1,6); tg.translate(0,0.5,0); inst(tg,M.trunk,pines,{cast:true});
+    const pg=new T.IcosahedronGeometry(1,0); inst(pg,M.crown,ptops,{cast:true});
+    // 遠山（右側）
+    const segs=360, pos=[], col=[], idx=[], hz=new T.Color(HAZE);
+    for(let i=0;i<=segs;i++){ const a=i/segs*Math.PI*2, dx=Math.cos(a), dz=Math.sin(a); const side=dx*mid.rx+dz*mid.rz; const k=smooth(0.05,0.5,side);
+      const r=2600, h=k*(120+90*Math.abs(Math.sin(a*9+1.3))+60*Math.abs(Math.sin(a*23))), x=mid.x+dx*r, z=mid.z+dz*r;
+      pos.push(x,-5,z, x,h,z); const c=new T.Color(0x7d9a86).lerp(hz,0.5); col.push(hz.r,hz.g,hz.b,c.r,c.g,c.b);
+      if(i<segs){ const q=i*2; idx.push(q,q+2,q+1,q+1,q+2,q+3); } }
+    const g=new T.BufferGeometry(); g.setAttribute('position',new T.Float32BufferAttribute(pos,3)); g.setAttribute('color',new T.Float32BufferAttribute(col,3)); g.setIndex(idx);
+    const hm=new T.MeshBasicMaterial({vertexColors:true,fog:false,side:T.DoubleSide}); jpMounts.push(hm); scene.add(new T.Mesh(g,hm));
+    // 富士山：前方偏右的遠方
+    const end={...fr(END)}; const fd={x:end.dx,z:end.dz}, fr2={x:end.rx,z:end.rz};
+    const FH=1300, FR2=3600; const fuG=new T.ConeGeometry(FR2,FH,40,6); const fp=fuG.attributes.position, fc=[]; const blue=new T.Color(0x6f86a8), snow=new T.Color(0xf4f7fa);
+    for(let i=0;i<fp.count;i++){ const y=(fp.getY(i)+FH/2)/FH; let rr=Math.hypot(fp.getX(i),fp.getZ(i)); const shape=Math.pow(1-y,1.6)*FR2+ (y>0.97?60:0); const k2=rr>0?shape/rr:0; fp.setX(i,fp.getX(i)*k2); fp.setZ(i,fp.getZ(i)*k2);
+      const c=blue.clone().lerp(hz,0.45*(1-y)); if(y>0.62) c.lerp(snow,Math.min(1,(y-0.62)*4+0.3*Math.sin(i*2.7)+0.2)); fc.push(c.r,c.g,c.b); }
+    fuG.setAttribute('color',new T.Float32BufferAttribute(fc,3));
+    const fm=new T.MeshBasicMaterial({vertexColors:true,fog:false}); jpMounts.push(fm);
+    const fuji=new T.Mesh(fuG,fm); fuji.position.set(end.x+fd.x*9500+fr2.x*3800, FH/2-40, end.z+fd.z*9500+fr2.z*3800); scene.add(fuji);
+    // 江之島：前方偏左的小島，島頂有展望燈塔
+    const ex=end.x+fd.x*900-fr2.x*780, ez=end.z+fd.z*900-fr2.z*780;
+    const isl=new T.Mesh(new T.SphereGeometry(420,28,12,0,Math.PI*2,0,Math.PI/2),std({color:0x5f8576,fog:false})); isl.scale.set(1.3,0.15,1); jpFar.push(isl.material); isl.position.set(ex,-2,ez); isl.castShadow=true; scene.add(isl);
+    const cliff=new T.Mesh(new T.CylinderGeometry(540,560,8,28),std({color:0xa59d8c,fog:false})); cliff.position.set(ex,-3,ez); jpFar.push(cliff.material); cliff.scale.set(1.0,1,0.78); scene.add(cliff);
+    const tower=new T.Mesh(new T.CylinderGeometry(3.2,4.5,46,10),std({color:0xe9ecef,roughness:0.5,fog:false})); tower.position.set(ex,58+23,ez); jpFar.push(tower.material); tower.castShadow=true; scene.add(tower);
+    const deck=new T.Mesh(new T.CylinderGeometry(9,6,5,12),std({color:0xd8dde2,fog:false})); deck.position.set(ex,58+46,ez); jpFar.push(deck.material); scene.add(deck);
+    const lamp=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:0xfff2c0,blending:T.AdditiveBlending,depthWrite:false,transparent:true})); lamp.position.set(ex,58+49,ez); lamp.scale.set(40,40,1); lamp.visible=false; scene.add(lamp); jpLamp=lamp;
+    // 江之島弁天橋
+    const br=new T.Mesh(new T.BoxGeometry(8,1,1),std({color:0xbdb6a8})); const bx=(end.x+ex)/2, bz=(end.z+ez)/2; br.position.set(bx,0.6,bz); br.lookAt(ex,0.6,ez); br.scale.set(1,1,Math.hypot(ex-end.x,ez-end.z)*0.55); scene.add(br);
+  }
+  const jpMounts=[], jpFar=[]; let jpLamp=null;
+  const roofG2=()=>{ const g=new T.BufferGeometry(); const v=[-0.5,0,-0.5, 0.5,0,-0.5, 0,1,-0.5, -0.5,0,0.5, 0.5,0,0.5, 0,1,0.5];
+    const ix=[0,2,1, 3,4,5, 0,3,5, 0,5,2, 1,2,5, 1,5,4]; g.setAttribute('position',new T.Float32BufferAttribute(v,3)); g.setIndex(ix); const ng=g.toNonIndexed(); ng.computeVertexNormals(); return ng; };
+
   /* sky dome with sun */
   const hex3=h=>new T.Vector3(((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255);
   const skyMat=new T.ShaderMaterial({ side:T.BackSide, depthWrite:false, fog:false,
@@ -185,7 +274,7 @@ function init3D(){
 
   /* mountains: Central Range to the west (+X, right of the train), Coastal Range to the east (−X) */
   const mountMats=[];
-  (function(){
+  if(!JP) (function(){
     const mid={...fr(END/2)}; const BY=AL?mid.y-320:0, HS=AL?1.8:1; const segs=900, pos=[], col=[], idx=[]; const c=new T.Color(), hz=new T.Color(HAZE);
     const ridgeN=a=> (Math.sin(a*7+1.3)*0.5+0.5)*0.45 + (Math.sin(a*19+0.4)*0.5+0.5)*0.3 + (Math.sin(a*41+2.2)*0.5+0.5)*0.17 + Math.abs(Math.sin(a*97+0.9))*0.05;
     for(let i=0;i<=segs;i++){
@@ -221,7 +310,8 @@ function init3D(){
 
   /* ground */
   const S0=PMIN+30, S1=PMAX-30;
-  if(!AL){
+  if(JP){ buildJapan(); }
+  else if(!AL){
   { const mid=fr(END/2); const g=new T.PlaneGeometry(GS,GS); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,M.ground); m.position.set(mid.x,0,mid.z); m.receiveShadow=true; scene.add(m); }
   ribbon(S0,S1,2,[[-9,0.015],[-2.7,0.015]],M.grass,{u:0.25,v:0.25});
   ribbon(S0,S1,2,[[2.7,0.015],[9,0.015]],M.grass,{u:0.25,v:0.25});
@@ -264,7 +354,7 @@ function init3D(){
   }
 
   /* provincial highway on the east side, with utility poles */
-  if(!AL){
+  if(!AL && !JP){
   ribbon(S0,S1,4,[[-42,0.05],[-34,0.05]],M.road,{u:1/8,v:1/12});
   const poles=[], parms=[];
   for(let s=Math.ceil(S0/40)*40; s<S1; s+=40){ poles.push({s,lat:-44.5,h:5}); parms.push({s,lat:-44.5,h:9.3}); }
@@ -294,7 +384,7 @@ function init3D(){
       ctrunks.push({s,lat,h:0,sx:R*0.12,sy:H*0.3,sz:R*0.12,terr:true});
     }
   }
-  if(!AL) for(let c=Math.floor(S0/14); c*14<S1; c++){
+  if(!AL && !JP) for(let c=Math.floor(S0/14); c*14<S1; c++){
     for(const sd of [-1,1]) for(const layer of [0,1]){
       const key=c*4+(sd>0?1:0)+layer*2; if(rnd(key)<(layer?0.55:0.3)) continue;
       const s=c*14+rnd(key*7+3)*14;
@@ -336,7 +426,7 @@ function init3D(){
   function signAt(s,lat,hBoard,w,h,map){ const g=new T.Group(); g.add(postMesh(hBoard,0.045)); const b=board(w,h,0.05,map); b.position.y=hBoard+h/2; b.castShadow=true; g.add(b); place(g,s,lat,0); scene.add(g); return g; }
   LIMITS.forEach(Lm=>{ if(Lm.s>0) signAt(Lm.s,-2.5,2.4,0.8,0.62,numTex(String(Lm.v),'#fbfbf6','#151515','#151515'));
     signAt(Lm.e,-2.5,2.4,0.62,0.62,signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=18; x.beginPath(); x.moveTo(0,h); x.lineTo(w,0); x.stroke(); x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); })); });
-  const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText('鳴',w/2,h/2+6); });
+  const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(JP?'笛':'鳴',w/2,h/2+6); });
   CROSSINGS.forEach(c=>signAt(c-300,-2.5,2.1,0.6,0.6,whistle));
   for(let s=100; s<END+700; s+=100){ const t=signTex(128,88,(x,w,h)=>{ x.fillStyle='#f6f6f0'; x.fillRect(0,0,w,h); x.fillStyle='#151515'; x.font='700 60px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((s/1000).toFixed(1),w/2,h/2+4); });
     signAt(s,2.3,0.55,0.42,0.29,t); }
@@ -395,32 +485,32 @@ function init3D(){
   const skin=std({color:0xe2b893}), hair=std({color:0x1d1b1a}), legsM=std({color:0x2b2d33});
   const stLights=[];
   const stations=STATIONS.map((st,i)=>{
-    const a=st.pos-190, b=st.pos+25;
+    const a=st.pos-(PL-25), b=st.pos+25;
     ribbon(a,b,2,[[-1.75,0],[-1.75,PT],[-9,PT],[-9,0]],M.concrete,{closed:true,caps:true,cast:true});
     ribbon(a,b,2,[[-9,PT+0.004],[-2.45,PT+0.004]],M.tile,{u:0.5,v:0.5});
     ribbon(a,b,2,[[-2.45,PT+0.005],[-2.25,PT+0.005]],M.tact,{u:5,v:5});
     ribbon(a,b,2,[[-2.25,PT+0.004],[-1.88,PT+0.004]],M.gray,{});
     ribbon(a,b,2,[[-1.88,PT+0.006],[-1.75,PT+0.006]],M.white,{});
-    ribbon(st.pos-170,st.pos-10,2,[[-8.7,PT+3.3],[-2.3,PT+3.5],[-2.3,PT+3.68],[-8.7,PT+3.5]],M.roof,{closed:true,caps:true,cast:true});
-    const cp=[]; for(let s=st.pos-166; s<=st.pos-14; s+=12) cp.push({s,lat:-5.6,h:PT+1.7});
+    ribbon(st.pos-(PL-45),st.pos-10,2,[[-8.7,PT+3.3],[-2.3,PT+3.5],[-2.3,PT+3.68],[-8.7,PT+3.5]],M.roof,{closed:true,caps:true,cast:true});
+    const cp=[]; for(let s=st.pos-(PL-49); s<=st.pos-14; s+=12) cp.push({s,lat:-5.6,h:PT+1.7});
     inst(new T.CylinderGeometry(0.11,0.11,3.4,8),M.post,cp,{cast:true});
-    ribbon(st.pos-166,st.pos-14,4,[[-4.2,PT+3.28],[-3.9,PT+3.3]],M.lampStrip,{receive:false});
-    const pl=new T.PointLight(0xfff0d0,0,70,1.6); place(pl,st.pos-90,-4.5,PT+3.0); scene.add(pl); stLights.push(pl);
+    ribbon(st.pos-(PL-49),st.pos-14,4,[[-4.2,PT+3.28],[-3.9,PT+3.3]],M.lampStrip,{receive:false});
+    const pl=new T.PointLight(0xfff0d0,0,70,1.6); place(pl,st.pos-PL*0.42,-4.5,PT+3.0); scene.add(pl); stLights.push(pl);
     // station building
     const bld=new T.Group();
     const bx=new T.Mesh(new T.BoxGeometry(9,5,24),M.building); bx.position.y=2.5; bx.castShadow=bx.receiveShadow=true; bld.add(bx);
     const rf=new T.Mesh(roofG,M.tileRoof); rf.scale.set(10.4,2.6,25.5); rf.position.y=5; rf.castShadow=true; bld.add(rf);
     for(let k=-2;k<=2;k++){ const wdw=new T.Mesh(new T.PlaneGeometry(1.6,1.6),M.win); wdw.rotation.y=Math.PI/2; wdw.position.set(4.52,2.6,k*4.4); bld.add(wdw); }
-    const bsign=board(0.1,1.0,4.6,null); bsign.material[0]=new T.MeshStandardMaterial({map:signTex(512,112,(x,w,h)=>{ x.fillStyle=AL?'#5a3a22':'#1d3f6e'; x.fillRect(0,0,w,h); x.fillStyle='#fff'; x.font='700 76px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(st.name+'車站',w/2,h/2+4); }),roughness:0.6});
+    const bsign=board(0.1,1.0,4.6,null); bsign.material[0]=new T.MeshStandardMaterial({map:signTex(512,112,(x,w,h)=>{ x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':'#1d3f6e'; x.fillRect(0,0,w,h); x.fillStyle='#fff'; x.font='700 76px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(signName(st)+(JP?'駅':'車站'),w/2,h/2+4); }),roughness:0.6});
     bsign.material[0].map.center.set(0.5,0.5); bsign.position.set(4.56,4.1,0); bld.add(bsign);
-    place(bld,st.pos-95,-17,0); scene.add(bld);
+    place(bld,st.pos-PL*0.44,JP?-12:-17,0); if(JP) bld.scale.set(0.6,0.75,0.45); scene.add(bld);
     // name board
     const prev=STATIONS[i-1], nxt=STATIONS[i+1];
-    const nb=signTex(760,230,(x,w,h)=>{ x.fillStyle=AL?'#f3e6cf':'#f5f4ef'; x.fillRect(0,0,w,h); x.fillStyle=AL?'#5a3a22':'#1d3f6e'; x.fillRect(0,h-62,w,62);
-      x.fillStyle='#141414'; x.textAlign='center'; x.textBaseline='middle'; x.font='700 104px '+FONT; x.fillText(st.name,w/2,70); x.font='500 30px '+FONT; x.fillStyle='#3a3a3a'; x.fillText(st.en,w/2,138);
-      x.fillStyle='#fff'; x.font='500 32px '+FONT; if(prev){ x.textAlign='left'; x.fillText('◀ '+prev.name,22,h-31); } if(nxt){ x.textAlign='right'; x.fillText(nxt.name+' ▶',w-22,h-31); } });
+    const nb=signTex(760,230,(x,w,h)=>{ x.fillStyle=AL?'#f3e6cf':'#f5f4ef'; x.fillRect(0,0,w,h); x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':'#1d3f6e'; x.fillRect(0,h-62,w,62);
+      x.fillStyle='#141414'; x.textAlign='center'; x.textBaseline='middle'; x.font=(signName(st).length>4?'700 76px ':'700 104px ')+FONT; x.fillText(signName(st),w/2,70); x.font='500 30px '+FONT; x.fillStyle='#3a3a3a'; x.fillText(st.en,w/2,138);
+      x.fillStyle='#fff'; x.font='500 32px '+FONT; if(prev){ x.textAlign='left'; x.fillText('◀ '+signName(prev),22,h-31); } if(nxt){ x.textAlign='right'; x.fillText(signName(nxt)+' ▶',w-22,h-31); } });
     const ng=new T.Group(); [-1.5,1.5].forEach(dx=>{ const p=postMesh(1.0,0.05); p.position.x=dx; ng.add(p); }); const nbm=board(3.8,1.15,0.06,nb); nbm.position.y=1.0+0.575; nbm.castShadow=true; ng.add(nbm);
-    place(ng,st.pos-80,-4.6,PT); scene.add(ng);
+    place(ng,st.pos-PL*0.37,-4.6,PT); scene.add(ng);
     // stop position marker "4"
     const sm=new T.Group(); sm.add(postMesh(1.3,0.035,M.white)); const smb=board(0.55,0.55,0.04,numTex('4','#1f5fbf','#ffffff','#ffffff')); smb.position.y=1.3+0.275; sm.add(smb);
     place(sm,st.pos,-2.05,PT); scene.add(sm);
@@ -435,7 +525,7 @@ function init3D(){
       const g=new T.Group(); const col=std({color:PAXC[(rnd(i*7+j*3)*PAXC.length)|0],roughness:0.8});
       const lg=new T.Mesh(paxLegs,legsM); lg.position.y=0.42; const bd=new T.Mesh(paxBody,col); bd.position.y=1.2; const hd=new T.Mesh(paxHead,skin); hd.position.y=1.68; const hr=new T.Mesh(paxHead,hair); hr.position.set(0,1.73,-0.02); hr.scale.set(1.05,0.8,1.05);
       [lg,bd,hd,hr].forEach(m=>{ m.castShadow=true; g.add(m); });
-      const p={g,s:st.pos-150+rnd(i*31+j)*135,lat:-3.1-rnd(i*17+j)*3.4,face:(rnd(i*5+j)-0.5)*1.5+Math.PI/2};
+      const p={g,s:st.pos-PL*0.7+rnd(i*31+j)*PL*0.63,lat:-3.1-rnd(i*17+j)*3.4,face:(rnd(i*5+j)-0.5)*1.5+Math.PI/2};
       place(g,p.s,p.lat,PT,p.face); scene.add(g); pax.push(p);
     }
     return {pax};
@@ -443,10 +533,10 @@ function init3D(){
 
   /* traffic on the highway */
   const cars=[]; const carCols=[0xf2f2f2,0x2c3e50,0xb33a2f,0x8a9aa6,0xe0b03a,0x355f4a];
-  for(let i=0;i<(AL?0:10);i++){ const g=new T.Group(); const col=carCols[i%carCols.length];
+  for(let i=0;i<(AL?0:JP?14:10);i++){ const g=new T.Group(); const col=carCols[i%carCols.length];
     const big=i%4===0; const body=new T.Mesh(new T.BoxGeometry(1.8,big?2.2:0.8,big?7.5:4.3),std({color:col,roughness:0.35,metalness:0.3})); body.position.y=big?1.5:0.62; body.castShadow=true; g.add(body);
     if(!big){ const cb=new T.Mesh(new T.BoxGeometry(1.6,0.6,2.2),std({color:0x1f272b,roughness:0.15})); cb.position.set(0,1.3,0.1); g.add(cb); }
-    scene.add(g); const dir=i%2?1:-1; cars.push({g,s:rnd(700+i)*END,v:(14+rnd(710+i)*8)*dir,lat:dir>0?-36:-40}); }
+    scene.add(g); const dir=i%2?1:-1; cars.push({g,s:rnd(700+i)*END,v:(JP?(9+rnd(710+i)*5):(14+rnd(710+i)*8))*dir,lat:JP?(dir>0?-16.5:-20):(dir>0?-36:-40)}); }
 
   /* 雲海（阿里山線）：山谷裡一大片會反光的雲 */
   let sea=null;
@@ -485,7 +575,7 @@ function init3D(){
   const blitScene=new T.Scene(), blitCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
   const bq=new T.Mesh(new T.PlaneGeometry(2,2),blitMat); bq.frustumCulled=false; blitScene.add(bq);
   R3={renderer,scene,cam,sun,sky,SUNDIR,sig,xings,stations,cars,rt,blitMat,blitScene,blitCam,makeRT,
-    hemi,skyMat,clouds,mountMats,M,head,stars,rain,rainSeed,stLights,sea};
+    hemi,skyMat,clouds,mountMats:mountMats.concat(jpMounts),M,head,stars,rain,rainSeed,stLights,sea,jpLamp,jpFar};
   applyEnv(); resize();
 }
 
@@ -521,7 +611,7 @@ function applyEnv(){
   if(!R3) return;
   const T=THREE, L= ENV.key==='dawn' ? lerpLook(LOOKS.dawn0,LOOKS.dawn1,dawnK()) : LOOKS[ENV.key], u=R3.skyMat.uniforms, v3=h=>new T.Vector3(((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255);
   u.top.value=v3(L.top); u.mid.value=v3(L.mid); u.hor.value=v3(L.hor); u.sunK.value.set(...L.sunK);
-  R3.SUNDIR.set(...L.sunDir).normalize();
+  R3.SUNDIR.set(...L.sunDir); if(JP) R3.SUNDIR.set(R3.SUNDIR.z, R3.SUNDIR.y, -R3.SUNDIR.x); R3.SUNDIR.normalize();
   R3.sun.color.setHex(L.sunC); R3.sun.intensity=L.sunI; R3.sun.castShadow=L.sunI>0.5;
   R3.hemi.color.setHex(L.hs); R3.hemi.groundColor.setHex(L.hg); R3.hemi.intensity=L.hI;
   R3.scene.fog.color.setHex(L.fog[0]); R3.scene.fog.near=L.fog[1]; R3.scene.fog.far=L.fog[2];
@@ -530,7 +620,9 @@ function applyEnv(){
   R3.head.intensity=L.head; R3.rain.visible=L.rain;
   if(ENV.key==='dawn'){ const k=dawnK(); R3.stars.visible=k<0.7; R3.stars.material.opacity=0.85*(1-k/0.7); } else { R3.stars.visible=L.stars; R3.stars.material.opacity=0.85; }
   if(R3.sea){ R3.sea.material.color.setHex(L.sea); R3.sea.material.opacity=L.seaO; R3.sea.userData.base.material.color.setHex(L.sea).multiplyScalar(0.92); }
-  R3.stLights.forEach(l=>l.intensity=L.lamps);
+  R3.stLights.forEach(l=>l.intensity=L.lamps); if(R3.jpLamp) R3.jpLamp.visible=L.lamps>0.5;
+  if(R3.jpFar) R3.jpFar.forEach(m=>{ if(m.userData.base==null) m.userData.base=m.color.getHex(); m.color.setHex(m.userData.base).multiply(new T.Color(L.mt)); if(L.mtO<1) m.color.lerp(new T.Color(L.fog[0]),0.8); });
+  if(R3.M.sea) R3.M.sea.color.setHex(ENV.key==='night'?0x223344:ENV.key==='dusk'?0xd8b8a0:ENV.key==='rain'?0x9aa4aa:0xffffff);
   const glow=L.lamps>0.5;
   R3.M.lampStrip.emissive.setHex(L.lamps>0?0xfff3d6:0); R3.M.lampStrip.emissiveIntensity=Math.min(1,L.lamps);
   R3.M.win.emissive.setHex(glow?0xffc873:0); R3.M.wall.emissive.setHex(glow?0xffffff:0);

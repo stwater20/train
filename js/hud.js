@@ -8,7 +8,7 @@ function drawGauge(lim){
   const dpr=Math.min(2,window.devicePixelRatio||1);
   if(gcv.width!==Math.round(s*dpr)){ gcv.width=gcv.height=Math.round(s*dpr); }
   g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,s,s);
-  const cx=s/2, cy=s/2, R=s*0.46, A0=Math.PI*0.75, A1=Math.PI*2.25, GM=ROUTE.lineMax<=40?40:120, TS=GM===40?1:5, TM=GM===40?5:10, TL=GM===40?10:20, ang=v=>A0+(A1-A0)*clamp(v/GM,0,1);
+  const cx=s/2, cy=s/2, R=s*0.46, A0=Math.PI*0.75, A1=Math.PI*2.25, GM=ROUTE.lineMax<=40?40:ROUTE.lineMax<=60?60:120, TS=GM===40?1:5, TM=GM===40?5:10, TL=GM===120?20:10, ang=v=>A0+(A1-A0)*clamp(v/GM,0,1);
   g.fillStyle='#0c1215'; g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fill();
   g.strokeStyle='#2d3a42'; g.lineWidth=2; g.stroke();
   g.strokeStyle='rgba(255,74,61,0.85)'; g.lineWidth=R*0.07; g.beginPath(); g.arc(cx,cy,R*0.86,ang(lim),A1); g.stroke();

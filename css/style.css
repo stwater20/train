@@ -268,3 +268,9 @@ html[lang="en"]{--f-display:"Noto Sans TC",system-ui,sans-serif}
 html[lang="en"] .card h2,html[lang="ja"] .card h2{letter-spacing:.01em}
 
 html[lang="en"] .btns .btn{white-space:nowrap;font-size:14px}
+.routepick{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:640px){ .routepick{grid-template-columns:1fr} }
+
+.routepick{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:640px){ .routepick{grid-template-columns:1fr} }
+html[lang="ja"] .btns .btn{white-space:nowrap;font-size:13.5px}
