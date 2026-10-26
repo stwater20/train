@@ -269,7 +269,7 @@ function bestKey(){ return ROUTE.key==='hualien' ? 'cabBest' : 'cabBest_'+ROUTE.
 function promoHTML(after){
   const url='https://sectools.tw/?utm_source=train-game&utm_medium=referral&utm_campaign='+(after?'end':'title');
   if(after) return `<a class="promo cta" href="${url}" target="_blank" rel="noopener">
-    <span>🛡️</span><span><b>${L('玩完了嗎？到 SecTools.tw 逛逛','Done driving? Drop by SecTools.tw','運転おつかれさま！SecTools.tw ものぞいてみて')}</b><small>${L('這個遊戲由 SecTools.tw 製作與維護，網站上還有免費的線上資安工具','This game is made and maintained by SecTools.tw — free online security tools await','このゲームは SecTools.tw が制作・運営。無料のオンラインセキュリティツールもあります')}</small></span><span aria-hidden="true">↗</span></a>`;
+    <span>🛡️</span><span><b>${L('由 SecTools.tw 製作與維護','Made and maintained by SecTools.tw','制作・運営：SecTools.tw')}</b><small>${L('我們也做免費的線上資安工具，有空可以看看','We also build free online security tools — have a look sometime','無料のオンラインセキュリティツールも作っています')}</small></span><span aria-hidden="true">↗</span></a>`;
   return `<a class="promo" href="${url}" target="_blank" rel="noopener">
     <span>🛡️</span><span><small>${L('本遊戲由','This game is','このゲームは')}</small><b>${L('SecTools.tw 製作與維護','made and maintained by SecTools.tw','SecTools.tw が制作・運営')}</b><small>${L('也來看看我們的線上資安工具','Check out our free online security tools','無料のオンラインセキュリティツールもどうぞ')}</small></span><span aria-hidden="true">↗</span></a>`;
 }
