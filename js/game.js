@@ -16,7 +16,7 @@ const WORDS={'完美':['Perfect','パーフェクト'],'優秀':['Excellent','�
 const trWord=w=> WORDS[w] ? L(w,WORDS[w][0],WORDS[w][1]) : w;
 const toastEl=document.getElementById('toast'); let toastTimer=0;
 function toast(msg, kind){ toastEl.textContent=msg; toastEl.className='toast'+(kind?' '+kind:''); toastEl.removeAttribute('data-off'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.setAttribute('data-off',''), 2800); }
-function penal(p,key,msg){ S.score-=p; S.pens[key]=(S.pens[key]||0)+p; toast(msg+' −'+p,'bad'); }
+function penal(p,key,msg){ p=Math.round(p*DIFF.penK); S.score-=p; S.pens[key]=(S.pens[key]||0)+p; toast(msg+' −'+p,'bad'); }
 
 /* ---------- simulation ---------- */
 function currentLimit(){
@@ -37,7 +37,7 @@ function step(dt){
   let forced=0;
   if(S.spad){ forced=-9; if(S.v<0.01) S.spad=false; }
   else{
-    if(!S.atpOver && kmh>lim+5){ S.atpOver=true; penal(30,'atp',L('ATP 介入：超過限速','ATP braking: overspeed','ATP作動：速度超過')); }
+    if(!S.atpOver && kmh>lim+DIFF.atp){ S.atpOver=true; penal(30,'atp',L('ATP 介入：超過限速','ATP braking: overspeed','ATP作動：速度超過')); }
     if(S.atpOver){ if(kmh<=lim-1){ S.atpOver=false; toast(L('ATP 解除，恢復手動','ATP released, manual control restored','ATP解除、手動に復帰')); } else forced=-8; }
     if(sg.aspect==='R' && dSig>0 && dSig<700){
       const allow=Math.sqrt(Math.max(0,2*1.0*(dSig-10)));
@@ -45,7 +45,7 @@ function step(dt){
     }
     if(S.atpSig){ if(S.v<0.01 || sg.aspect!=='R') S.atpSig=false; else forced=-9; }
   }
-  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast(L('超過限速 ','Over the limit of ','制限速度超過 ')+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; S.score-=2; S.pens.over+=2; } }
+  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast(L('超過限速 ','Over the limit of ','制限速度超過 ')+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; const q=2*DIFF.penK; S.score-=q; S.pens.over+=q; } }
   else S.overOn=false;
 
   let n=S.notch;
@@ -55,7 +55,7 @@ function step(dt){
   let target; S.slip=false;
   if(n>0){ const amax=ROUTE.power*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01));
     // 雨天軌面濕滑：低速大檔位容易空轉
-    if(ENV.rain && n>=4 && S.v<12){ S.slip = Math.sin(S.t*5.3)+Math.sin(S.t*2.1)>0.6; target*=S.slip?0.55:0.8; } }
+    if(ENV.rain && DIFF.slip && n>=4 && S.v<12){ S.slip = Math.sin(S.t*5.3)+Math.sin(S.t*2.1)>0.6; target*=S.slip?0.55:0.8; } }
   else if(n===0) target=0;
   else target=-(n===-9?ROUTE.ebDecel:ROUTE.brakeStep*(-n))*(ENV.rain?0.85:1);
   S.curF += (target-S.curF)*Math.min(1, dt/(target<S.curF?0.45:0.7));
@@ -82,6 +82,9 @@ function step(dt){
     }
   });
 
+  // 新手模式：該開始煞車時提醒一次
+  if(DIFF.guide && !S.doors && S.phase==='run'){ const st=STATIONS[S.next]; if(st && S.cueAt!==S.next){ const d=st.pos-S.pos, need=S.v*S.v/(2*0.55)+25;
+    if(S.v>3 && d>0 && d<need+20 && S.notch>=0){ S.cueAt=S.next; toast(L('🔰 現在開始煞車：拉到 B4 左右','🔰 Start braking now: about B4','🔰 ブレーキ開始：B4 くらいへ'),'good'); } } }
   if(S.doors){
     S.dwell-=dt;
     if(S.dwell<=0){
@@ -92,9 +95,9 @@ function step(dt){
   } else {
     const st=STATIONS[S.next];
     if(st && S.pos-st.pos>15){
-      S.score-=60; S.pens.miss+=60;
-      S.log.push({name:st.name, miss:true, pp:0, tp:0, total:-60});
-      toast(L('過站！未停靠 ','Overran! Missed ','通過！停車せず ')+stName(st)+' −60','bad');
+      const mp=Math.round(60*DIFF.penK); S.score-=mp; S.pens.miss+=mp;
+      S.log.push({name:st.name, miss:true, pp:0, tp:0, total:-mp});
+      toast(L('過站！未停靠 ','Overran! Missed ','通過！停車せず ')+stName(st)+' −'+mp,'bad');
       if(S.next>=STATIONS.length-1){ endGame(); return; }
       S.next++; extrasDepart();
     }
@@ -120,7 +123,7 @@ function action(){
   const ae=Math.abs(err); let pp, rank;
   if(ae<=0.5){pp=100;rank='完美';} else if(ae<=1){pp=80;rank='優秀';} else if(ae<=3){pp=55;rank='良好';} else if(ae<=8){pp=25;rank='普通';} else {pp=5;rank='勉強';}
   const late=S.t-st.arr; let tp, trank;
-  if(late<-20){tp=20;trank='早到';} else if(late<=5){tp=40;trank='準點';} else {tp=Math.max(0,Math.round(40-(late-5)*1.5));trank='延誤';}
+  if(late<-20 && !DIFF.guide){tp=20;trank='早到';} /* 新手模式早到也算準點 */ else if(late<=5){tp=40;trank='準點';} else {tp=Math.max(0,Math.round(40-(late-5)*1.5));trank='延誤';}
   S.score+=pp+tp;
   S.log.push({name:st.name, err, rank, pp, late, trank, tp, total:pp+tp});
   S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
@@ -131,12 +134,22 @@ function action(){
 let actx=null;
 function horn(){
   if(S.phase==='run') S.hornPos=S.pos;
+  if(TRAIN.sound==='steam'){ whistle(); return; }
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
     const t=actx.currentTime, g=actx.createGain(), lp=actx.createBiquadFilter();
     lp.type='lowpass'; lp.frequency.value=1700; lp.connect(g); g.connect(actx.destination);
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.14,t+0.05); g.gain.setValueAtTime(0.14,t+0.75); g.gain.linearRampToValueAtTime(0,t+0.95);
     [311,370,466].forEach(fr=>{ const o=actx.createOscillator(); o.type='sawtooth'; o.frequency.value=fr; o.connect(lp); o.start(t); o.stop(t+1); });
+  }catch(e){}
+}
+/* 蒸汽汽笛：三個音加上氣流聲 */
+function whistle(){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime, g=actx.createGain(); g.connect(actx.destination);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.09,t+0.12); g.gain.setValueAtTime(0.09,t+1.1); g.gain.linearRampToValueAtTime(0,t+1.45);
+    [440,554,659].forEach(fr=>{ const o=actx.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(fr*0.97,t); o.frequency.linearRampToValueAtTime(fr,t+0.15); o.connect(g); o.start(t); o.stop(t+1.5); });
   }catch(e){}
 }
 function togglePause(){
@@ -147,6 +160,7 @@ function togglePause(){
 }
 function startGame(tut){
   tutStop();
+  if(tut!==true && DIFF.guide && !tutSeen()) tut=true; // 新手模式：這條路線第一次開會自動帶教學
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever();
   extrasStart();
   if(S.tut) tutStart();
@@ -171,6 +185,15 @@ function closeHelp(){
 }
 const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手冊</p><h2>操作說明</h2></div><button class="btn" id="ovClose" type="button" aria-label="關閉操作說明">關閉</button></div>
 <div class="help">
+<section><h3>難度、車種與紀念章</h3>
+  <ul>
+    <li><b>🔰 新手</b>：時刻表寬鬆、扣分減半、不會空轉。該煞車時會提醒，誤差尺上的綠色三角形是預計停車位置。每條路線第一次開會自動帶教學，可以跳過。</li>
+    <li><b>🎯 專業</b>：實際時刻表、扣分加重，ATP 超速 3 km/h 就介入，停車誤差尺只在最後 20 m 出現。</li>
+    <li><b>車種</b>：每條路線都有一輛靠成就解鎖的車——花東線 A 評價解鎖 EMU900、祝山看日出解鎖蒸汽機車 SL-31、專業模式開完江之電解鎖 300 形。</li>
+    <li><b>車站紀念章</b>：停車誤差 3 m 內就能蓋到那一站的紀念章，開完全程會蓋起點站的章。</li>
+  </ul></section>
+<section><h3>車內廣播</h3>
+  <p>發車後會有歡迎廣播，快到站時提醒下車與開門方向，誤點時會致歉。臺鐵與林鐵播國語和英語，江之電播日語和英語；畫面下方會同步顯示字幕。📻 是行車調度的無線電，只出字幕。</p></section>
 <section><h3>主控制器</h3>
   <div class="chips"><i class="p">P5</i><i class="p">P4</i><i class="p">P3</i><i class="p">P2</i><i class="p">P1</i><i class="n">N</i><i class="b">B1</i><i class="b">B2</i><i class="b">…</i><i class="b">B8</i><i class="e">EB</i></div>
   <ul>
@@ -279,7 +302,7 @@ function showOverlay(kind){
           `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「4」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
     ovCard.innerHTML=`${langPickHTML()}
       <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
-      <p class="eyebrow">${ROUTE.train} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p>
+      <p class="eyebrow">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p>
       <h2>${ROUTE.title}</h2>
       <p>${story}</p>
       <ul class="howto">
@@ -290,10 +313,10 @@ function showOverlay(kind){
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
         <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))(JP?'笛':'鳴')}</li>
       </ul>
-      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}${ROUTE.key!=='hualien'?`<small>${L('在花東線進行','on the Hualien line','花東線で実施')}</small>`:''}</button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
+      <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       ${titleExtrasHTML()}`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
-    document.getElementById('ovTut').addEventListener('click',()=>{ if(ROUTE.key!=='hualien'){ try{ localStorage.setItem('cabAutoTut','1'); }catch(e){} setRoute('hualien'); } else startTutorial(); });
+    document.getElementById('ovTut').addEventListener('click',startTutorial);
     document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
     document.querySelectorAll('.langbtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.lang!==LANG) setLang(b.dataset.lang); }));
     document.getElementById('ovHelp').addEventListener('click',openHelp);
@@ -308,7 +331,7 @@ function showOverlay(kind){
     const max=(STATIONS.length-1)*140;
     const sc=S.score, g = sc>=max*0.86?'S':sc>=max*0.72?'A':sc>=max*0.54?'B':sc>=max*0.32?'C':'D';
     const rows=S.log.map(r=> r.miss
-      ? `<tr><td>${nameOf(r.name)}</td><td class="num">${L('過站','Overran','通過')}</td><td>—</td><td>—</td><td class="num">−60</td></tr>`
+      ? `<tr><td>${nameOf(r.name)}</td><td class="num">${L('過站','Overran','通過')}</td><td>—</td><td>—</td><td class="num">${r.total}</td></tr>`
       : `<tr><td>${nameOf(r.name)}</td><td class="num">${fmtErr(r.err)}</td><td>${trWord(r.rank)}</td><td>${trWord(r.trank)} ${r.late>0?'+':'−'}${fmtDur(r.late)}</td><td class="num">+${r.total}</td></tr>`).join('');
     const P=S.pens, info=S.endInfo||(S.endInfo=extrasEnd(g));
     ovCard.innerHTML=`<p class="eyebrow">${L('本班次結束 · 抵達','Run complete · arrived at ','運行終了 · 到着 ')}${stName(STATIONS[STATIONS.length-1])} ${fmtClock(BASE_CLOCK+S.t)}</p>

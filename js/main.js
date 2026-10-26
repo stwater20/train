@@ -7,7 +7,7 @@ function frame(now){
   const dt=Math.min(0.1,(now-last)/1000); last=now;
   if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt; while(accum>=1/60){ step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
   else accum=0;
-  tutTick(); audioTick(dt); render(dt); hud(now);
+  tutTick(); extrasTick(dt); audioTick(dt); render(dt); hud(now);
   requestAnimationFrame(frame);
 }
 /* 頁面上固定的文字：[選擇器, 屬性, English, 日本語] */
@@ -42,7 +42,7 @@ function boot(data){
   applyStaticText();
   if(data && data.S && typeof data.S==='object'){ S=Object.assign(fresh(),data.S); }
   document.getElementById('hTitle').textContent=ROUTE.title;
-  document.getElementById('hSub').textContent=ROUTE.train+' · '+stName(STATIONS[0])+' → '+stName(STATIONS[STATIONS.length-1])+' · '+ROUTE.desc;
+  document.getElementById('hSub').textContent=TRAIN.name+' · '+stName(STATIONS[0])+' → '+stName(STATIONS[STATIONS.length-1])+' · '+ROUTE.desc;
   let autoTut=false; try{ autoTut=localStorage.getItem('cabAutoTut')==='1'; localStorage.removeItem('cabAutoTut'); }catch(e){}
   if(autoTut && ROUTE.key==='hualien') startTutorial();
   else if(S.phase==='title') showOverlay('title');

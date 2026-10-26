@@ -281,3 +281,38 @@ html[lang="ja"] .btns .btn{white-space:nowrap;font-size:13.5px}
 .about p{margin:0}
 .about ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
 .about b{color:var(--ink)}
+.stopscale .ptr.pred{border-top-color:var(--go);opacity:.85}
+
+/* ---------- 難度、車種、紀念章、解鎖 ---------- */
+.pickrow{display:grid;gap:6px}
+.pickrow > .lab{font-size:12px}
+.diffpick,.trainpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.diffbtn,.trainbtn{display:grid;gap:2px;text-align:left;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel-3);color:var(--muted);cursor:pointer;font:inherit}
+.diffbtn b,.trainbtn b{font-size:14px;color:var(--ink)}
+.diffbtn small,.trainbtn small{font-size:11.5px;line-height:1.4}
+.diffbtn.on,.trainbtn.on{border-color:var(--amber);background:#2a2618}
+.trainbtn.locked{opacity:.6;cursor:not-allowed}
+.trainbtn.locked b{color:var(--muted)}
+.stampgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:6px 0 10px}
+.stamp{display:grid;justify-items:center;gap:2px;padding:10px 6px;border-radius:50%;aspect-ratio:1;align-content:center;border:2px dashed var(--line);color:var(--muted);text-align:center}
+.stamp.got{border:3px double #c8433a;color:#e7a39b;transform:rotate(-6deg);background:rgba(200,67,58,.07)}
+.stamp .sa{font-size:24px;line-height:1}
+.stamp .sn{font-size:12px;font-weight:700;color:var(--ink)}
+.stamp.got .sn{color:#f1b9b2}
+.stamp .sd{font-size:10px;line-height:1.2}
+.unlock{display:grid;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid var(--amber);background:#2a2618;color:var(--ink)}
+.unlock small{color:var(--muted);font-size:12px}
+@media (max-width:640px){ .diffpick,.trainpick{grid-template-columns:1fr} }
+
+/* ---------- 車內廣播字幕 ---------- */
+.ann{position:absolute;z-index:4;left:12px;bottom:12px;max-width:min(560px,calc(50% - 20px));display:flex;gap:8px;align-items:flex-start;
+  background:rgba(10,14,17,.82);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.55;color:var(--ink);animation:coachIn .25s ease-out}
+.ann .ai{flex:none}
+@media (max-width:900px){ .ann{left:auto;right:12px;bottom:auto;top:64px;max-width:calc(50% - 20px)} }
+@media (max-width:640px){ .ann{position:static;transform:none;max-width:none;border-radius:0;border-width:1px 0 0;font-size:13px} }
+.promo.cta{border-color:var(--amber);background:linear-gradient(90deg,#2a2618,var(--panel-3))}
+.promo.cta b{font-size:15px;color:var(--amber)}
+.seolinks{display:flex;flex-wrap:wrap;gap:6px 24px;font-size:13px}
+.seolinks ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
+.seolinks a{color:var(--amber);text-decoration:none}
+.seolinks a:hover{text-decoration:underline}

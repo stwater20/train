@@ -63,10 +63,39 @@ TEXT = {
   },
 }
 
-def seo_block(lang):
-    t = TEXT[lang]
-    url = SITE + PATHS[lang]
-    alts = '\n'.join(f'<link rel="alternate" hreflang="{HTML_LANG[l]}" href="{SITE+PATHS[l]}">' for l in PATHS)
+ROUTE_KEYS = ['hualien', 'alishan', 'enoden']
+ROUTE_TEXT = {
+  'zh': {
+    'hualien': ('花東線區間車駕駛模擬｜花蓮到壽豐 3D 火車駕駛遊戲', '開臺鐵區間車從花蓮到壽豐，停吉安、志學、平和，學會看限速、號誌與進站停車。附新手教學，免安裝、瀏覽器直接玩。', '花東線'),
+    'alishan': ('阿里山小火車駕駛模擬｜祝山線日出列車 3D 遊戲', '駕駛阿里山林業鐵路祝山線，從阿里山爬到海拔 2,451 公尺的祝山，搭日出列車看雲海與玉山日出，還能解鎖蒸汽機車 SL-31。', '阿里山小火車'),
+    'enoden':  ('江之電駕駛模擬｜鎌倉高校前・江之島 3D 電車遊戲', '開日本江之電從稻村崎到江之島，沿著相模灣海岸，經過《灌籃高手》的鎌倉高校前平交道與路面電車區間，遠方就是富士山。', '江之電'),
+  },
+  'en': {
+    'hualien': ('Hualien Line Train Simulator | Drive a Taiwan Railway local train', 'Drive a Taiwan Railway local train from Hualien to Shoufeng, calling at Ji’an, Zhixue and Pinghe. Learn speed limits, signals and precise station stops. Free in your browser, tutorial included.', 'Hualien Line'),
+    'alishan': ('Alishan Forest Railway Simulator | Sunrise train to Zhushan', 'Drive the Alishan Forest Railway Zhushan Line up to Zhushan at 2,451 m, the highest station in Taiwan, and watch the sunrise over a sea of clouds. Unlock the SL-31 steam locomotive.', 'Alishan Forest Railway'),
+    'enoden':  ('Enoden Train Simulator | Drive along the Kamakura coast to Enoshima', 'Drive Japan’s Enoden from Inamuragasaki to Enoshima along Sagami Bay, past the famous Kamakura-Kōkōmae crossing and through the street-running section, with Mt Fuji ahead.', 'Enoden'),
+  },
+  'ja': {
+    'hualien': ('台湾・花東線 運転シミュレーター｜台湾鉄道の区間車を運転', '台湾鉄道の区間車で花蓮から寿豊まで。吉安・志学・平和に停車しながら、速度制限・信号・停止位置ピタ止めを学べます。インストール不要の無料ブラウザゲーム。', '台湾・花東線'),
+    'alishan': ('阿里山森林鉄道 運転シミュレーター｜祝山線ご来光列車', '阿里山森林鉄道 祝山線を運転して、台湾最高所の祝山駅（標高 2,451 m）へ。ご来光列車で雲海と玉山の日の出を。蒸気機関車 SL-31 も解除できます。', '阿里山森林鉄道'),
+    'enoden':  ('江ノ電 運転シミュレーター｜鎌倉高校前・江ノ島までブラウザで運転', '江ノ電を稲村ヶ崎から江ノ島まで運転。相模湾の海沿い、鎌倉高校前の踏切、腰越〜江ノ島の併用軌道、富士山と江の島の眺め。インストール不要の無料ブラウザゲーム。', '江ノ電'),
+  },
+}
+NAV_LABEL = {'zh': '所有路線', 'en': 'All routes', 'ja': 'すべての路線'}
+
+def page_path(lang, route=None):
+    return ('/' if lang == 'zh' else f'/{lang}/') + (f'{route}/' if route else '')
+
+def nav_html(lang):
+    items = ''.join(f'<li><a href="{page_path(lang, r)}">{ROUTE_TEXT[lang][r][2]}</a></li>' for r in ROUTE_KEYS)
+    langs = ''.join(f'<li><a href="{page_path(l)}" hreflang="{HTML_LANG[l]}">{n}</a></li>' for l, n in (('zh','中文'),('en','English'),('ja','日本語')))
+    return f'<nav class="seolinks" aria-label="{NAV_LABEL[lang]}"><ul>{items}</ul><ul>{langs}</ul></nav>'
+
+def seo_block(lang, route=None):
+    t = dict(TEXT[lang])
+    if route: t['title'], t['desc'], t['name'] = ROUTE_TEXT[lang][route][0], ROUTE_TEXT[lang][route][1], ROUTE_TEXT[lang][route][0].split('｜')[0].split(' | ')[0]
+    url = SITE + page_path(lang, route)
+    alts = '\n'.join(f'<link rel="alternate" hreflang="{HTML_LANG[l]}" href="{SITE+page_path(l, route)}">' for l in PATHS)
     ld = {
         '@context': 'https://schema.org', '@type': 'VideoGame', 'name': t['name'], 'url': url,
         'description': t['desc'], 'inLanguage': HTML_LANG[lang], 'image': OG_IMAGE,
@@ -79,7 +108,7 @@ def seo_block(lang):
 <meta name="description" content="{t['desc']}">
 <link rel="canonical" href="{url}">
 {alts}
-<link rel="alternate" hreflang="x-default" href="{SITE}/">
+<link rel="alternate" hreflang="x-default" href="{SITE+page_path('zh', route)}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SecTools.tw">
 <meta property="og:title" content="{t['title']}">
@@ -99,30 +128,36 @@ def between(s, tag, body):
 
 def main():
     src = io.open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read()
+    pages = []
     for lang in ('zh', 'en', 'ja'):
-        s = src
-        s = re.sub(r'<html lang="[^"]*">', f'<html lang="{HTML_LANG[lang]}">', s, count=1)
-        s = between(s, 'SEO', seo_block(lang))
-        s = between(s, 'ABOUT', '<!--ABOUT-->\n  ' + TEXT[lang]['about'] + '\n  <!--/ABOUT-->')
-        force = '' if lang == 'zh' else f'<script>window.FORCE_LANG="{lang}";</script>\n'
-        s = re.sub(r'<!--FORCE-->\n(?:<script>window\.FORCE_LANG=.*?</script>\n)?', '<!--FORCE-->\n' + force, s)
-        if lang == 'zh':
-            io.open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(s)
-        else:
-            s = re.sub(r'(href|src)="(css|js)/', r'\1="../\2/', s)
-            os.makedirs(os.path.join(ROOT, lang), exist_ok=True)
-            io.open(os.path.join(ROOT, lang, 'index.html'), 'w', encoding='utf-8').write(s)
+        for route in [None] + ROUTE_KEYS:
+            s = src
+            s = re.sub(r'<html lang="[^"]*">', f'<html lang="{HTML_LANG[lang]}">', s, count=1)
+            s = between(s, 'SEO', seo_block(lang, route))
+            s = between(s, 'ABOUT', '<!--ABOUT-->\n  ' + TEXT[lang]['about'] + '\n  ' + nav_html(lang) + '\n  <!--/ABOUT-->')
+            force = ''
+            if lang != 'zh': force += f'<script>window.FORCE_LANG="{lang}";</script>\n'
+            if route: force += f'<script>window.FORCE_ROUTE="{route}";</script>\n'
+            s = re.sub(r'<!--FORCE-->\n(?:<script>window\.FORCE_[A-Z]+=.*?</script>\n)*', lambda m: '<!--FORCE-->\n' + force, s)
+            path = page_path(lang, route)
+            depth = path.strip('/').count('/') + 1 if path != '/' else 0
+            if depth:
+                s = re.sub(r'(href|src)="(css|js)/', lambda m: f'{m.group(1)}="' + '../' * depth + m.group(2) + '/', s)
+            out = os.path.join(ROOT, path.strip('/'), 'index.html') if depth else os.path.join(ROOT, 'index.html')
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            if not depth: src_out = s
+            io.open(out, 'w', encoding='utf-8').write(s)
+            pages.append(route)
     today = datetime.date.today().isoformat()
-    links = ''.join(f'\n    <xhtml:link rel="alternate" hreflang="{HTML_LANG[l]}" href="{SITE+PATHS[l]}"/>' for l in PATHS)
-    urls = ''.join(f'''
-  <url>
-    <loc>{SITE+PATHS[l]}</loc>
-    <lastmod>{today}</lastmod>{links}
-  </url>''' for l in PATHS)
+    urls = ''
+    for route in [None] + ROUTE_KEYS:
+        links = ''.join(f'\n    <xhtml:link rel="alternate" hreflang="{HTML_LANG[l]}" href="{SITE+page_path(l, route)}"/>' for l in PATHS)
+        for l in PATHS:
+            urls += f'\n  <url>\n    <loc>{SITE+page_path(l, route)}</loc>\n    <lastmod>{today}</lastmod>{links}\n  </url>'
     io.open(os.path.join(ROOT, 'sitemap.xml'), 'w', encoding='utf-8').write(
         f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">{urls}\n</urlset>\n')
     io.open(os.path.join(ROOT, 'robots.txt'), 'w', encoding='utf-8').write(f'User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n')
-    print('built /, /en/, /ja/, sitemap.xml, robots.txt')
+    print(f'built {len(pages)} pages, sitemap.xml, robots.txt')
 
 if __name__ == '__main__':
     main()

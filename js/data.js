@@ -12,7 +12,7 @@ document.documentElement.lang = LANG==='zh'?'zh-Hant':LANG;
 const L=(zh,en,ja)=> LANG==='en'?en : LANG==='ja'?(ja??en) : zh;
 /* 每個語言有自己的網址：/、/en/、/ja/（方便搜尋引擎收錄） */
 const LANG_PATH={zh:'/',en:'/en/',ja:'/ja/'};
-function setLang(l){ try{ localStorage.setItem('cabLang',l); }catch(e){} location.href=LANG_PATH[l]; }
+function setLang(l){ try{ localStorage.setItem('cabLang',l); }catch(e){} location.href=pagePath(l, window.FORCE_ROUTE||null); }
 const stName = st => L(st.name, st.en, st.ja||st.name);
 
 /* ---------- route data ---------- */
@@ -75,11 +75,16 @@ const ROUTES = {
 };
 let ROUTE = LANG==='ja' ? ROUTES.enoden : ROUTES.hualien; // 日文版預設先開江之電
 try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
-function setRoute(key){ try{ localStorage.setItem('cabRoute',JSON.stringify(key)); }catch(e){} location.reload(); }
+/* 路線專屬網頁（例如 /ja/enoden/）會指定路線 */
+if(ROUTES[window.FORCE_ROUTE]){ ROUTE=ROUTES[window.FORCE_ROUTE]; try{ localStorage.setItem('cabRoute',JSON.stringify(ROUTE.key)); }catch(e){} }
+function pagePath(lang,route){ return (lang==='zh'?'/':'/'+lang+'/')+(route?route+'/':''); }
+function setRoute(key){ try{ localStorage.setItem('cabRoute',JSON.stringify(key)); }catch(e){} if(window.FORCE_ROUTE) location.href=pagePath(LANG,key); else location.reload(); }
 
 const TRAIN_LEN = ROUTE.trainLen;
 const STATIONS = ROUTE.stations;
-(function(){ let t=0; STATIONS[0].dep=0; for(let i=1;i<STATIONS.length;i++){ t+=STATIONS[i].leg; STATIONS[i].arr=t; t+=15; STATIONS[i].dep=t; } })();
+/* 時刻表：依難度模式放寬或收緊 */
+function buildSchedule(k){ let t=0; STATIONS[0].dep=0; for(let i=1;i<STATIONS.length;i++){ t+=Math.round(STATIONS[i].leg*k); STATIONS[i].arr=t; t+=15; STATIONS[i].dep=t; } }
+buildSchedule(1);
 const END = STATIONS[STATIONS.length-1].pos;
 const LINE_MAX = ROUTE.lineMax;
 const LIMITS = ROUTE.limits;
@@ -110,6 +115,40 @@ const ENVS = {
   mist:   {key:'mist',    name:L('雲霧','Mist','霧'), icon:'🌫️', clock:14*3600+10*60, word:L('起霧的午後','on a misty afternoon','霧の午後')},
 };
 let ENV = ENVS[ROUTE.envs[0]];
+
+/* ---------- 難度模式 ---------- */
+const DIFFS = {
+  easy:{key:'easy', icon:'🔰', name:L('新手','Beginner','初心者'), desc:L('時刻表寬鬆、扣分減半、提示煞車點與預計停車位置，不會空轉','Relaxed timetable, half penalties, braking cues and predicted stop point, no wheel slip','ゆとりダイヤ・減点半分・ブレーキ開始の合図と停止予測あり・空転なし'),
+        timeK:1.15, penK:0.5, atp:5, guide:true, gauge:80, slip:false},
+  pro: {key:'pro', icon:'🎯', name:L('專業','Pro','上級'), desc:L('實際時刻表、扣分加重、ATP 超速 3 km/h 就介入，停車誤差尺只在最後 20 m 出現','Real timetable, heavier penalties, ATP at +3 km/h, stop gauge only in the last 20 m','実ダイヤ・減点増・ATP は +3 km/h で作動・停止誤差ゲージは最後の 20 m だけ'),
+        timeK:1.0, penK:1.5, atp:3, guide:false, gauge:20, slip:true},
+};
+let DIFF = DIFFS.easy;
+try{ const k=JSON.parse(localStorage.getItem('cabDiff')); if(DIFFS[k]) DIFF=DIFFS[k]; }catch(e){}
+function setDiff(k){ DIFF=DIFFS[k]||DIFFS.easy; try{ localStorage.setItem('cabDiff',JSON.stringify(DIFF.key)); }catch(e){} buildSchedule(DIFF.timeK); }
+buildSchedule(DIFF.timeK);
+
+/* ---------- 車種：每條路線一輛預設、一輛靠成就解鎖 ---------- */
+const TRAINS = {
+  hualien:[
+    {key:'emu800', name:L('EMU800 型區間車','EMU800 local train','EMU800形 区間車'), power:0.95, brakeStep:0.13, ebDecel:1.45, sound:'vvvf', pitch:1.0, frame:'#0d1215'},
+    {key:'emu900', name:L('EMU900 型區間車','EMU900 local train','EMU900形 区間車'), power:1.12, brakeStep:0.145, ebDecel:1.55, sound:'vvvf', pitch:1.25, frame:'#10161c',
+     req:'gradeA_hualien', reqText:L('花東線拿到 A 以上評價','Get an A or better on the Hualien line','花東線で A 以上の評価')},
+  ],
+  alishan:[
+    {key:'dl', name:L('柴油機車','Diesel locomotive','ディーゼル機関車'), power:0.9, brakeStep:0.13, ebDecel:1.25, sound:'diesel', frame:'#0d1215'},
+    {key:'sl31', name:L('蒸汽機車 SL-31（Shay 型）','Steam loco SL-31 (Shay)','蒸気機関車 SL-31（シェイ式）'), power:0.82, brakeStep:0.12, ebDecel:1.15, sound:'steam', frame:'#1a1410',
+     req:'sunrise', reqText:L('解鎖成就「祝山看日出」','Unlock “Sunrise at Zhushan”','実績「祝山のご来光」を解除')},
+  ],
+  enoden:[
+    {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},
+    {key:'e300', name:L('江之電 300 形（305 編成）','Enoden Type 300 (set 305)','江ノ電 300形（305編成）'), power:0.78, brakeStep:0.12, ebDecel:1.3, sound:'resistor', pitch:0.7, frame:'#16201a',
+     req:'pro_enoden', reqText:L('用專業模式把江之電開到江之島','Finish the Enoden in Pro mode','上級モードで江ノ電を完走')},
+  ],
+};
+let TRAIN = TRAINS[ROUTE.key][0];
+try{ const k=JSON.parse(localStorage.getItem('cabTrain_'+ROUTE.key)); const t=TRAINS[ROUTE.key].find(x=>x.key===k); if(t) TRAIN=t; }catch(e){}
+Object.assign(ROUTE,{power:TRAIN.power, brakeStep:TRAIN.brakeStep, ebDecel:TRAIN.ebDecel});
 /* 車站附近的觀光景點指示牌 */
 const SIGHTS = {
   '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],

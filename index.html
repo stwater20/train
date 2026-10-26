@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap">
-<link rel="stylesheet" href="css/style.css?v=20261026211329">
+<link rel="stylesheet" href="css/style.css?v=20261026212402">
 </head>
 <body>
 
@@ -78,7 +78,7 @@
       <div class="ro span2"><span class="lab">前方</span><div class="ahead" id="roAhead"><div>—</div></div></div>
       <div class="ro span2"><span class="lab">預定到達</span><span class="dig" id="roSched">08:13:35</span><span class="sub" id="roSlack">&nbsp;</span></div>
       <div class="ro span2 stopscale"><span class="lab">停車誤差 <span id="roErr" class="errval">接近時顯示</span></span>
-        <div class="bar"><div class="tick"></div><div class="ptr" id="errPtr" hidden></div></div>
+        <div class="bar"><div class="tick"></div><div class="ptr pred" id="predPtr" hidden></div><div class="ptr" id="errPtr" hidden></div></div>
         <div class="lbls"><span>−15</span><span>−3</span><span>0</span><span>+3</span><span>+15 m</span></div>
       </div>
       <div class="ro full"><div class="pills"><span class="pill" id="pDoor">車門 關</span><span class="pill" id="pAtp">ATP 正常</span><span class="pill" id="pNotch">主控制器 B8</span><span class="pill" id="pBc">BC 440 kPa</span><span class="pill" id="pGrade">坡度 0‰</span><span class="pill" id="pSlip" hidden>空轉</span></div></div>
@@ -110,6 +110,7 @@
     </ul>
     <p>可以選晴天、黃昏、夜間或雨天，有行車音效、車內廣播與成就徽章。</p>
   </section>
+  <nav class="seolinks" aria-label="所有路線"><ul><li><a href="/hualien/">花東線</a></li><li><a href="/alishan/">阿里山小火車</a></li><li><a href="/enoden/">江之電</a></li></ul><ul><li><a href="/" hreflang="zh-Hant">中文</a></li><li><a href="/en/" hreflang="en">English</a></li><li><a href="/ja/" hreflang="ja">日本語</a></li></ul></nav>
   <!--/ABOUT-->
 </div>
 
@@ -120,14 +121,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <!--FORCE-->
-<script src="js/data.js?v=20261026211329"></script>
-<script src="js/help.js?v=20261026211329"></script>
-<script src="js/game.js?v=20261026211329"></script>
-<script src="js/extras.js?v=20261026211329"></script>
-<script src="js/tutorial.js?v=20261026211329"></script>
-<script src="js/audio.js?v=20261026211329"></script>
-<script src="js/render3d.js?v=20261026211329"></script>
-<script src="js/hud.js?v=20261026211329"></script>
-<script src="js/main.js?v=20261026211329"></script>
+<script src="js/data.js?v=20261026212402"></script>
+<script src="js/help.js?v=20261026212402"></script>
+<script src="js/game.js?v=20261026212402"></script>
+<script src="js/extras.js?v=20261026212402"></script>
+<script src="js/tutorial.js?v=20261026212402"></script>
+<script src="js/audio.js?v=20261026212402"></script>
+<script src="js/render3d.js?v=20261026212402"></script>
+<script src="js/hud.js?v=20261026212402"></script>
+<script src="js/main.js?v=20261026212402"></script>
 </body>
 </html>

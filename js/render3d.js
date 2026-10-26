@@ -51,7 +51,7 @@ new ResizeObserver(resize).observe(cv);
 
 function drawFrame(){
   fctx.clearRect(0,0,W,H);
-  fctx.fillStyle='#0d1215';
+  fctx.fillStyle=TRAIN.frame||'#0d1215';
   fctx.beginPath(); fctx.moveTo(0,0); fctx.lineTo(W*0.05,0); fctx.lineTo(W*0.028,H); fctx.lineTo(0,H); fctx.closePath(); fctx.fill();
   fctx.beginPath(); fctx.moveTo(W,0); fctx.lineTo(W*0.95,0); fctx.lineTo(W*0.972,H); fctx.lineTo(W,H); fctx.closePath(); fctx.fill();
   fctx.fillRect(0,0,W,Math.max(6,H*0.028));
@@ -522,9 +522,13 @@ function init3D(){
     // passengers
     const pax=[];
     if(i>0) for(let j=0;j<9;j++){
-      const g=new T.Group(); const col=std({color:PAXC[(rnd(i*7+j*3)*PAXC.length)|0],roughness:0.8});
+      // 在地旅客：學校旁的站多是穿制服的學生，江之電海邊有衝浪客，阿里山是背著背包的登山客
+      const student=['志學','鎌倉高校前'].includes(st.name) && j%2===0, surfer=['稻村崎','七里濱','腰越'].includes(st.name) && j%3===0, hiker=AL && j%2===1;
+      const g=new T.Group(); const col=std({color:student?0x1f2a44:PAXC[(rnd(i*7+j*3)*PAXC.length)|0],roughness:0.8});
       const lg=new T.Mesh(paxLegs,legsM); lg.position.y=0.42; const bd=new T.Mesh(paxBody,col); bd.position.y=1.2; const hd=new T.Mesh(paxHead,skin); hd.position.y=1.68; const hr=new T.Mesh(paxHead,hair); hr.position.set(0,1.73,-0.02); hr.scale.set(1.05,0.8,1.05);
       [lg,bd,hd,hr].forEach(m=>{ m.castShadow=true; g.add(m); });
+      if(surfer){ const sb=new T.Mesh(new T.BoxGeometry(0.5,2.0,0.07),std({color:[0xf2c14e,0x4fb3d9,0xe86a5c,0xf4f4f0][j%4],roughness:0.4})); sb.position.set(0.42,1.0,0.05); sb.rotation.z=-0.12; sb.castShadow=true; g.add(sb); }
+      if(hiker){ const bp=new T.Mesh(new T.BoxGeometry(0.34,0.46,0.2),std({color:[0x2f6b45,0xb3492f,0x2f4f7f][j%3]})); bp.position.set(0,1.2,-0.2); bp.castShadow=true; g.add(bp); }
       const p={g,s:st.pos-PL*0.7+rnd(i*31+j)*PL*0.63,lat:-3.1-rnd(i*17+j)*3.4,face:(rnd(i*5+j)-0.5)*1.5+Math.PI/2};
       place(g,p.s,p.lat,PT,p.face); scene.add(g); pax.push(p);
     }
@@ -658,6 +662,18 @@ function drawRain(dt){
   fctx.restore();
 }
 
+/* ---------- 蒸汽機車的煙：從前方煙囪冒出，往後飄過駕駛室上方 ---------- */
+const PUFFS=[]; let puffT=0;
+function drawSteam(dt){
+  const run=S.phase==='run' && !S.paused && !S.coachHold;
+  if(run){ puffT-=dt; if(puffT<=0){ puffT= S.v>0.15 ? 1/(1.4+S.v*1.7)*2 : 0.9;
+    const pow=Math.max(0,S.eff)/5; PUFFS.push({x:W*(0.5+(Math.random()-0.5)*0.03), y:H*0.3, r:H*(0.045+pow*0.03), a:0.55+pow*0.35, vx:(Math.random()-0.5)*W*0.05, vy:-H*(0.12+S.v*0.02)}); } }
+  for(let i=PUFFS.length-1;i>=0;i--){ const p=PUFFS[i]; if(run){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=H*0.09*dt*(1+S.v*0.05); p.a-=dt*0.28; } if(p.a<=0 || p.y+p.r<0) PUFFS.splice(i,1); }
+  fctx.save();
+  for(const p of PUFFS){ const g=fctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r); g.addColorStop(0,'rgba(235,235,232,'+p.a+')'); g.addColorStop(1,'rgba(220,220,215,0)'); fctx.fillStyle=g; fctx.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2); }
+  fctx.restore();
+}
+
 function render(dt){
   if(!R3){ return; }
   const {renderer,scene,cam,sun,sky,SUNDIR,sig,xings,stations,cars}=R3;
@@ -675,7 +691,9 @@ function render(dt){
     for(let i=0;i<Sd.length/3;i++){ let y=Sd[i*3+1]-fall, z=Sd[i*3+2]+rush; if(y<-8||z>-1.5){ y=14; z=-6-Math.random()*44; Sd[i*3]=(Math.random()-0.5)*36; } Sd[i*3+1]=y; Sd[i*3+2]=z;
       const x=Sd[i*3], k=i*6; P[k]=x; P[k+1]=y; P[k+2]=z; P[k+3]=x; P[k+4]=y+0.55; P[k+5]=z-0.06-S.v*0.03; }
     R3.rain.geometry.attributes.position.needsUpdate=true; }
-  if(ENV.rain){ drawFrame(); drawRain(dt); } else if(DROPS.length){ DROPS.length=0; drawFrame(); }
+  const steam=TRAIN.sound==='steam';
+  if(ENV.rain || steam){ drawFrame(); if(ENV.rain) drawRain(dt); if(steam) drawSteam(dt); R3.fxDirty=true; }
+  else if(R3.fxDirty || DROPS.length){ DROPS.length=0; PUFFS.length=0; drawFrame(); R3.fxDirty=false; }
   sun.target.position.set(cx+dx*35,f.y,cz+dz*35); sun.position.copy(sun.target.position).addScaledVector(SUNDIR,200); sun.target.updateMatrixWorld();
 
   if(sig.lamps.G) ['G','Y','R'].forEach(k=>{ const on=S.sig.aspect===k; sig.lamps[k].m.material.color.setHex(on?sig.lamps[k].col:0x2b2f30); sig.glows[k].visible=on; });

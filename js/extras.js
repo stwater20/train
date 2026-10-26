@@ -18,6 +18,8 @@ const ACHS=[
   {id:'clean',   icon:'🧼', name:L('零扣分','Clean sheet','減点ゼロ'),     desc:L('一整班沒有任何扣分','A whole run with no penalties','一度も減点なしで完走')},
   {id:'horn',    icon:'📯', name:L('喇叭手','Horn master','警笛マスター'),     desc:L('三個平交道都有鳴笛','Sound the horn at all three crossings','3か所の踏切すべてで警笛')},
   {id:'gradeS',  icon:'🏆', name:L('S 級司機員','S-rank driver','Sランク運転士'), desc:L('拿到 S 評價','Get an S grade','S評価を獲得')},
+  {id:'proS',    icon:'💎', name:L('專業司機員','Pro driver','プロ運転士'), desc:L('專業模式拿到 S 評價','Get an S grade in Pro mode','上級モードで S 評価')},
+  {id:'stamps',  icon:'📮', name:L('集章達人','Stamp collector','スタンプラリー達人'), desc:L('集滿全部車站紀念章','Collect every station stamp','全駅のスタンプを集める')},
   {id:'redrun',  icon:'🚨', name:L('紅燈戰士','Red-light runner','信号無視'),   desc:L('……闖過紅燈（不太光彩）','…passed a red signal (not proud of it)','……赤信号を冒進（自慢にならない）')},
   {id:'skip',    icon:'💨', name:L('過站不停','Express service','通過列車'),   desc:L('錯過一個車站（旅客很錯愕）','Miss a station (passengers were not amused)','駅を通過してしまう（乗客びっくり）')},
 ];
@@ -38,15 +40,53 @@ function achGridHTML(highlight){
 /* ---------- sound & announcements ---------- */
 let voiceOn=load('cabVoice',true);
 function setVoice(on){ voiceOn=on; save('cabVoice',on); if(!on) try{ speechSynthesis.cancel(); }catch(e){} }
-/* 中文版播國語＋英語，英文版只播英語，日文版播日語＋英語 */
-function announce(zh,en,ja){
-  if(!voiceOn || !('speechSynthesis' in window)) return;
+/* ---------- 車內廣播：語音照路線的當地語言（臺鐵、林鐵說國語，江之電說日語）再加英語；字幕照介面語言 ---------- */
+const NATIVE = ROUTE.japan ? 'ja' : 'zh';
+const annEl=document.createElement('div'); annEl.className='ann'; annEl.hidden=true; annEl.setAttribute('aria-live','polite');
+document.querySelector('.stage').appendChild(annEl);
+let annTimer=0;
+function caption(icon,txt){
+  annEl.innerHTML=`<span class="ai">${icon}</span><span>${txt}</span>`; annEl.hidden=false;
+  clearTimeout(annTimer); annTimer=setTimeout(()=>annEl.hidden=true, 2500+txt.length*(LANG==='en'?55:130));
+}
+/* m = {zh, en, ja}；radio=true 表示行車調度無線電，只出字幕不播語音 */
+function annSay(m, radio){
+  caption(radio?'📻':'📢', LANG==='en'?m.en : LANG==='ja'?(m.ja||m.en) : m.zh);
+  if(radio || !voiceOn || !('speechSynthesis' in window)) return;
   const say=(txt,lang)=>{ const u=new SpeechSynthesisUtterance(txt); u.lang=lang; u.rate=0.95; speechSynthesis.speak(u); };
-  try{
-    speechSynthesis.cancel();
-    if(LANG==='zh') say(zh,'zh-TW'); else if(LANG==='ja' && ja) say(ja,'ja-JP');
-    if(en) say(en,'en-US');
-  }catch(e){}
+  try{ speechSynthesis.cancel(); if(NATIVE==='ja') say(m.ja,'ja-JP'); else say(m.zh,'zh-TW'); if(m.en) say(m.en,'en-US'); }catch(e){}
+}
+const nm = st => ({zh:st.name, en:st.en, ja:st.ja||st.name});
+const ANN = {
+  welcome(){ const n=nm(STATIONS[1]), t=nm(STATIONS[STATIONS.length-1]);
+    if(ROUTE.japan) return {ja:`本日も江ノ電をご利用いただきまして、ありがとうございます。この電車は${t.ja}行きです。次は${n.ja}です。`, en:`Thank you for riding the Enoden. This train is bound for ${t.en}. The next station is ${n.en}.`, zh:`感謝您今天搭乘江之電。本列車開往${t.zh}，下一站${n.zh}。`};
+    if(ROUTE.key==='alishan') return {zh:`歡迎搭乘阿里山林業鐵路祝山線${ENV.key==='dawn'?'日出列車':''}。沿途坡陡彎多，請坐穩扶好；山上氣溫低，請注意保暖。下一站${n.zh}。`, en:`Welcome aboard the Alishan Forest Railway Zhushan Line. The line is steep and curvy, so please stay seated, and keep warm in the mountain air. The next station is ${n.en}.`, ja:`阿里山森林鉄道 祝山線にご乗車ありがとうございます。急勾配と急カーブが続きますので、お席にお掛けください。山の上は冷えますので暖かくしてお過ごしください。次は${n.ja}です。`};
+    return {zh:`各位旅客您好，歡迎搭乘臺鐵區間車。本列車開往${t.zh}，下一站${n.zh}。車門關閉時請勿強行上下車。`, en:`Welcome aboard this Taiwan Railway local train to ${t.en}. The next station is ${n.en}.`, ja:`台湾鉄道の区間車をご利用いただきありがとうございます。この列車は${t.ja}行きです。次は${n.ja}です。`}; },
+  next(st,last){ const n=nm(st);
+    if(ROUTE.japan) return {ja:`次は${last?'終点、':''}${n.ja}です。`, en:`The next station is ${n.en}${last?', the last stop':''}.`, zh:`下一站，${last?'終點':''}${n.zh}。`};
+    return {zh:`下一站，${n.zh}${last?'，本列車終點站':''}。`, en:`The next station is ${n.en}${last?', the terminal station':''}.`, ja:`次は${last?'終点、':''}${n.ja}です。`}; },
+  approach(st,last){ const n=nm(st);
+    if(ROUTE.japan) return last
+      ? {ja:`まもなく終点、${n.ja}です。湘南モノレールはお乗り換えです。お出口は左側です。お忘れ物のないようご注意ください。`, en:`We will soon arrive at ${n.en}, the last stop. Please change here for the Shonan Monorail. The doors on the left side will open. Please take all your belongings with you.`, zh:`即將抵達終點${n.zh}，轉乘湘南單軌電車的旅客請在本站下車。左側車門開啟，請別忘了隨身物品。`}
+      : {ja:`まもなく、${n.ja}です。お出口は左側です。`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
+    if(ROUTE.key==='alishan' && last) return {zh:`祝山站快到了，海拔 2,451 公尺，是全台最高的火車站。下車後步行就能到觀日平台，請小心腳步。`, en:`We are arriving at Zhushan, 2,451 m above sea level — the highest station in Taiwan. The sunrise viewing platform is a short walk away. Please watch your step.`, ja:`まもなく祝山です。標高 2,451 m、台湾で最も高い駅です。展望台へは歩いてすぐです。足元にお気をつけください。`};
+    return last
+      ? {zh:`本列車即將抵達終點站${n.zh}，請帶好隨身行李，下車時請注意月台間隙，謝謝搭乘。`, en:`We are arriving at ${n.en}, the terminal station. Please take all your belongings and mind the gap. Thank you for travelling with us.`, ja:`まもなく終点${n.ja}です。お忘れ物のないよう、また足元にご注意ください。ご乗車ありがとうございました。`}
+      : {zh:`${n.zh}站快到了，要下車的旅客請準備，下車時請注意月台間隙。`, en:`We are now arriving at ${n.en}. Please mind the gap when leaving the train.`, ja:`まもなく${n.ja}です。お降りの際は足元にご注意ください。`}; },
+  late(min){ return {zh:`本列車目前延誤約 ${min} 分鐘，造成您的不便，敬請見諒。`, en:`This train is running about ${min} minute${min>1?'s':''} late. We apologise for the inconvenience.`, ja:`ただいまこの電車は約${min}分遅れております。ご迷惑をおかけしております。`}; },
+  altitude(m){ return {zh:`列車目前在海拔約 ${m.toLocaleString()} 公尺的地方。`, en:`We are now at about ${m.toLocaleString()} m above sea level.`, ja:`ただいま標高およそ ${m.toLocaleString()} m を走行中です。`}; },
+};
+/* 每個畫格呼叫：歡迎廣播、即將到站、延誤致歉、海拔、無線電 */
+function extrasTick(dt){
+  if(S.phase!=='run' || S.paused || S.coachHold) return;
+  const A=S.ann||(S.ann={t:0, welcomed:false, appr:{}, alt:{}, lateSaid:-999, sig:0, street:false});
+  A.t+=dt;
+  if(!A.welcomed && A.t>4){ A.welcomed=true; annSay(ANN.welcome()); }
+  const st=STATIONS[S.next];
+  if(st && !S.doors && !A.appr[S.next]){ const d=st.pos-S.pos; if(S.v>1 && d>0 && d<Math.max(150,S.v*22)){ A.appr[S.next]=true; annSay(ANN.approach(st, S.next===STATIONS.length-1)); } }
+  if(ROUTE.key==='alishan') [2300,2400].forEach(m=>{ if(!A.alt[m] && altitude(S.pos)>=m){ A.alt[m]=true; annSay(ANN.altitude(m)); } });
+  if(ROUTE.signal!=null && S.sig.phase===1 && A.sig===0){ A.sig=1; annSay({zh:'【行車調度】32 號號誌前方區間還有列車沒有出清，請在號誌前停車等候。',en:'[Dispatcher] The block beyond signal 32 is still occupied. Stop before the signal and wait.',ja:'【指令】32号信号機の先に列車が在線しています。信号の手前で停車して待機してください。'},true); }
+  if(ROUTE.street && !A.street && S.pos>ROUTE.street.s-250){ A.street=true; annSay({zh:'【司機提醒】前方進入路面併用軌道，和汽車共用道路，限速 25 km/h，注意行人。',en:'[Driver note] Street running ahead: sharing the road with cars at 25 km/h. Watch for pedestrians.',ja:'【運転メモ】この先は併用軌道。車と道路を共有し 25 km/h、歩行者に注意。'},true); }
 }
 function chime(){
   try{
@@ -64,25 +104,27 @@ function chime(){
 /* ---------- game hooks (game.js 會呼叫) ---------- */
 function extrasStart(){
   lastNew=[];
-  const st=STATIONS[1];
-  const last=STATIONS[STATIONS.length-1];
-  announce('本列車開往'+last.name+'。下一站，'+st.name+'。','This train is bound for '+last.en+'. Next station, '+st.en+'.','この列車は'+last.ja+'行きです。次は'+st.ja+'です。');
+
 }
 function extrasStop(st,err){
   chime();
   if(Math.abs(err)<=0.5) unlockAch('perfect');
+  if(Math.abs(err)<=3) giveStamp(st);
   const last=S.next>=STATIONS.length-1;
-  announce(last?st.name+'到了，本列車終點站，謝謝搭乘。':st.name+'到了。', last?'This is the terminal station, '+st.en+'. Thank you.':st.en+'.', last?st.ja+'、終点です。ご乗車ありがとうございました。':st.ja+'です。');
+  if(voiceOn && 'speechSynthesis' in window) try{ speechSynthesis.cancel(); }catch(e){}
   showFact(st);
 }
 function extrasDepart(){
   const st=STATIONS[S.next]; if(!st) return;
-  const last=S.next===STATIONS.length-1;
-  announce('下一站，'+st.name+(last?'，本列車終點站。':'。'),'Next station, '+st.en+'.','次は'+st.ja+(last?'、終点です。':'です。'));
+  const last=S.next===STATIONS.length-1, A=S.ann||{};
+  annSay(ANN.next(st,last));
+  const prev=STATIONS[S.next-1], late=S.t-(prev?prev.dep:0);
+  if(late>60 && S.t-(A.lateSaid||-999)>150){ A.lateSaid=S.t; setTimeout(()=>{ if(S.phase==='run') annSay(ANN.late(Math.max(1,Math.round(late/60)))); },7000); }
 }
 function extrasEnd(grade){
   const log=S.log, P=S.pens;
   const stopsAll=S.log.filter(r=>!r.miss);
+  giveStamp(STATIONS[0]);
   if(ROUTE.japan) unlockAch('enoshima');
   else if(ROUTE.key==='alishan'){ unlockAch('zhushan'); const z=stopsAll.find(r=>r.name==='祝山'); if(ENV.key==='dawn' && z && z.trank!=='延誤') unlockAch('sunrise'); }
   else unlockAch('first');
@@ -94,11 +136,16 @@ function extrasEnd(grade){
   if(grade==='S') unlockAch('gradeS');
   if(P.spad>0) unlockAch('redrun');
   if(P.miss>0) unlockAch('skip');
+  if(ROUTE.key==='hualien' && (grade==='S'||grade==='A')) setFlag('gradeA_hualien');
+  if(ROUTE.key==='enoden' && DIFF.key==='pro') setFlag('pro_enoden');
+  if(DIFF.key==='pro' && grade==='S') unlockAch('proS');
+  const newTrains=Object.values(TRAINS).flat().filter(t=>t.req && trainUnlocked(t) && !load('cabTrainSeen_'+t.key,false));
+  newTrains.forEach(t=>save('cabTrainSeen_'+t.key,true));
   const bk=bestKey(), best=load(bk,null), sc=Math.round(S.score);
   const isBest = !best || sc>best.score;
   if(isBest) save(bk,{score:sc, grade, at:Date.now()});
   const runs=load('cabRuns',0)+1; save('cabRuns',runs);
-  return {isBest, best:isBest?{score:sc,grade}:best, runs};
+  return {isBest, best:isBest?{score:sc,grade}:best, runs, newTrains};
 }
 
 /* ---------- passenger comments ---------- */
@@ -176,6 +223,9 @@ function titleExtrasHTML(){
   return `<div class="recs"><span>${L('最佳紀錄','Best','ベスト')} <b>${best?best.score+L(' 分（',' pts (',' 点（')+best.grade+L('）',')','）'):'—'}</b></span><span>${L('已開 ','Runs ','運転回数 ')}<b>${runs}</b>${L(' 班','','')}</span><span>${L('成就','Achievements','実績')} <b>${n}/${ACHS.length}</b></span></div>
     <details class="achbox"><summary>${L('查看成就徽章','Achievement badges','実績バッジを見る')}</summary>${achGridHTML()}</details>
     ${sightsHTML()}
+    ${stampBookHTML()}
+    ${diffPickHTML()}
+    ${trainPickHTML()}
     <div class="envpick" role="radiogroup" aria-label="${L('天氣與時段','Weather and time','天気と時間帯')}">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
     <div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> ${L('列車音效','Train sounds','走行音')}</label>
     <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> ${L('車內語音廣播','Onboard announcements','車内放送')}</label></div>
@@ -184,15 +234,18 @@ function titleExtrasHTML(){
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
   const f=document.getElementById('sfxTog'); if(f) f.addEventListener('change',()=>setSfx(f.checked));
+  document.querySelectorAll('.diffbtn').forEach(b=>b.addEventListener('click',()=>{ setDiff(b.dataset.diff); showOverlay('title'); }));
+  document.querySelectorAll('.trainbtn').forEach(b=>b.addEventListener('click',()=>{ const t=TRAINS[ROUTE.key].find(x=>x.key===b.dataset.train); if(!t || !trainUnlocked(t)) return; pickTrain(t); showOverlay('title'); }));
   document.querySelectorAll('.envbtn').forEach(b=>b.addEventListener('click',()=>{ setEnv(b.dataset.env); showOverlay('title'); const nb=document.querySelector('.envbtn[data-env="'+b.dataset.env+'"]'); if(nb) nb.focus({preventScroll:true}); }));
 }
 function endExtrasHTML(info,grade){
   const got=lastNew.map(id=>ACHS.find(a=>a.id===id)).filter(Boolean);
   return `${passengerSays(grade)}
     <div class="recs">${info.isBest?`<span class="nb">🎉 ${L('新紀錄！','New best!','自己ベスト更新！')}</span>`:`<span>${L('最佳紀錄','Best','ベスト')} <b>${info.best.score}${L(' 分（',' pts (',' 点（')}${info.best.grade}${L('）',')','）')}</b></span>`}<span>${L('第 ','Run #','')}<b>${info.runs}</b>${L(' 班','',' 回目')}</span></div>
+    ${(info.newTrains||[]).map(t=>`<div class="unlock">🎉 ${L('解鎖新列車：','New train unlocked: ','新しい車両を解除：')}<b>${t.name}</b><small>${L('回標題畫面就能選','Pick it on the title screen','タイトル画面で選べます')}</small></div>`).join('')}
     ${got.length?`<div class="newach"><p class="eyebrow">${L('本班解鎖成就','Unlocked this run','今回解除した実績')}</p>${achGridHTML(lastNew).replace('class="achs"','class="achs only-new"')}</div>`:''}
     ${rideRealHTML()}
-    ${promoHTML()}`;
+    ${promoHTML(true)}`;
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${nameOf(r.name)} ${L('過站','overran','通過')}`:`${nameOf(r.name)} ${fmtErr(r.err)} ${trWord(r.trank)}`).join('\n');
@@ -213,7 +266,44 @@ function bindEndExtras(grade){
 function bestKey(){ return ROUTE.key==='hualien' ? 'cabBest' : 'cabBest_'+ROUTE.key; }
 
 /* ---------- 製作與維護 ---------- */
-function promoHTML(){
-  return `<a class="promo" href="https://sectools.tw/?utm_source=train-game&utm_medium=referral" target="_blank" rel="noopener">
+function promoHTML(after){
+  const url='https://sectools.tw/?utm_source=train-game&utm_medium=referral&utm_campaign='+(after?'end':'title');
+  if(after) return `<a class="promo cta" href="${url}" target="_blank" rel="noopener">
+    <span>🛡️</span><span><b>${L('玩完了嗎？到 SecTools.tw 逛逛','Done driving? Drop by SecTools.tw','運転おつかれさま！SecTools.tw ものぞいてみて')}</b><small>${L('這個遊戲由 SecTools.tw 製作與維護，網站上還有免費的線上資安工具','This game is made and maintained by SecTools.tw — free online security tools await','このゲームは SecTools.tw が制作・運営。無料のオンラインセキュリティツールもあります')}</small></span><span aria-hidden="true">↗</span></a>`;
+  return `<a class="promo" href="${url}" target="_blank" rel="noopener">
     <span>🛡️</span><span><small>${L('本遊戲由','This game is','このゲームは')}</small><b>${L('SecTools.tw 製作與維護','made and maintained by SecTools.tw','SecTools.tw が制作・運営')}</b><small>${L('也來看看我們的線上資安工具','Check out our free online security tools','無料のオンラインセキュリティツールもどうぞ')}</small></span><span aria-hidden="true">↗</span></a>`;
+}
+
+/* ---------- 解鎖旗標與車種 ---------- */
+let FLAGS=load('cabFlags',{});
+function setFlag(k){ if(!FLAGS[k]){ FLAGS[k]=Date.now(); save('cabFlags',FLAGS); } }
+function trainUnlocked(t){ return !t.req || !!FLAGS[t.req] || !!ACH[t.req]; }
+function pickTrain(t){ TRAIN=t; const hs=document.getElementById('hSub'); if(hs) hs.textContent=t.name+' · '+stName(STATIONS[0])+' → '+stName(STATIONS[STATIONS.length-1])+' · '+ROUTE.desc; Object.assign(ROUTE,{power:t.power, brakeStep:t.brakeStep, ebDecel:t.ebDecel}); save('cabTrain_'+ROUTE.key,t.key); if(typeof drawFrame==='function') drawFrame(); if(typeof auRetune==='function') auRetune(); }
+function diffPickHTML(){
+  return `<div class="pickrow"><span class="lab">${L('難度','Difficulty','難易度')}</span><div class="diffpick" role="radiogroup">${Object.values(DIFFS).map(d=>`<button type="button" role="radio" aria-checked="${d===DIFF}" class="diffbtn${d===DIFF?' on':''}" data-diff="${d.key}"><b>${d.icon} ${d.name}</b><small>${d.desc}</small></button>`).join('')}</div></div>`;
+}
+function trainPickHTML(){
+  return `<div class="pickrow"><span class="lab">${L('車種','Train','車両')}</span><div class="trainpick" role="radiogroup">${TRAINS[ROUTE.key].map(t=>{ const ok=trainUnlocked(t);
+    return `<button type="button" role="radio" aria-checked="${t===TRAIN}" class="trainbtn${t===TRAIN?' on':''}${ok?'':' locked'}" data-train="${t.key}"${ok?'':' aria-disabled="true"'}><b>${ok?'':'🔒 '}${t.name}</b><small>${ok?(t.req?L('已解鎖','Unlocked','解除済み'):L('標準車種','Standard','標準車両')):t.reqText}</small></button>`; }).join('')}</div></div>`;
+}
+
+/* ---------- 車站紀念章（在地特色） ---------- */
+const STAMP_ART={'花蓮':'🏞️','吉安':'⛩️','志學':'🎓','平和':'🌾','壽豐':'🐚','阿里山':'🌸','對高岳':'🌲','祝山':'🌄','稻村崎':'🌅','七里濱':'🏄','鎌倉高校前':'🏀','腰越':'🐟','江之島':'🗼'};
+let STAMPS=load('cabStamps',{});
+function allStations(){ return Object.values(ROUTES).flatMap(r=>r.stations.map(st=>({st,route:r}))); }
+function giveStamp(st){
+  if(STAMPS[st.name]) return false;
+  STAMPS[st.name]=Date.now(); save('cabStamps',STAMPS);
+  toast(L('📮 蓋到「','📮 Stamp collected: ','📮 スタンプ獲得：「')+stName(st)+L('」車站紀念章！','','」'),'good');
+  if(allStations().every(x=>STAMPS[x.st.name])) unlockAch('stamps');
+  return true;
+}
+function stampHTML(st){
+  const got=!!STAMPS[st.name], d=got?new Date(STAMPS[st.name]):null;
+  return `<div class="stamp${got?' got':''}" title="${stName(st)}"><span class="sa">${got?STAMP_ART[st.name]||'🚉':'？'}</span><span class="sn">${stName(st)}</span><span class="sd">${got?(d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate()):L('停車誤差 3 m 內蓋章','stop within 3 m','誤差 3 m 以内で押印')}</span></div>`;
+}
+function stampBookHTML(){
+  const all=allStations(), n=all.filter(x=>STAMPS[x.st.name]).length;
+  return `<details class="achbox stamps"><summary>${L('車站紀念章','Station stamps','駅スタンプ帳')} ${n}/${all.length}</summary>
+    ${Object.values(ROUTES).map(r=>`<p class="eyebrow">${r.name}</p><div class="stampgrid">${r.stations.map(stampHTML).join('')}</div>`).join('')}</details>`;
 }

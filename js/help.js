@@ -3,6 +3,15 @@
 
 const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</p><h2>How to drive</h2></div><button class="btn" id="ovClose" type="button" aria-label="Close the handbook">Close</button></div>
 <div class="help">
+<section><h3>Difficulty, trains and stamps</h3>
+  <ul>
+    <li><b>🔰 Beginner</b>: relaxed timetable, half penalties, no wheel slip. You get a cue when to brake, and a green triangle on the gauge shows your predicted stop. Your first run on each route starts with a skippable tutorial.</li>
+    <li><b>🎯 Pro</b>: real timetable, heavier penalties, ATP steps in at +3 km/h, and the stop gauge only appears in the last 20 m.</li>
+    <li><b>Trains</b>: each route has a train to unlock — an A on the Hualien line unlocks the EMU900, the sunrise achievement unlocks steam loco SL-31, and finishing the Enoden in Pro mode unlocks the Type 300.</li>
+    <li><b>Station stamps</b>: stop within 3 m to collect that station’s stamp; finishing a route stamps the starting station.</li>
+  </ul></section>
+<section><h3>Onboard announcements</h3>
+  <p>After departure you’ll hear a welcome, an arrival notice before each stop and an apology if you’re running late. Taiwan Railway and the Alishan line announce in Mandarin and English, the Enoden in Japanese and English, with captions on screen. 📻 marks dispatcher radio (captions only).</p></section>
 <section><h3>Master controller</h3>
   <div class="chips"><i class="p">P5</i><i class="p">P4</i><i class="p">P3</i><i class="p">P2</i><i class="p">P1</i><i class="n">N</i><i class="b">B1</i><i class="b">B2</i><i class="b">…</i><i class="b">B8</i><i class="e">EB</i></div>
   <ul>
@@ -84,6 +93,15 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
 
 const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンドブック</p><h2>操作説明</h2></div><button class="btn" id="ovClose" type="button" aria-label="操作説明を閉じる">閉じる</button></div>
 <div class="help">
+<section><h3>難易度・車両・駅スタンプ</h3>
+  <ul>
+    <li><b>🔰 初心者</b>：ゆとりダイヤ・減点半分・空転なし。ブレーキ開始の合図が出て、ゲージの緑の三角が停止予測位置を示します。各路線の初回はチュートリアル付き（スキップ可）。</li>
+    <li><b>🎯 上級</b>：実ダイヤ・減点増、ATP は +3 km/h で作動、停止誤差ゲージは最後の 20 m だけ表示。</li>
+    <li><b>車両</b>：各路線に実績で解除できる車両があります。花東線で A 評価なら EMU900、「祝山のご来光」で蒸気機関車 SL-31、上級モードで江ノ電を完走すると 300形。</li>
+    <li><b>駅スタンプ</b>：停止誤差 3 m 以内でその駅のスタンプを獲得。完走すると始発駅のスタンプも押せます。</li>
+  </ul></section>
+<section><h3>車内放送</h3>
+  <p>発車後の案内、到着前の「まもなく」放送、遅れたときのお詫びが流れます。台湾鉄道と阿里山線は中国語と英語、江ノ電は日本語と英語で、画面に字幕も出ます。📻 は指令の無線（字幕のみ）です。</p></section>
 <section><h3>マスコン</h3>
   <div class="chips"><i class="p">P5</i><i class="p">P4</i><i class="p">P3</i><i class="p">P2</i><i class="p">P1</i><i class="n">N</i><i class="b">B1</i><i class="b">B2</i><i class="b">…</i><i class="b">B8</i><i class="e">EB</i></div>
   <ul>

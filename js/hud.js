@@ -28,7 +28,7 @@ function drawGauge(lim){
 const $=id=>document.getElementById(id);
 const el={clock:$('clock'),score:$('score'),next:$('roNext'),nextEn:$('roNextEn'),nextLab:$('roNextLab'),dist:$('roDist'),distSub:$('roDistSub'),
   limit:$('roLimit'),limitSub:$('roLimitSub'),sig:$('roSig'),sigSub:$('roSigSub'),ahead:$('roAhead'),sched:$('roSched'),slack:$('roSlack'),
-  err:$('roErr'),ptr:$('errPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
+  err:$('roErr'),ptr:$('errPtr'),pred:$('predPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
   hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
 const SIGNAME={G:L('綠燈','Green','進行'),Y:L('黃燈','Yellow','注意'),R:L('紅燈','Red','停止')};
 let lastHud=0;
@@ -48,8 +48,13 @@ function hud(now){
     el.distSub.textContent= dist<0 ? L('已超過停車位置','Past the stop mark','停止位置を超過') : dist<300 ? L('藍色「4」停車位置標','Blue “4” stop board','青い「4」停止位置目標') : L('月台在左側','Platform on the left','ホームは左側');
     el.hDist.textContent=txt;
     const err=-dist;
-    if(dist<80 && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); el.err.classList.add('num'); }
-    else { el.ptr.hidden=true; el.err.textContent=L('接近時顯示','shown near the mark','接近時に表示'); el.err.classList.remove('num'); }
+    if(dist<DIFF.gauge && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); el.err.classList.add('num'); }
+    else { el.ptr.hidden=true; el.err.textContent=DIFF.gauge<80?L('最後 20 m 顯示','shown in the last 20 m','残り 20 m で表示'):L('接近時顯示','shown near the mark','接近時に表示'); el.err.classList.remove('num'); }
+    // 新手模式：預計停車位置（綠色三角形）與煞車提示
+    const pe = (DIFF.guide && !S.doors && S.v>0.3 && S.acc<-0.05) ? S.pos + S.v*S.v/(2*-S.acc) - st.pos : null;
+    if(pe!=null && dist<300){ el.pred.hidden=false; el.pred.style.left=((clamp(pe,-15,15)+15)/30*100)+'%';
+      if(dist>=80) el.distSub.textContent=L('預計停在 ','Predicted stop ','停止予測 ')+fmtErr(pe); }
+    else el.pred.hidden=true;
     el.sched.textContent=fmtClock(BASE_CLOCK+st.arr);
     const slack=st.arr-S.t;
     el.slack.textContent= slack>=0 ? L('尚有 ','Time left ','残り ')+fmtDur(slack) : L('已延誤 ','Late by ','遅れ ')+fmtDur(slack);

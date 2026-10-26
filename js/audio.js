@@ -49,7 +49,11 @@ function puff(dur,vol){ AU.hissUntil=actx.currentTime+dur; ramp(AU.hiss.g.gain,v
 
 /* 鋼軌每 25 m 一個接縫；駕駛室在第一節車的前轉向架上方，聽到的是一輪一輪的「喀噠—喀噠」 */
 const RAIL=ROUTE.railLen, AXLES= ROUTE.key==='alishan' ? [0,1.4,9.6,11.0] : [0,2.1,15.9,18.0, 20+0,20+2.1, 20+15.9,20+18.0];
-const DIESEL=!ROUTE.electric;
+let DIESEL=TRAIN.sound==='diesel', STEAM=TRAIN.sound==='steam';
+/* 換車種時重新設定音色 */
+function auRetune(){ DIESEL=TRAIN.sound==='diesel'; STEAM=TRAIN.sound==='steam'; if(AU.motF) AU.motF.type=DIESEL?'lowpass':'bandpass'; }
+function chuff(vol){ const c=actx, t=c.currentTime, s=c.createBufferSource(); s.buffer=AU.white; const f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=700; const g=c.createGain();
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22); s.connect(f); f.connect(g); g.connect(AU.master); s.start(t,Math.random()*1.5,0.3); }
 function audioTick(dt){
   if(!AU.ready || !sfxOn) return;
   const run=S.phase==='run' && !S.paused && !S.coachHold, v=run?S.v:0, kmh=v*3.6;
@@ -61,7 +65,12 @@ function audioTick(dt){
 
   // 馬達：加速時明顯，回生煞車時較小
   const eff=run?S.eff:0;
-  if(DIESEL){
+  if(STEAM){
+    // 蒸汽機車：Shay 型齒輪傳動，排氣聲很密；加汽時大聲，滑行時只剩輕輕的嘶聲
+    ramp(AU.motG.gain,0,0.2);
+    if(run && v>0.15){ AU.chuffT=(AU.chuffT||0)-dt; if(AU.chuffT<=0){ AU.chuffT=1/(1.4+v*1.7); chuff(eff>0? 0.12+0.025*eff : 0.035); } }
+    if(run) ramp(AU.hiss.g.gain, Math.max(0.008, actx.currentTime<AU.hissUntil?0.06:0.008), 0.3);
+  } else if(DIESEL){
     // 柴油引擎：怠速一直在響，轉速跟著檔位，不跟車速
     const rpm=Math.max(0,eff);
     ramp(AU.motG.gain, run? 0.05+0.022*rpm : (S.phase==='title'?0:0.03), 0.4);
@@ -69,7 +78,7 @@ function audioTick(dt){
   } else {
   const motVol = eff>0 ? 0.025+0.012*eff : (eff<0 && eff>-9 && v>2 ? 0.02 : 0);
   ramp(AU.motG.gain, motVol, 0.12);
-  const base=120+kmh*14; AU.mot[0].frequency.value=base; AU.mot[1].frequency.value=base*1.5+3; AU.motF.frequency.value=500+kmh*20;
+  const base=(120+kmh*14)*(TRAIN.pitch||1); AU.mot[0].frequency.value=base; AU.mot[1].frequency.value=base*1.5+3; AU.motF.frequency.value=500+kmh*20;
   }
 
   // 煞車排氣：加大煞車或鬆開煞車時「噗嘶」
