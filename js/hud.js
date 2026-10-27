@@ -29,7 +29,7 @@ const $=id=>document.getElementById(id);
 const el={clock:$('clock'),score:$('score'),next:$('roNext'),nextEn:$('roNextEn'),nextLab:$('roNextLab'),dist:$('roDist'),distSub:$('roDistSub'),
   limit:$('roLimit'),limitSub:$('roLimitSub'),sig:$('roSig'),sigSub:$('roSigSub'),ahead:$('roAhead'),sched:$('roSched'),slack:$('roSlack'),
   err:$('roErr'),ptr:$('errPtr'),pred:$('predPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
-  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),hNext:$('hNext'),hNextLab:$('hNextLab'),hNotch:$('hNotch'),hNL:$('hNL'),hNLv:$('hNLv'),hNLd:$('hNLd'),hErr:$('hErr'),hPred:$('hPred'),hErrBox:$('hErrBox'),hDistLab:$('hDistLab'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
+  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),hNext:$('hNext'),hNextLab:$('hNextLab'),hNotch:$('hNotch'),hEta:$('hEta'),hEtaLab:$('hEtaLab'),hSlack:$('hSlack'),hNL:$('hNL'),hNLv:$('hNLv'),hNLd:$('hNLd'),hErr:$('hErr'),hPred:$('hPred'),hErrBox:$('hErrBox'),hDistLab:$('hDistLab'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
 const SIGNAME={G:L('綠燈','Green','進行'),Y:L('黃燈','Yellow','注意'),R:L('紅燈','Red','停止')};
 let lastHud=0;
 function hud(now){
@@ -93,6 +93,8 @@ function hud(now){
   const nl=LIMITS.filter(Lm=>Lm.s>p && Lm.s-p<1200 && Lm.v<lim).sort((a,b)=>a.s-b.s)[0];
   el.hNL.hidden=!nl; if(nl){ el.hNLv.textContent=nl.v; el.hNLd.textContent=Math.round(nl.s-p)+' m'; }
   // 手機版畫面上的小儀表：下一站、檔位、停車誤差
+  if(st){ el.hEta.textContent=fmtClock(BASE_CLOCK+st.arr).slice(0,5); el.hEtaLab.textContent=L('預定到達','Due','到着予定'); const sl=st.arr-S.t;
+    el.hSlack.textContent= sl>=0 ? L('尚有 ','in ','あと ')+fmtDur(sl) : L('延誤 ','late ','遅れ ')+fmtDur(sl); el.hSlack.classList.toggle('warn',sl<0); }
   if(st){ el.hNext.textContent=stName(st); el.hNextLab.textContent=S.doors?L('停車中','Stopped','停車中'):L('下一站','Next','次駅'); }
   el.hNotch.textContent=nLabel(S.eff); el.hNotch.className='hud-notch '+(S.eff>0?'p':S.eff<0?(S.eff===-9?'e':'b'):'n');
   el.hErr.hidden=el.ptr.hidden; el.hErr.style.left=el.ptr.style.left; el.hPred.hidden=el.pred.hidden; el.hPred.style.left=el.pred.style.left;
