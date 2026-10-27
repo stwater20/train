@@ -139,6 +139,11 @@ const ENVS = {
 };
 let ENV = ENVS[ROUTE.envs[0]];
 
+/* ---------- 畫面風格：方塊（預設）或寫實 ---------- */
+let STYLE='block';
+try{ const k=JSON.parse(localStorage.getItem('cabStyle')); if(k==='block'||k==='smooth') STYLE=k; }catch(e){}
+function setStyle(k){ try{ localStorage.setItem('cabStyle',JSON.stringify(k)); }catch(e){} location.reload(); }
+
 /* ---------- 難度模式 ---------- */
 const DIFFS = {
   easy:{key:'easy', icon:'🔰', name:L('新手','Beginner','初心者'), desc:L('時刻表寬鬆、扣分減半、提示煞車點與預計停車位置，不會空轉','Relaxed timetable, half penalties, braking cues and predicted stop point, no wheel slip','ゆとりダイヤ・減点半分・ブレーキ開始の合図と停止予測あり・空転なし'),

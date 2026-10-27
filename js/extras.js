@@ -240,6 +240,7 @@ function titleExtrasHTML(){
     ${sightsHTML()}
     ${stampBookHTML()}
     ${diffPickHTML()}
+    <div class="pickrow"><span class="lab">${L('畫面風格','Visual style','グラフィック')}</span><div class="diffpick" role="radiogroup">${[['block','🧱',L('方塊','Blocky','ブロック'),L('像積木一樣的方塊世界','A chunky, blocky world','積み木のようなブロックの世界')],['smooth','🌄',L('寫實','Realistic','リアル'),L('比較接近真實的山和樹','Smoother hills and trees','なめらかな山や木')]].map(([k,ic,n,d])=>`<button type="button" role="radio" aria-checked="${STYLE===k}" class="stylebtn diffbtn${STYLE===k?' on':''}" data-style="${k}"><b>${ic} ${n}</b><small>${d}</small></button>`).join('')}</div></div>
     ${trainPickHTML()}
     <div class="envpick" role="radiogroup" aria-label="${L('天氣與時段','Weather and time','天気と時間帯')}">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
     <div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> ${L('列車音效','Train sounds','走行音')}</label>
@@ -249,7 +250,8 @@ function titleExtrasHTML(){
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
   const f=document.getElementById('sfxTog'); if(f) f.addEventListener('change',()=>setSfx(f.checked));
-  document.querySelectorAll('.diffbtn').forEach(b=>b.addEventListener('click',()=>{ setDiff(b.dataset.diff); showOverlay('title'); }));
+  document.querySelectorAll('.diffbtn:not(.stylebtn)').forEach(b=>b.addEventListener('click',()=>{ setDiff(b.dataset.diff); showOverlay('title'); }));
+  document.querySelectorAll('.stylebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.style!==STYLE) setStyle(b.dataset.style); }));
   document.querySelectorAll('.trainbtn').forEach(b=>b.addEventListener('click',()=>{ const t=TRAINS[ROUTE.key].find(x=>x.key===b.dataset.train); if(!t || !trainUnlocked(t)) return; pickTrain(t); showOverlay('title'); }));
   document.querySelectorAll('.envbtn').forEach(b=>b.addEventListener('click',()=>{ setEnv(b.dataset.env); showOverlay('title'); const nb=document.querySelector('.envbtn[data-env="'+b.dataset.env+'"]'); if(nb) nb.focus({preventScroll:true}); }));
 }
