@@ -29,7 +29,7 @@ const $=id=>document.getElementById(id);
 const el={clock:$('clock'),score:$('score'),next:$('roNext'),nextEn:$('roNextEn'),nextLab:$('roNextLab'),dist:$('roDist'),distSub:$('roDistSub'),
   limit:$('roLimit'),limitSub:$('roLimitSub'),sig:$('roSig'),sigSub:$('roSigSub'),ahead:$('roAhead'),sched:$('roSched'),slack:$('roSlack'),
   err:$('roErr'),ptr:$('errPtr'),pred:$('predPtr'),door:$('pDoor'),atp:$('pAtp'),pn:$('pNotch'),acc:$('accFill'),done:$('routeDone'),mark:$('trainMark'),
-  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),hNext:$('hNext'),hNextLab:$('hNextLab'),hNotch:$('hNotch'),hErr:$('hErr'),hPred:$('hPred'),hErrBox:$('hErrBox'),hDistLab:$('hDistLab'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
+  hSpd:$('hSpd'),hLim:$('hLim'),hDist:$('hDist'),hNext:$('hNext'),hNextLab:$('hNextLab'),hNotch:$('hNotch'),hNL:$('hNL'),hNLv:$('hNLv'),hNLd:$('hNLd'),hErr:$('hErr'),hPred:$('hPred'),hErrBox:$('hErrBox'),hDistLab:$('hDistLab'),bDoor:$('bDoor'),bc:$('pBc'),grade:$('pGrade'),slip:$('pSlip')};
 const SIGNAME={G:L('綠燈','Green','進行'),Y:L('黃燈','Yellow','注意'),R:L('紅燈','Red','停止')};
 let lastHud=0;
 function hud(now){
@@ -89,6 +89,9 @@ function hud(now){
   el.done.style.width=(frac*100)+'%'; el.mark.style.left=(frac*100)+'%';
   stnEls.forEach((d,i)=>{ d.classList.toggle('done', i<S.next || (i===S.next && S.doors) || S.phase==='end'); d.classList.toggle('next', i===S.next && !S.doors && S.phase==='run'); });
   el.hSpd.textContent=Math.round(S.v*3.6);
+  // 下一個（比現在低的）速限與距離
+  const nl=LIMITS.filter(Lm=>Lm.s>p && Lm.s-p<1200 && Lm.v<lim).sort((a,b)=>a.s-b.s)[0];
+  el.hNL.hidden=!nl; if(nl){ el.hNLv.textContent=nl.v; el.hNLd.textContent=Math.round(nl.s-p)+' m'; }
   // 手機版畫面上的小儀表：下一站、檔位、停車誤差
   if(st){ el.hNext.textContent=stName(st); el.hNextLab.textContent=S.doors?L('停車中','Stopped','停車中'):L('下一站','Next','次駅'); }
   el.hNotch.textContent=nLabel(S.eff); el.hNotch.className='hud-notch '+(S.eff>0?'p':S.eff<0?(S.eff===-9?'e':'b'):'n');

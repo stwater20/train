@@ -82,6 +82,9 @@ function step(dt){
     }
   });
 
+  // 新手模式：前方有較低速限、該開始減速時提醒一次
+  if(DIFF.guide && S.phase==='run'){ const lim=currentLimit(); const Lm=LIMITS.find(x=>x.s>S.pos && x.v<lim && x.s-S.pos<1200); S.limCue=S.limCue||{};
+    if(Lm && !S.limCue[Lm.s]){ const vL=Lm.v/3.6, d=Lm.s-S.pos; if(S.v>vL+0.6 && d < (S.v*S.v-vL*vL)/(2*0.5)+40){ S.limCue[Lm.s]=true; toast(L('🔰 前方限速 '+Lm.v+'，現在開始減速','🔰 Limit '+Lm.v+' ahead — start slowing down','🔰 この先 制限 '+Lm.v+'、減速を開始'),'good'); } } }
   // 新手模式：該開始煞車時提醒一次
   if(DIFF.guide && !S.doors && S.phase==='run'){ const st=STATIONS[S.next]; if(st && S.cueAt!==S.next){ const d=st.pos-S.pos, need=S.v*S.v/(2*0.55)+25;
     if(S.v>3 && d>0 && d<need+20 && S.notch>=0){ S.cueAt=S.next; toast(L('🔰 現在開始煞車：拉到 B4 左右','🔰 Start braking now: about B4','🔰 ブレーキ開始：B4 くらいへ'),'good'); } } }

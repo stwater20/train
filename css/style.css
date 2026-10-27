@@ -424,3 +424,9 @@ html[lang="ja"] .btns .btn{white-space:nowrap;font-size:13.5px}
   body.playing .fact,body.playing .ann{left:8px;right:auto;max-width:55%;top:40px;bottom:auto;font-size:12px}
   body.playing .ann{top:auto;bottom:62px}
 }
+.hud-nl{display:none;align-items:center;gap:5px}
+.hud-nl .hud-lim.sm{width:26px;height:26px;font-size:12px;border-width:2px}
+.hud-nl b{font-family:var(--f-digit);font-weight:400;font-size:14px;color:var(--amber)}
+.hud-nl[hidden]{display:none!important}
+@media (max-width:640px){ body.playing .hud-nl{display:flex} }
+@media (max-height:500px) and (orientation:landscape){ body.playing .hud-nl{display:flex} }
