@@ -17,7 +17,7 @@ OG_IMAGE = SITE + '/og.jpg'
 
 TEXT = {
   'zh': {
-    'title': '火車駕駛模擬｜花東線・阿里山小火車・江之電 3D 駕駛遊戲',
+    'title': '火車駕駛模擬｜花東線・阿里山小火車・台北捷運・江之電 3D 駕駛遊戲',
     'desc': '免安裝、瀏覽器直接玩的 3D 火車駕駛遊戲。開花東線區間車、阿里山小火車爬上祝山看日出，或開日本江之電沿著海岸到江之島。附新手教學，中英日三語。',
     'name': '火車駕駛模擬',
     'about': '''<section class="about">
@@ -26,13 +26,14 @@ TEXT = {
     <ul>
       <li><b>台灣花東線</b>（花蓮 → 吉安 → 志學 → 平和 → 壽豐）：區間車穿過稻田，西邊就是中央山脈。附新手教學。</li>
       <li><b>阿里山林業鐵路祝山線</b>（阿里山 → 對高岳 → 祝山）：762 mm 窄軌登山鐵道，最陡 62‰，搭日出列車看雲海日出。</li>
+      <li><b>台北捷運淡水信義線</b>（北投 → 關渡 → 紅樹林 → 淡水）：雙線區間，看關渡大橋、淡水河紅樹林與觀音山。</li>
       <li><b>日本江之電</b>（稻村崎 → 七里濱 → 鎌倉高校前 → 腰越 → 江之島）：相模灣、富士山、江之島、鎌倉高校前平交道，以及腰越到江之島的路面電車區間。</li>
     </ul>
     <p>可以選晴天、黃昏、夜間或雨天，有行車音效、車內廣播與成就徽章。</p>
   </section>''',
   },
   'en': {
-    'title': 'Train Driving Simulator | Drive Taiwan’s Hualien Line, the Alishan Forest Railway and Japan’s Enoden',
+    'title': 'Train Driving Simulator | Drive Taiwan’s Hualien Line, Alishan Forest Railway, Taipei Metro and Japan’s Enoden',
     'desc': 'Free 3D cab-view train driving game in your browser. Drive a Hualien local train, climb to Zhushan on the Alishan Forest Railway at sunrise, or run the Enoden along the coast to Enoshima. Tutorial included.',
     'name': 'Train Driving Simulator',
     'about': '''<section class="about">
@@ -41,13 +42,14 @@ TEXT = {
     <ul>
       <li><b>Hualien Line, Taiwan</b> (Hualien → Ji’an → Zhixue → Pinghe → Shoufeng): a local EMU through rice paddies beside the Central Mountain Range. Includes a tutorial.</li>
       <li><b>Alishan Forest Railway, Zhushan Line</b> (Alishan → Duigaoyue → Zhushan): 762 mm narrow-gauge mountain railway, grades up to 62‰, and a sunrise train above a sea of clouds.</li>
+      <li><b>Taipei Metro Tamsui Line</b> (Beitou → Guandu → Hongshulin → Tamsui): double track past the Guandu Bridge, the Tamsui River mangroves and Guanyin Mountain.</li>
       <li><b>Enoden, Japan</b> (Inamuragasaki → Shichirigahama → Kamakura-Kōkōmae → Koshigoe → Enoshima): Sagami Bay, Mt Fuji, Enoshima, the famous Kamakura-Kōkōmae crossing and street running into Enoshima.</li>
     </ul>
     <p>Choose sunny, dusk, night or rain, with train sounds, onboard announcements and achievement badges.</p>
   </section>''',
   },
   'ja': {
-    'title': '電車運転シミュレーター｜江ノ電・阿里山森林鉄道・台湾の電車をブラウザで運転',
+    'title': '電車運転シミュレーター｜江ノ電・阿里山森林鉄道・台北MRT・台湾の電車をブラウザで運転',
     'desc': 'インストール不要、ブラウザで遊べる無料の3D電車運転ゲーム。江ノ電で稲村ヶ崎から江ノ島へ、阿里山森林鉄道でご来光の祝山へ、台湾・花東線の区間車も。運転台視点で停止位置ピタ止めと定時運転を目指そう。',
     'name': '電車運転シミュレーター',
     'about': '''<section class="about">
@@ -56,6 +58,7 @@ TEXT = {
     <ul>
       <li><b>江ノ電</b>（稲村ヶ崎 → 七里ヶ浜 → 鎌倉高校前 → 腰越 → 江ノ島）：相模湾、富士山、江の島、鎌倉高校前の踏切、腰越〜江ノ島の併用軌道。</li>
       <li><b>阿里山森林鉄道 祝山線</b>（阿里山 → 対高岳 → 祝山）：軌間 762 mm の登山鉄道、最急 62‰。ご来光列車で雲海の日の出を。</li>
+      <li><b>台北MRT 淡水信義線</b>（北投 → 関渡 → 紅樹林 → 淡水）：複線区間、関渡大橋や淡水河のマングローブ、観音山の眺め。</li>
       <li><b>台湾 花東線</b>（花蓮 → 吉安 → 志学 → 平和 → 寿豊）：区間車で田園と中央山脈のあいだを走ります。チュートリアル付き。</li>
     </ul>
     <p>晴れ・夕暮れ・夜・雨を選べて、走行音や車内放送、実績バッジもあります。</p>
@@ -63,21 +66,24 @@ TEXT = {
   },
 }
 
-ROUTE_KEYS = ['hualien', 'alishan', 'enoden']
+ROUTE_KEYS = ['hualien', 'alishan', 'enoden', 'tamsui']
 ROUTE_TEXT = {
   'zh': {
     'hualien': ('花東線區間車駕駛模擬｜花蓮到壽豐 3D 火車駕駛遊戲', '開臺鐵區間車從花蓮到壽豐，停吉安、志學、平和，學會看限速、號誌與進站停車。附新手教學，免安裝、瀏覽器直接玩。', '花東線'),
     'alishan': ('阿里山小火車駕駛模擬｜祝山線日出列車 3D 遊戲', '駕駛阿里山林業鐵路祝山線，從阿里山爬到海拔 2,451 公尺的祝山，搭日出列車看雲海與玉山日出，還能解鎖蒸汽機車 SL-31。', '阿里山小火車'),
+    'tamsui':  ('台北捷運淡水信義線駕駛模擬｜北投到淡水 3D 捷運遊戲', '用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。', '捷運淡水線'),
     'enoden':  ('江之電駕駛模擬｜鎌倉高校前・江之島 3D 電車遊戲', '開日本江之電從稻村崎到江之島，沿著相模灣海岸，經過《灌籃高手》的鎌倉高校前平交道與路面電車區間，遠方就是富士山。', '江之電'),
   },
   'en': {
     'hualien': ('Hualien Line Train Simulator | Drive a Taiwan Railway local train', 'Drive a Taiwan Railway local train from Hualien to Shoufeng, calling at Ji’an, Zhixue and Pinghe. Learn speed limits, signals and precise station stops. Free in your browser, tutorial included.', 'Hualien Line'),
     'alishan': ('Alishan Forest Railway Simulator | Sunrise train to Zhushan', 'Drive the Alishan Forest Railway Zhushan Line up to Zhushan at 2,451 m, the highest station in Taiwan, and watch the sunrise over a sea of clouds. Unlock the SL-31 steam locomotive.', 'Alishan Forest Railway'),
+    'tamsui':  ('Taipei Metro Simulator | Drive the Tamsui Line from Beitou to Tamsui', 'Drive a Taipei Metro train in manual mode from Beitou to Tamsui, past the Guandu plain, the red Guandu Bridge, the mangroves of the Tamsui River and Guanyin Mountain.', 'Taipei Metro Tamsui Line'),
     'enoden':  ('Enoden Train Simulator | Drive along the Kamakura coast to Enoshima', 'Drive Japan’s Enoden from Inamuragasaki to Enoshima along Sagami Bay, past the famous Kamakura-Kōkōmae crossing and through the street-running section, with Mt Fuji ahead.', 'Enoden'),
   },
   'ja': {
     'hualien': ('台湾・花東線 運転シミュレーター｜台湾鉄道の区間車を運転', '台湾鉄道の区間車で花蓮から寿豊まで。吉安・志学・平和に停車しながら、速度制限・信号・停止位置ピタ止めを学べます。インストール不要の無料ブラウザゲーム。', '台湾・花東線'),
     'alishan': ('阿里山森林鉄道 運転シミュレーター｜祝山線ご来光列車', '阿里山森林鉄道 祝山線を運転して、台湾最高所の祝山駅（標高 2,451 m）へ。ご来光列車で雲海と玉山の日の出を。蒸気機関車 SL-31 も解除できます。', '阿里山森林鉄道'),
+    'tamsui':  ('台北MRT 淡水線 運転シミュレーター｜北投から淡水へ', '台北MRT淡水信義線を手動運転で北投から淡水へ。関渡平原、赤い関渡大橋、淡水河のマングローブ、観音山の眺め。インストール不要の無料ブラウザゲーム。', '台北MRT淡水線'),
     'enoden':  ('江ノ電 運転シミュレーター｜鎌倉高校前・江ノ島までブラウザで運転', '江ノ電を稲村ヶ崎から江ノ島まで運転。相模湾の海沿い、鎌倉高校前の踏切、腰越〜江ノ島の併用軌道、富士山と江の島の眺め。インストール不要の無料ブラウザゲーム。', '江ノ電'),
   },
 }

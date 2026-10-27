@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--SEO-->
+<title>台北捷運淡水信義線駕駛模擬｜北投到淡水 3D 捷運遊戲</title>
+<meta name="description" content="用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。">
+<link rel="canonical" href="https://train.sectools.tw/tamsui/">
+<link rel="alternate" hreflang="zh-Hant" href="https://train.sectools.tw/tamsui/">
+<link rel="alternate" hreflang="en" href="https://train.sectools.tw/en/tamsui/">
+<link rel="alternate" hreflang="ja" href="https://train.sectools.tw/ja/tamsui/">
+<link rel="alternate" hreflang="x-default" href="https://train.sectools.tw/tamsui/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SecTools.tw">
+<meta property="og:title" content="台北捷運淡水信義線駕駛模擬｜北投到淡水 3D 捷運遊戲">
+<meta property="og:description" content="用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。">
+<meta property="og:url" content="https://train.sectools.tw/tamsui/">
+<meta property="og:image" content="https://train.sectools.tw/og.jpg">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="台北捷運淡水信義線駕駛模擬｜北投到淡水 3D 捷運遊戲">
+<meta name="twitter:description" content="用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。">
+<meta name="twitter:image" content="https://train.sectools.tw/og.jpg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "VideoGame", "name": "台北捷運淡水信義線駕駛模擬", "url": "https://train.sectools.tw/tamsui/", "description": "用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。", "inLanguage": "zh-Hant", "image": "https://train.sectools.tw/og.jpg", "genre": "Simulation", "gamePlatform": "Web browser", "applicationCategory": "Game", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": "SecTools.tw", "url": "https://sectools.tw/"}}</script>
+<!--/SEO-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="../css/style.css?v=20261027182205">
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1 id="hTitle">花東線駕駛室</h1>
+      <p id="hSub">區間車 4 輛編成 · 花蓮 → 壽豐 · 單線電化區間</p>
+    </div>
+    <div class="meters">
+      <button class="helpbtn mpause" id="bPause2" type="button" aria-label="暫停">❚❚</button>
+      <button class="helpbtn" id="bHelp" type="button">操作說明 <kbd style="font-family:var(--f-digit);font-weight:400;color:var(--muted)">?</kbd></button>
+      <div class="meter"><span class="lab">時刻</span><b id="clock">08:12:00</b></div>
+      <div class="meter"><span class="lab">得分</span><b id="score">0</b></div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <canvas id="view" aria-label="駕駛室前方視野"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="toast" id="toast" data-off role="status" aria-live="polite"></div>
+    <div class="hud" aria-hidden="true">
+      <div class="hud-row">
+        <div class="hud-spd"><b id="hSpd">0</b><small>km/h</small></div>
+        <div class="hud-lim" id="hLim">45</div>
+        <div class="hud-dist"><small id="hDistLab">停車位置</small><b id="hDist">—</b></div>
+        <div class="hud-notch" id="hNotch">B8</div>
+      </div>
+      <div class="hud-row hud-row2">
+        <div class="hud-next"><small id="hNextLab">下一站</small><b id="hNext">—</b></div>
+        <div class="hud-err" id="hErrBox"><div class="bar"><div class="tick"></div><div class="ptr pred" id="hPred" hidden></div><div class="ptr" id="hErr" hidden></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="route" id="route" aria-label="路線進度">
+    <div class="rail"></div><div class="done" id="routeDone"></div>
+    <div class="trainmark" id="trainMark"></div>
+  </div>
+
+  <section class="console">
+    <div class="sec gaugebox">
+      <canvas id="gauge" aria-label="速度表"></canvas>
+      <div class="accbar">
+        <span class="lab">加減速度 m/s²</span>
+        <div class="track"><div class="fill" id="accFill"></div><div class="zero"></div></div>
+        <div class="scale"><span>−1.5</span><span>0</span><span>+1.0</span></div>
+      </div>
+    </div>
+
+    <div class="sec readouts">
+      <div class="ro span2"><span class="lab" id="roNextLab">下一站</span><span class="name" id="roNext">吉安</span><span class="sub" id="roNextEn">Ji'an</span></div>
+      <div class="ro span2"><span class="lab">距停車位置</span><span class="dig xl" id="roDist">1150 m</span><span class="sub" id="roDistSub">藍色「4」標</span></div>
+      <div class="ro"><span class="lab">目前限速</span><span class="dig" id="roLimit">45</span><span class="sub" id="roLimitSub">km/h</span></div>
+      <div class="ro"><span class="lab">號誌</span><span class="lamp" id="roSig"><i></i><span>—</span></span><span class="sub" id="roSigSub">&nbsp;</span></div>
+      <div class="ro span2"><span class="lab">前方</span><div class="ahead" id="roAhead"><div>—</div></div></div>
+      <div class="ro span2"><span class="lab">預定到達</span><span class="dig" id="roSched">08:13:35</span><span class="sub" id="roSlack">&nbsp;</span></div>
+      <div class="ro span2 stopscale"><span class="lab">停車誤差 <span id="roErr" class="errval">接近時顯示</span></span>
+        <div class="bar"><div class="tick"></div><div class="ptr pred" id="predPtr" hidden></div><div class="ptr" id="errPtr" hidden></div></div>
+        <div class="lbls"><span>−15</span><span>−3</span><span>0</span><span>+3</span><span>+15 m</span></div>
+      </div>
+      <div class="ro full"><div class="pills"><span class="pill" id="pDoor">車門 關</span><span class="pill" id="pAtp">ATP 正常</span><span class="pill" id="pNotch">主控制器 B8</span><span class="pill" id="pBc">BC 440 kPa</span><span class="pill" id="pGrade">坡度 0‰</span><span class="pill" id="pSlip" hidden>空轉</span></div></div>
+    </div>
+
+    <div class="sec controls">
+      <div class="lever" id="lever" aria-label="主控制器"></div>
+      <div class="btns">
+        <button class="btn power" id="bUp" type="button">▲ 動力<kbd>W / ↑</kbd></button>
+        <button class="btn brake" id="bDown" type="button">▼ 煞車<kbd>S / ↓</kbd></button>
+        <button class="btn door full" id="bDoor" type="button">開門<kbd>空白鍵</kbd></button>
+        <button class="btn eb" id="bEB" type="button">緊急煞車<kbd>E</kbd></button>
+        <button class="btn" id="bHorn" type="button">鳴笛<kbd>H</kbd></button>
+        <button class="btn" id="bPause" type="button">暫停<kbd>P</kbd></button>
+        <button class="btn" id="bN" type="button">回 N 檔<kbd>N</kbd></button>
+      </div>
+    </div>
+  </section>
+  <p class="keys">鍵盤：<kbd>W</kbd>/<kbd>↑</kbd> 往動力推一格　<kbd>S</kbd>/<kbd>↓</kbd> 往煞車拉一格　<kbd>N</kbd> 中立　<kbd>E</kbd> 緊急煞車　<kbd>空白鍵</kbd> 停妥後開門　<kbd>H</kbd> 鳴笛　<kbd>P</kbd> 暫停　<kbd>?</kbd> 操作說明</p>
+  <p class="foot">由 <a href="https://sectools.tw/?utm_source=train-game&amp;utm_medium=referral" target="_blank" rel="noopener">SecTools.tw</a> 製作與維護 · 遊戲內距離與坡度為示意</p>
+  <!--ABOUT-->
+  <section class="about">
+    <h2>瀏覽器就能玩的火車駕駛模擬</h2>
+    <p>從駕駛室的 3D 視角操作主控制器與煞車，把車頭停在月台的停車位置標上。免安裝，手機也能玩。</p>
+    <ul>
+      <li><b>台灣花東線</b>（花蓮 → 吉安 → 志學 → 平和 → 壽豐）：區間車穿過稻田，西邊就是中央山脈。附新手教學。</li>
+      <li><b>阿里山林業鐵路祝山線</b>（阿里山 → 對高岳 → 祝山）：762 mm 窄軌登山鐵道，最陡 62‰，搭日出列車看雲海日出。</li>
+      <li><b>台北捷運淡水信義線</b>（北投 → 關渡 → 紅樹林 → 淡水）：雙線區間，看關渡大橋、淡水河紅樹林與觀音山。</li>
+      <li><b>日本江之電</b>（稻村崎 → 七里濱 → 鎌倉高校前 → 腰越 → 江之島）：相模灣、富士山、江之島、鎌倉高校前平交道，以及腰越到江之島的路面電車區間。</li>
+    </ul>
+    <p>可以選晴天、黃昏、夜間或雨天，有行車音效、車內廣播與成就徽章。</p>
+  </section>
+  <nav class="seolinks" aria-label="所有路線"><ul><li><a href="/hualien/">花東線</a></li><li><a href="/alishan/">阿里山小火車</a></li><li><a href="/enoden/">江之電</a></li><li><a href="/tamsui/">捷運淡水線</a></li></ul><ul><li><a href="/" hreflang="zh-Hant">中文</a></li><li><a href="/en/" hreflang="en">English</a></li><li><a href="/ja/" hreflang="ja">日本語</a></li></ul></nav>
+  <!--/ABOUT-->
+</div>
+
+<div class="overlay" id="ov">
+  <div class="card" id="ovCard"></div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<!--FORCE-->
+<script>window.FORCE_ROUTE="tamsui";</script>
+<script src="../js/data.js?v=20261027182205"></script>
+<script src="../js/help.js?v=20261027182205"></script>
+<script src="../js/game.js?v=20261027182205"></script>
+<script src="../js/extras.js?v=20261027182205"></script>
+<script src="../js/tutorial.js?v=20261027182205"></script>
+<script src="../js/audio.js?v=20261027182205"></script>
+<script src="../js/render3d.js?v=20261027182205"></script>
+<script src="../js/hud.js?v=20261027182205"></script>
+<script src="../js/main.js?v=20261027182205"></script>
+</body>
+</html>

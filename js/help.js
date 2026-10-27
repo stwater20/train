@@ -54,6 +54,11 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
     <li><b>Red</b>: a train is ahead. Stop before the signal and wait for it to change. Approaching too fast triggers ATP (−30); passing it costs 150.</li>
   </ul>
   <p>On the Hualien line there is block signal No. 32 between Zhixue and Pinghe. The Alishan line has no signal.</p></section>
+<section><h3>Taipei Metro Tamsui Line</h3>
+  <ul>
+    <li>Beitou to Tamsui on double track with third-rail power — no overhead wires and no level crossings. In real service it runs automatically; here you drive it in manual mode.</li>
+    <li>Six cars, 141 m long, with long platforms. Top speed 80 km/h, 35 km/h into Tamsui. Oncoming trains pass on your right.</li>
+  </ul></section>
 <section><h3>Enoden</h3>
   <ul>
     <li>The Enoden runs from Inamuragasaki to Enoshima with Sagami Bay on your left. Stations are close together and there are many level crossings; the 「笛」 board is the whistle board.</li>
@@ -144,6 +149,11 @@ const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンド�
     <li><b>赤（停止）</b>：前方に列車あり。信号の手前で停車して変わるのを待ちます。速すぎると ATP 作動（−30）、冒進は −150。</li>
   </ul>
   <p>花東線の志学〜平和間に第32号閉塞信号機があります。阿里山線には信号機はありません。</p></section>
+<section><h3>台北MRT 淡水信義線</h3>
+  <ul>
+    <li>北投から淡水へ。複線・第三軌条集電で、架線も踏切もありません。実際は自動運転ですが、ここでは手動運転モードで運転します。</li>
+    <li>6両・全長 141 m、ホームも長めです。最高 80 km/h、淡水駅手前は 35 km/h。対向列車が右側を通過します。</li>
+  </ul></section>
 <section><h3>江ノ電</h3>
   <ul>
     <li>江ノ電は稲村ヶ崎から江ノ島へ、左手に相模湾を見ながら走ります。駅間が短く踏切が多いので、「笛」標識で警笛を。</li>

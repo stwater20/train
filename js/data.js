@@ -33,6 +33,7 @@ const ROUTES = {
     limits:[ {s:0,e:300,v:45}, {s:1700,e:2050,v:65}, {s:2650,e:2900,v:50}, {s:4300,e:4750,v:70}, {s:5300,e:5600,v:60} ],
     curves:[ {s:850,e:1050,k:0.0016}, {s:1700,e:2050,k:0.0032}, {s:2250,e:2450,k:-0.0020}, {s:3150,e:3400,k:0.0018}, {s:4300,e:4750,k:-0.0030}, {s:5000,e:5200,k:0.0012} ],
     crossings:[780, 3120, 4920],
+    loops:[{s:2440, e:2820, st:2}],
     signal:3480,
     grades:[ {s:-800,e:200,g:0}, {s:200,e:900,g:5}, {s:900,e:1250,g:0}, {s:1250,e:2100,g:8}, {s:2100,e:2700,g:0}, {s:2700,e:3300,g:-6}, {s:3300,e:3950,g:0}, {s:3950,e:4800,g:10}, {s:4800,e:5150,g:-4}, {s:5150,e:99999,g:0} ],
   },
@@ -50,6 +51,7 @@ const ROUTES = {
     curves:[ {s:300,e:420,k:0.004}, {s:520,e:760,k:-0.0065}, {s:900,e:1050,k:0.004}, {s:1180,e:1420,k:0.0055}, {s:1560,e:1700,k:-0.004}, {s:1900,e:2120,k:-0.0065},
              {s:2700,e:2800,k:0.004}, {s:2860,e:3080,k:0.0065}, {s:3200,e:3330,k:-0.005} ],
     crossings:[1640],
+    loops:[{s:2318, e:2670, st:1}],
     signal:null,
     grades:[ {s:-800,e:150,g:0}, {s:150,e:900,g:45}, {s:900,e:1500,g:60}, {s:1500,e:2300,g:50}, {s:2300,e:2600,g:0}, {s:2600,e:3400,g:62}, {s:3400,e:99999,g:0} ],
   },
@@ -68,9 +70,30 @@ const ROUTES = {
     limits:[ {s:0,e:160,v:25}, {s:560,e:800,v:35}, {s:1880,e:2080,v:30}, {s:2880,e:3080,v:30}, {s:3120,e:3600,v:25}, {s:3600,e:3780,v:15} ],
     curves:[ {s:560,e:800,k:-0.0035}, {s:1450,e:1650,k:0.0025}, {s:2350,e:2550,k:-0.003}, {s:3600,e:3700,k:0.008} ],
     crossings:[450, 1380, 2045, 2640],
+    loops:[{s:920, e:1265, st:1}, {s:2820, e:3110, st:3}],
     street:{s:3120, e:3600},
     signal:null,
     grades:[ {s:-800,e:250,g:0}, {s:250,e:850,g:-6}, {s:850,e:1250,g:0}, {s:1250,e:1800,g:5}, {s:1800,e:2200,g:0}, {s:2200,e:2800,g:-4}, {s:2800,e:99999,g:0} ],
+  },
+  tamsui:{
+    key:'tamsui', name:L('捷運淡水信義線','Taipei Metro Tamsui Line','台北MRT淡水信義線'), title:L('台北捷運駕駛室','Taipei Metro Cab','台北MRT運転台'), train:L('捷運 6 節編成','6-car metro train','MRT 6両編成'), desc:L('雙線・第三軌供電','double track, third rail','複線・第三軌条'),
+    trainLen:141, lineMax:80, gauge:1.435, electric:true, thirdRail:true, double:true, elev0:10, elevScale:1, railLen:25,
+    power:1.1, ebDecel:1.4, brakeStep:0.14, platLen:170, sunFlip:true,
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'北投',   en:'Beitou',     ja:'北投',   pos:0},
+      {name:'復興崗', en:'Fuxinggang', ja:'復興崗', pos:900,  leg:106},
+      {name:'忠義',   en:'Zhongyi',    ja:'忠義',   pos:1700, leg:88},
+      {name:'關渡',   en:'Guandu',     ja:'関渡',   pos:2500, leg:86},
+      {name:'竹圍',   en:'Zhuwei',     ja:'竹囲',   pos:3500, leg:98},
+      {name:'紅樹林', en:'Hongshulin', ja:'紅樹林', pos:4400, leg:91},
+      {name:'淡水',   en:'Tamsui',     ja:'淡水',   pos:5400, leg:102},
+    ],
+    limits:[ {s:0,e:200,v:45}, {s:2300,e:2620,v:60}, {s:5200,e:5450,v:35} ],
+    curves:[ {s:1150,e:1400,k:-0.002}, {s:2300,e:2620,k:0.0028}, {s:3800,e:4100,k:-0.0022}, {s:4850,e:5150,k:0.0018} ],
+    crossings:[],
+    signal:null,
+    grades:[ {s:-800,e:950,g:0}, {s:950,e:1450,g:10}, {s:1450,e:1750,g:0}, {s:1750,e:2250,g:-12}, {s:2250,e:2550,g:0}, {s:2550,e:3250,g:6}, {s:3250,e:3550,g:0}, {s:3550,e:4150,g:-5}, {s:4150,e:4450,g:0}, {s:4450,e:5150,g:4}, {s:5150,e:99999,g:0} ],
   },
 };
 let ROUTE = LANG==='ja' ? ROUTES.enoden : ROUTES.hualien; // 日文版預設先開江之電
@@ -140,6 +163,11 @@ const TRAINS = {
     {key:'sl31', name:L('蒸汽機車 SL-31（Shay 型）','Steam loco SL-31 (Shay)','蒸気機関車 SL-31（シェイ式）'), power:0.82, brakeStep:0.12, ebDecel:1.15, sound:'steam', frame:'#1a1410',
      req:'sunrise', reqText:L('解鎖成就「祝山看日出」','Unlock “Sunrise at Zhushan”','実績「祝山のご来光」を解除')},
   ],
+  tamsui:[
+    {key:'c381', name:L('C381 型電聯車','Type C381 train','C381形 電車'), power:1.1, brakeStep:0.14, ebDecel:1.4, sound:'vvvf', pitch:1.2, frame:'#0d1215'},
+    {key:'c301', name:L('C301 型電聯車（第一代）','Type C301 train (first generation)','C301形 電車（初代）'), power:0.95, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.8, frame:'#141a20',
+     req:'gradeA_tamsui', reqText:L('淡水線拿到 A 以上評價','Get an A or better on the Tamsui Line','淡水線で A 以上の評価')},
+  ],
   enoden:[
     {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},
     {key:'e300', name:L('江之電 300 形（305 編成）','Enoden Type 300 (set 305)','江ノ電 300形（305編成）'), power:0.78, brakeStep:0.12, ebDecel:1.3, sound:'resistor', pitch:0.7, frame:'#16201a',
@@ -153,6 +181,7 @@ Object.assign(ROUTE,{power:TRAIN.power, brakeStep:TRAIN.brakeStep, ebDecel:TRAIN
 const SIGHTS = {
   '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],
   '阿里山':['神木群 →'], '祝山':['觀日平台 →'],
+  '北投':['北投溫泉 →'], '關渡':['關渡宮 →','關渡自然公園 →'], '紅樹林':['紅樹林保護區 →'], '淡水':['淡水老街 →','漁人碼頭 →'],
   '七里濱':['七里ヶ浜海岸 →'], '鎌倉高校前':['踏切 撮影はマナーを守って'], '腰越':['腰越漁港 →'], '江之島':['江の島 →','江島神社 →'],
 };
 let BASE_CLOCK = ENV.clock;

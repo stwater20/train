@@ -116,3 +116,16 @@ function audioTick(dt){
 }
 /* 開關門時的氣壓聲 */
 function doorSound(open){ if(!AU.ready||!sfxOn) return; puff(open?0.5:0.4,0.07); ping(open?140:110,0.25,0.12,'sine',open?0.35:0.3); }
+
+/* 錯車：一陣風切聲 */
+function whoosh(k){
+  if(!AU.ready || !sfxOn || k<0.15) return;
+  const c=actx, t=c.currentTime, s=c.createBufferSource(); s.buffer=AU.white; const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.setValueAtTime(400,t); f.frequency.linearRampToValueAtTime(1400,t+0.4); f.frequency.linearRampToValueAtTime(300,t+1.6);
+  const g=c.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.22*k,t+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+1.8);
+  s.connect(f); f.connect(g); g.connect(AU.master); s.start(t,Math.random(),2);
+}
+/* 對向車發車前的兩聲短鳴笛（遠一點、小聲一點） */
+function passToot(){
+  if(!AU.ready || !sfxOn) return;
+  [0,0.45].forEach(d=>{ [349,415].forEach(fr=>ping(fr,0.3,0.035,'sawtooth',d)); });
+}
