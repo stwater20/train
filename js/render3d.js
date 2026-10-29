@@ -717,6 +717,66 @@ function init3D(){
     const mid=fr(END/2); sea=new T.Mesh(new T.PlaneGeometry(26000,26000),new T.MeshBasicMaterial({map:seaTex,transparent:true,depthWrite:false,color:0xffffff}));
     sea.rotation.x=-Math.PI/2; sea.position.set(mid.x,-125,mid.z); scene.add(sea);
     const base=new T.Mesh(new T.PlaneGeometry(26000,26000),new T.MeshBasicMaterial({color:0xeef2f5})); base.rotation.x=-Math.PI/2; base.position.set(mid.x,-140,mid.z); scene.add(base); sea.userData.base=base; }
+  /* ---------- 在地地標（位置為示意，但都是沿線真的有的東西） ---------- */
+  {
+    const mat=c=>std({color:c,roughness:0.7});
+    const box=(g,w,h,d,c,x,y,z,ry)=>{ const m=new T.Mesh(new T.BoxGeometry(w,h,d),typeof c==='number'?mat(c):c); m.position.set(x||0,(y||0)+h/2,z||0); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; g.add(m); return m; };
+    const put=(g,sv,lat,ry)=>{ place(g,sv,lat,0,ry||0); scene.add(g); return g; };
+    /* 台灣廟宇：紅牆、橘黃屋頂、燕尾翹脊 */
+    const temple=(sv,lat,sc,ry)=>{ const g=new T.Group(); box(g,9,4.2,7,0xb8322a); box(g,10.4,0.5,8.4,0xd9a23a,0,4.2);
+      const roof=new T.Mesh(roofG2(),mat(0xe0a83c)); roof.scale.set(9.6,2.2,8); roof.position.y=4.7; roof.castShadow=true; g.add(roof);
+      [-1,1].forEach(sd=>{ const tip=box(g,1.8,0.35,0.4,0xe0a83c,sd*5.2,6.6,0); tip.rotation.z=-sd*0.5; });
+      box(g,3,2.6,0.3,0x6b2018,0,0,3.6); box(g,0.5,3.2,0.5,0xd93a2e,-3.4,0,3.9); box(g,0.5,3.2,0.5,0xd93a2e,3.4,0,3.9);
+      g.scale.setScalar(sc||1); return put(g,sv,lat,ry); };
+    /* 土地公廟：路邊的小廟 */
+    const shrine=(sv,lat)=>{ const g=new T.Group(); box(g,1.6,1.4,1.3,0xc23a2e); const r=new T.Mesh(roofG2(),mat(0xe0a83c)); r.scale.set(2.0,0.8,1.7); r.position.y=1.4; g.add(r); box(g,0.8,0.7,0.1,0x4a1610,0,0.15,0.66); return put(g,sv,lat,Math.PI/2); };
+    /* 白鷺鷥 */
+    const egrets=(s0,s1,lat0,lat1,n,seed)=>{ const list=[]; for(let i=0;i<n;i++){ const sv=s0+rnd(seed+i)*(s1-s0), lat=lat0+rnd(seed+i+50)*(lat1-lat0); list.push({s:sv,lat,h:0.05,ry:rnd(seed+i+90)*6}); }
+      const body=new T.BoxGeometry(0.25,0.22,0.55); body.translate(0,0.55,0); const neck=new T.BoxGeometry(0.08,0.35,0.08); neck.translate(0,0.85,0.22); const legs=new T.BoxGeometry(0.06,0.45,0.06); legs.translate(0,0.22,0);
+      inst(mergeGeos([body,neck,legs]),std({color:0xf7f7f2,roughness:0.6}),list,{cast:true}); };
+    /* 鳥居 */
+    const torii=(sv,lat,c,ry)=>{ const g=new T.Group(); [-2.4,2.4].forEach(x=>{ const p=new T.Mesh(BLOCK?new T.BoxGeometry(0.6,7,0.6):new T.CylinderGeometry(0.3,0.34,7,12),mat(c)); p.position.set(x,3.5,0); p.castShadow=true; g.add(p); });
+      box(g,7.4,0.5,0.6,c,0,6.9); box(g,6,0.35,0.4,c,0,5.7); return put(g,sv,lat,ry); };
+    /* 船 */
+    const boat=(sv,lat,ry,c)=>{ const g=new T.Group(); box(g,2.6,1,7,c||0xf2f2ee,0,-0.4); box(g,1.8,1.2,2.4,0x3f5f86,0,0.6,-0.8); return put(g,sv,lat,ry); };
+    /* 一般建築（學校、校園） */
+    const building=(sv,lat,w,h,d,c,ry,roofC)=>{ const g=new T.Group(); box(g,w,h,d,M.wall); g.children[0].material=M.wall; if(roofC!=null){ const r=new T.Mesh(roofG2(),mat(roofC)); r.scale.set(w+0.8,2.2,d+0.6); r.position.y=h; g.add(r); } return put(g,sv,lat,ry); };
+
+    if(ROUTE.key==='hualien'){
+      // 稻田裡的白鷺鷥、路邊的土地公廟
+      egrets(300,1000,14,90,14,7000); egrets(3200,3800,14,120,12,7100); egrets(4300,5200,14,110,12,7200);
+      [620,2000,3300,4600].forEach((sv,i)=>shrine(sv,i%2?9.2:-9.2));
+      // 吉安附近：日式佛寺（慶修院）
+      { const g=new T.Group(); box(g,8,3.6,8,0x5a3f2e); const r=new T.Mesh(roofG2(),mat(0x4a5258)); r.scale.set(10,3,10); r.position.y=3.6; g.add(r); box(g,9,0.6,9,0x8a8a84,0,-0.3); put(g,1320,-34,0.3); }
+      // 志學一帶：大學校園建築
+      building(2760,40,30,9,16,0xffffff,0.1,0x9a3a2e); building(2830,70,24,12,14,0xffffff,-0.2,0x9a3a2e); building(2700,78,18,7,12,0xffffff,0.4,0x9a3a2e);
+      // 壽豐附近的廟
+      temple(5320,-30,1.1,0.2);
+    }
+    if(ROUTE.key==='alishan'){
+      // 祝山觀日平台與等日出的人群
+      const g=new T.Group(); box(g,26,0.6,14,0x6b4a2e); for(let i=-12;i<=12;i+=3){ box(g,0.2,1.1,0.2,0x5a3f28,i,0.6,6.8); } box(g,26,0.15,0.15,0x5a3f28,0,1.6,6.8);
+      const pm=std({color:0x2b2d33}); for(let k=0;k<26;k++){ const p=new T.Mesh(new T.BoxGeometry(0.45,1.6,0.35),k%4?pm:std({color:[0xd24b3c,0x3d6fb6,0xf0c040][k%3]})); p.position.set(-11+rnd(9400+k)*22,1.4,-5+rnd(9500+k)*10); p.castShadow=true; g.add(p); }
+      put(g,END+40,-28,0);
+    }
+    if(JP){
+      // 鎌倉高校（坡上的白色校舍）、平交道旁拍照的遊客
+      building(2010,46,40,12,14,0xffffff,0.05,null);
+      { const g=new T.Group(); const pm=std({color:0x2b2d33}); for(let k=0;k<7;k++){ const p=new T.Mesh(new T.BoxGeometry(0.45,1.6,0.35),k%2?pm:std({color:[0xf0c040,0xd24b3c,0x5a8f4e,0xe07aa0][k%4]})); p.position.set((k-3)*0.9,0.8,0); p.castShadow=true; g.add(p); } put(g,2058,-9.5,0); }
+      // 七里濱海上的衝浪客
+      { const list=[], boards=[]; for(let i=0;i<14;i++){ const sv=900+rnd(9600+i)*900, lat=-70-rnd(9700+i)*80; boards.push({s:sv,lat,h:-0.3,ry:rnd(9800+i)*6,c:[0xf2c14e,0x4fb3d9,0xe86a5c,0xf4f4f0][i%4]}); list.push({s:sv,lat,h:-0.1}); }
+        inst(new T.BoxGeometry(0.5,0.08,2.1),std({color:0xffffff}),boards,{}); inst(new T.BoxGeometry(0.4,0.9,0.3),std({color:0x1d2228}),list,{}); }
+      // 江之島入口的青銅鳥居（在弁天橋前）
+      torii(END+35,-24,0x4f6b5e,0);
+    }
+    if(ROUTE.key==='tamsui'){
+      // 關渡宮（河邊的廟）、濕地的白鷺鷥、河上的船
+      temple(2900,-58,1.6,0.3);
+      egrets(1850,3050,-20,-68,26,7300);
+      [[3600,-180,0.2,0xf2f2ee],[4100,-260,-0.4,0x3f86c4],[4700,-150,0.6,0xf2f2ee],[5200,-320,1.2,0xc8322b],[5350,-120,-0.2,0xf2f2ee]].forEach(([sv,lat,ry,c])=>boat(sv,lat,ry,c));
+    }
+  }
+
   /* 對向列車：每條路線不同塗裝 */
   const LIVERY = AL ? {body:'#b3262b', top:'#b3262b', stripe:'#f2e6c8', cars:4, len:13, w:2.3, h:2.7}
                : JP ? {body:'#2f7d4f', top:'#efe6c6', stripe:'#2f7d4f', cars:2, len:12.6, w:2.5, h:3.0}
