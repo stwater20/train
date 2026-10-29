@@ -112,7 +112,7 @@ function setNotch(n){
   if(S.phase!=='run' || S.paused) return;
   n=clamp(n,-9,5);
   if(n>0 && S.doors){ toast(L('車門開啟中，無法加速','Doors are open, cannot power','ドア開扉中は力行できません')); return; }
-  if(n===-9 && S.notch!==-9 && S.v>2) penal(10,'eb',L('使用緊急煞車','Emergency brake used','非常ブレーキ使用'));
+  if(n===-9 && S.notch!==-9 && S.v>2){ penal(10,'eb',L('使用緊急煞車','Emergency brake used','非常ブレーキ使用')); const sg=document.querySelector('.stage'); sg.classList.remove('shake'); void sg.offsetWidth; sg.classList.add('shake'); }
   S.notch=n; renderLever();
 }
 function action(){
@@ -132,7 +132,8 @@ function action(){
   S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
-  toast(stName(st)+L('｜誤差 ',' | error ','｜誤差 ')+fmtErr(err)+'・'+trWord(rank)+' +'+pp+'｜'+trWord(trank)+' +'+tp,'good');
+  if(typeof stopFX==='function') stopFX(rank,pp,trank,tp,err);
+  else toast(stName(st)+L('｜誤差 ',' | error ','｜誤差 ')+fmtErr(err)+'・'+trWord(rank)+' +'+pp+'｜'+trWord(trank)+' +'+tp,'good');
 }
 let actx=null;
 function horn(){
@@ -177,7 +178,7 @@ function endGame(){ tutStop(); setPlaying(false); S.phase='end'; S.doors=false; 
 /* ---------- overlay ---------- */
 const ov=document.getElementById('ov'), ovCard=document.getElementById('ovCard');
 let curOv=null, helpReturn=null;
-function hideOverlay(){ ov.hidden=true; curOv=null; }
+function hideOverlay(){ ov.hidden=true; curOv=null; document.body.classList.remove('menu'); }
 function openHelp(){
   if(curOv==='help') return;
   if(S.phase==='run'){ helpReturn = S.paused ? 'pause' : 'run'; S.paused=true; }
@@ -289,6 +290,7 @@ function langPickHTML(){
 function showOverlay(kind){
   ov.hidden=false;
   curOv=kind;
+  ov.classList.toggle('is-title',kind==='title'); document.body.classList.toggle('menu',kind==='title');
   if(kind==='help'){
     ovCard.className='card wide'; ovCard.innerHTML=L(HELP_ZH,HELP_EN,HELP_JA);
     document.getElementById('ovGo').textContent = helpReturn==='run'||helpReturn==='pause' ? L('回到駕駛','Back to driving','運転に戻る') : L('回上一頁','Back','戻る');
@@ -314,12 +316,17 @@ function showOverlay(kind){
       : L(`你是${ENV.word} ${hhmm} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
           `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “4” board on each platform — the closer, the higher your score — and keep to the timetable.`,
           `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「4」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
-    ovCard.innerHTML=`${langPickHTML()}
+    const tab=window.titleTab||'go';
+    ovCard.className='card menu';
+    ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p></header>
+      <nav class="menu-tabs" role="tablist">${[['go','🚆',L('出發','Depart','出発')],['collect','🏅',L('收藏','Collection','コレクション')],['settings','⚙️',L('設定','Settings','設定')]].map(([k,ic,n])=>`<button type="button" role="tab" class="menutab${tab===k?' on':''}" aria-selected="${tab===k}" data-tab="${k}"><span>${ic}</span>${n}</button>`).join('')}</nav>
+      <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
+      <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
+      <section class="tabpane" data-pane="go"${tab==='go'?'':' hidden'}>
       <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
-      <p class="eyebrow">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p>
-      <h2>${ROUTE.title}</h2>
-      <p>${story}</p>
-      <ul class="howto">
+      <p class="story">${story}</p>
+      ${departPicksHTML()}
+      <details class="howto-box"><summary>${L('駕駛重點','Driving tips','運転のポイント')}</summary><ul class="howto">
         <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
         <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
         <li>${TS ? L('最高 80 km/h，雙線區間沒有平交道；淡水站前限速 35 km/h','Top speed 80 km/h, double track with no level crossings; 35 km/h into Tamsui','最高 80 km/h、複線で踏切なし。淡水駅手前は 35 km/h')
@@ -327,9 +334,12 @@ function showOverlay(kind){
              : AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
         <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))(JP?'笛':'鳴')}</li>
-      </ul>
+      </ul></details>
       <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
-      ${titleExtrasHTML()}`;
+      </section>`;
+    document.querySelectorAll('.menutab').forEach(b=>b.addEventListener('click',()=>{ window.titleTab=b.dataset.tab; document.querySelectorAll('.menutab').forEach(x=>{ const on=x===b; x.classList.toggle('on',on); x.setAttribute('aria-selected',on); }); document.querySelectorAll('.tabpane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); ov.scrollTop=0; }));
+    const h2b=document.getElementById('ovHelp2'); if(h2b) h2b.addEventListener('click',openHelp);
+    const ib=document.getElementById('ovInstall'); if(ib && window.__installPrompt){ ib.hidden=false; ib.addEventListener('click',async()=>{ const e=window.__installPrompt; window.__installPrompt=null; e.prompt(); ib.hidden=true; }); }
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTut').addEventListener('click',startTutorial);
     document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
@@ -360,6 +370,7 @@ function showOverlay(kind){
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); setPlaying(false); showOverlay('title'); });
     bindEndExtras(g);
+    if(typeof endFX==='function') endFX(g,Math.round(sc));
   }
   const b=document.getElementById('ovGo'); if(b) setTimeout(()=>{ try{b.focus({preventScroll:true});}catch(e){} },30);
 }

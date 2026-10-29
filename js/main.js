@@ -5,6 +5,7 @@
 let last=performance.now(), accum=0;
 function frame(now){
   const dt=Math.min(0.1,(now-last)/1000); last=now;
+  if(S.phase==='title' && R3){ S.pos+=dt*11; S.v=11; S.t+=dt; if(S.pos>END-60) S.pos=-40; }
   if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt; while(accum>=1/60){ step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
   else accum=0;
   tutTick(); extrasTick(dt); audioTick(dt); render(dt); hud(now);
@@ -50,7 +51,16 @@ function boot(data){
   else if(S.paused) showOverlay('pause');
   else hideOverlay();
   resize(); renderLever();
-  const go=()=>{ try{ init3D(); }catch(e){ console.error(e); toast(L('3D 場景建立失敗','Could not build the 3D scene','3Dシーンを作成できませんでした'),'bad'); } };
+  // 載入畫面：顯示路線名稱與駕駛小技巧，3D 場景建好後淡出
+  const TIPS=[L('停車誤差 3 m 內可以蓋到車站紀念章','Stop within 3 m to collect the station stamp','誤差 3 m 以内で駅スタンプ獲得'),
+    L('速限要等整列車尾端通過才解除','A limit ends only when the rear of the train has passed','制限は最後尾が抜けるまで続きます'),
+    L('雨天軌道濕滑，起步用 P2–P3 比較不會空轉','On wet rails, start with P2–P3 to avoid wheel slip','雨の日は P2–P3 で起動すると空転しにくい'),
+    L('平交道前的鳴笛標過後按 H 鳴笛有加分','Sound the horn after the whistle board for a bonus','汽笛標識の後で警笛を鳴らすと加点'),
+    L('專業模式拿到好成績可以解鎖新車種','Good results in Pro mode unlock new trains','上級モードの好成績で新車両が解除されます')];
+  const ld=document.getElementById('loading'), tip=document.getElementById('ldTip');
+  if(ld){ ld.querySelector('.ld-title').textContent=ROUTE.title; tip.textContent=TIPS[(Math.random()*TIPS.length)|0]; }
+  let ldGone=false; const hideLd=()=>{ if(ld && !ldGone){ ldGone=true; ld.classList.add('done'); setTimeout(()=>ld.remove(),600); } };
+  const go=()=>{ try{ init3D(); }catch(e){ console.error(e); toast(L('3D 場景建立失敗','Could not build the 3D scene','3Dシーンを作成できませんでした'),'bad'); } requestAnimationFrame(()=>requestAnimationFrame(hideLd)); setTimeout(hideLd,4000); };
   // 3D 招牌是畫在 canvas 上的，要先把會用到的中文字形載入，不然會用到系統字型而跑版
   const glyphs=STATIONS.map(s=>s.name+s.en).join('')+Object.values(SIGHTS).flat().join('')+'車站鳴◀▶→‰L0123456789.';
   const fl=document.fonts ? Promise.all(['700 100px "Noto Sans TC"','500 30px "Noto Sans TC"'].map(f=>document.fonts.load(f,glyphs))).then(()=>document.fonts.ready) : Promise.resolve();
@@ -58,3 +68,10 @@ function boot(data){
   requestAnimationFrame(t=>{ last=t; frame(t); });
 }
 boot({});
+
+/* 安裝成 App（PWA）與全螢幕 */
+if('serviceWorker' in navigator && location.protocol==='https:') window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); window.__installPrompt=e; const b=document.getElementById('ovInstall'); if(b) b.hidden=false; });
+{ const fb=document.getElementById('bFull'); const can=document.fullscreenEnabled||document.webkitFullscreenEnabled;
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  if(fb && can && !standalone){ fb.hidden=false; fb.addEventListener('click',()=>{ const d=document; if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); } else { const el=d.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el).catch?.(()=>{}); } }); } }

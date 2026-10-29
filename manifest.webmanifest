@@ -1,0 +1,17 @@
+{
+  "name": "火車駕駛模擬 Train Driving Simulator",
+  "short_name": "火車駕駛",
+  "description": "3D 駕駛室視角的火車駕駛遊戲：花東線、阿里山小火車、台北捷運淡水線與江之電。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#151c21",
+  "theme_color": "#151c21",
+  "lang": "zh-Hant",
+  "icons": [
+    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

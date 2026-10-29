@@ -24,13 +24,20 @@
 <meta name="twitter:image" content="https://train.sectools.tw/og.jpg">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "VideoGame", "name": "Train Driving Simulator", "url": "https://train.sectools.tw/en/", "description": "Free 3D cab-view train driving game in your browser. Drive a Hualien local train, climb to Zhushan on the Alishan Forest Railway at sunrise, or run the Enoden along the coast to Enoshima. Tutorial included.", "inLanguage": "en", "image": "https://train.sectools.tw/og.jpg", "genre": "Simulation", "gamePlatform": "Web browser", "applicationCategory": "Game", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": "SecTools.tw", "url": "https://sectools.tw/"}}</script>
 <!--/SEO-->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#151c21">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Share+Tech+Mono&display=swap">
-<link rel="stylesheet" href="../css/style.css?v=20261029180505">
+<link rel="stylesheet" href="../css/style.css?v=20261029210408">
 </head>
 <body>
 
+<div id="loading" class="loading" role="status"><div class="ld-in"><div class="ld-logo">🚆</div><p class="ld-title">火車駕駛模擬</p><div class="ld-bar"><i></i></div><p class="ld-tip" id="ldTip">正在鋪設軌道…</p></div></div>
 <div class="app">
   <header class="top">
     <div class="brand">
@@ -38,6 +45,7 @@
       <p id="hSub">區間車 4 輛編成 · 花蓮 → 壽豐 · 單線電化區間</p>
     </div>
     <div class="meters">
+      <button class="helpbtn mpause" id="bFull" type="button" aria-label="全螢幕" hidden>⛶</button>
       <button class="helpbtn mpause" id="bPause2" type="button" aria-label="暫停">❚❚</button>
       <button class="helpbtn" id="bHelp" type="button">操作說明 <kbd style="font-family:var(--f-digit);font-weight:400;color:var(--muted)">?</kbd></button>
       <div class="meter"><span class="lab">時刻</span><b id="clock">08:12:00</b></div>
@@ -133,14 +141,14 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <!--FORCE-->
 <script>window.FORCE_LANG="en";</script>
-<script src="../js/data.js?v=20261029180505"></script>
-<script src="../js/help.js?v=20261029180505"></script>
-<script src="../js/game.js?v=20261029180505"></script>
-<script src="../js/extras.js?v=20261029180505"></script>
-<script src="../js/tutorial.js?v=20261029180505"></script>
-<script src="../js/audio.js?v=20261029180505"></script>
-<script src="../js/render3d.js?v=20261029180505"></script>
-<script src="../js/hud.js?v=20261029180505"></script>
-<script src="../js/main.js?v=20261029180505"></script>
+<script src="../js/data.js?v=20261029210408"></script>
+<script src="../js/help.js?v=20261029210408"></script>
+<script src="../js/game.js?v=20261029210408"></script>
+<script src="../js/extras.js?v=20261029210408"></script>
+<script src="../js/tutorial.js?v=20261029210408"></script>
+<script src="../js/audio.js?v=20261029210408"></script>
+<script src="../js/render3d.js?v=20261029210408"></script>
+<script src="../js/hud.js?v=20261029210408"></script>
+<script src="../js/main.js?v=20261029210408"></script>
 </body>
 </html>

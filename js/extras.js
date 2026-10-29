@@ -233,20 +233,33 @@ function rideRealHTML(){
 }
 
 /* ---------- overlay fragments ---------- */
-function titleExtrasHTML(){
-  const best=load(bestKey(),null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length;
-  return `<div class="recs"><span>${L('最佳紀錄','Best','ベスト')} <b>${best?best.score+L(' 分（',' pts (',' 点（')+best.grade+L('）',')','）'):'—'}</b></span><span>${L('已開 ','Runs ','運転回数 ')}<b>${runs}</b>${L(' 班','','')}</span><span>${L('成就','Achievements','実績')} <b>${n}/${ACHS.length}</b></span></div>
-    <details class="achbox"><summary>${L('查看成就徽章','Achievement badges','実績バッジを見る')}</summary>${achGridHTML()}</details>
-    ${sightsHTML()}
-    ${stampBookHTML()}
-    ${diffPickHTML()}
-    <div class="pickrow"><span class="lab">${L('畫面風格','Visual style','グラフィック')}</span><div class="diffpick" role="radiogroup">${[['block','🧱',L('方塊','Blocky','ブロック'),L('像積木一樣的方塊世界','A chunky, blocky world','積み木のようなブロックの世界')],['smooth','🌄',L('寫實','Realistic','リアル'),L('比較接近真實的山和樹','Smoother hills and trees','なめらかな山や木')]].map(([k,ic,n,d])=>`<button type="button" role="radio" aria-checked="${STYLE===k}" class="stylebtn diffbtn${STYLE===k?' on':''}" data-style="${k}"><b>${ic} ${n}</b><small>${d}</small></button>`).join('')}</div></div>
+/* 標題畫面分成三個分頁：出發、收藏、設定 */
+function departPicksHTML(){
+  return `${diffPickHTML()}
     ${trainPickHTML()}
-    <div class="envpick" role="radiogroup" aria-label="${L('天氣與時段','Weather and time','天気と時間帯')}">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div>
-    <div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> ${L('列車音效','Train sounds','走行音')}</label>
-    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> ${L('車內語音廣播','Onboard announcements','車内放送')}</label></div>
+    <div class="pickrow"><span class="lab">${L('天氣與時段','Weather and time','天気と時間帯')}</span><div class="envpick" role="radiogroup">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div></div>`;
+}
+function collectHTML(){
+  const best=load(bestKey(),null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length, all=allStations(), ns=all.filter(x=>STAMPS[x.st.name]).length;
+  return `<div class="statgrid">
+      <div><small>${L('最佳紀錄','Best','ベスト')}</small><b>${best?best.score:'—'}</b><span>${best?best.grade:''}</span></div>
+      <div><small>${L('開過的班次','Runs','運転回数')}</small><b>${runs}</b></div>
+      <div><small>${L('成就','Achievements','実績')}</small><b>${n}<i>/${ACHS.length}</i></b></div>
+      <div><small>${L('紀念章','Stamps','スタンプ')}</small><b>${ns}<i>/${all.length}</i></b></div>
+    </div>
+    <h3 class="sect">${L('成就徽章','Achievement badges','実績バッジ')}</h3>${achGridHTML()}
+    <h3 class="sect">${L('車站紀念章','Station stamps','駅スタンプ帳')}</h3>${Object.values(ROUTES).map(r=>`<p class="eyebrow">${r.name}</p><div class="stampgrid">${r.stations.map(stampHTML).join('')}</div>`).join('')}
+    ${sightsHTML()}`;
+}
+function settingsHTML(){
+  return `<div class="pickrow"><span class="lab">${L('畫面風格','Visual style','グラフィック')}</span><div class="diffpick" role="radiogroup">${[['block','🧱',L('方塊','Blocky','ブロック'),L('像積木一樣的方塊世界','A chunky, blocky world','積み木のようなブロックの世界')],['smooth','🌄',L('寫實','Realistic','リアル'),L('比較接近真實的山和樹','Smoother hills and trees','なめらかな山や木')]].map(([k,ic,n,d])=>`<button type="button" role="radio" aria-checked="${STYLE===k}" class="stylebtn diffbtn${STYLE===k?' on':''}" data-style="${k}"><b>${ic} ${n}</b><small>${d}</small></button>`).join('')}</div></div>
+    <div class="pickrow"><span class="lab">${L('聲音','Sound','サウンド')}</span><div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> ${L('列車音效','Train sounds','走行音')}</label>
+    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> ${L('車內語音廣播','Onboard announcements','車内放送')}</label></div></div>
+    <div class="pickrow"><span class="lab">${L('語言','Language','言語')}</span>${langPickHTML()}</div>
+    <div class="pickrow"><span class="lab">${L('其他','More','その他')}</span><div class="btnrow"><button class="btn" id="ovHelp2" type="button">${L('操作說明','How to drive','操作説明')}</button>${('standalone' in navigator || window.matchMedia)?`<button class="btn" id="ovInstall" type="button" hidden>${L('📲 安裝到主畫面','📲 Install app','📲 ホーム画面に追加')}</button>`:''}</div></div>
     ${promoHTML()}`;
 }
+function titleExtrasHTML(){ return ''; }
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
   const f=document.getElementById('sfxTog'); if(f) f.addEventListener('change',()=>setSfx(f.checked));
@@ -323,4 +336,23 @@ function stampBookHTML(){
   const all=allStations(), n=all.filter(x=>STAMPS[x.st.name]).length;
   return `<details class="achbox stamps"><summary>${L('車站紀念章','Station stamps','駅スタンプ帳')} ${n}/${all.length}</summary>
     ${Object.values(ROUTES).map(r=>`<p class="eyebrow">${r.name}</p><div class="stampgrid">${r.stations.map(stampHTML).join('')}</div>`).join('')}</details>`;
+}
+
+/* ---------- 視覺回饋：停車結果、結算分數與彩帶 ---------- */
+const RANK_STYLE={'完美':['#ffd34d','PERFECT'],'優秀':['#46d483','GREAT'],'良好':['#7fb8ff','GOOD'],'普通':['#c6d0d3','OK'],'勉強':['#ff8a70','CLOSE']};
+function stopFX(rank,pp,trank,tp,err){
+  const st=document.querySelector('.stage'); const el=document.createElement('div'); const [col,en]=RANK_STYLE[rank]||['#fff',''];
+  el.className='stopfx'; el.style.setProperty('--c',col);
+  el.innerHTML=`<small>${en}</small><b>${trWord(rank)}</b><span>${fmtErr(err)} · +${pp}　${trWord(trank)} +${tp}</span>`;
+  st.appendChild(el); setTimeout(()=>el.remove(),2300);
+}
+function endFX(grade,score){
+  const g=document.querySelector('.grade span'); if(g && !matchMedia('(prefers-reduced-motion: reduce)').matches){ const t0=performance.now(), unit=g.textContent.replace(/^-?\d+/,'');
+    const tick=now=>{ const k=Math.min(1,(now-t0)/1100), e=1-Math.pow(1-k,3); g.textContent=Math.round(score*e)+unit; if(k<1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+  const gb=document.querySelector('.grade b'); if(gb){ gb.classList.add('pop'); gb.dataset.g=grade; }
+  if((grade==='S'||grade==='A') && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const box=document.createElement('div'); box.className='confetti'; const cols=['#ffb23e','#46d483','#7fb8ff','#ff8a70','#ffd34d','#e07aa0'];
+    for(let i=0;i<(grade==='S'?90:45);i++){ const p=document.createElement('i'); p.style.left=Math.random()*100+'%'; p.style.background=cols[i%cols.length]; p.style.animationDelay=(Math.random()*0.6)+'s'; p.style.animationDuration=(1.8+Math.random()*1.4)+'s'; p.style.setProperty('--x',(Math.random()*160-80)+'px'); p.style.setProperty('--r',(Math.random()*720-360)+'deg'); box.appendChild(p); }
+    document.getElementById('ov').appendChild(box); setTimeout(()=>box.remove(),4200);
+  }
 }
