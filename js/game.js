@@ -78,7 +78,7 @@ function step(dt){
     if(prev<c && S.pos>=c && !S.crossDone[i]){
       S.crossDone[i]=true;
       if(S.hornPos>=c-350 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast(L('平交道前鳴笛確認 +10','Horn before the crossing +10','踏切前で警笛 +10'),'good'); }
-      else { const w=ROUTE.japan?'笛':'鳴'; toast(L('通過平交道：下次記得在「'+w+'」標附近鳴笛','Level crossing passed: sound the horn after the 「'+w+'」 board next time','踏切通過：次は「'+w+'」標識の後で警笛を')); }
+      else { const w=(ROUTE.japan||ROUTE.jpSign)?'笛':'鳴'; toast(L('通過平交道：下次記得在「'+w+'」標附近鳴笛','Level crossing passed: sound the horn after the 「'+w+'」 board next time','踏切通過：次は「'+w+'」標識の後で警笛を')); }
     }
   });
 
@@ -129,7 +129,7 @@ function action(){
   if(late<-20 && !DIFF.guide){tp=20;trank='早到';} /* 新手模式早到也算準點 */ else if(late<=5){tp=40;trank='準點';} else {tp=Math.max(0,Math.round(40-(late-5)*1.5));trank='延誤';}
   S.score+=pp+tp;
   S.log.push({name:st.name, err, rank, pp, late, trank, tp, total:pp+tp});
-  S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : 10; S.boarded[S.next]=S.t;
+  S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : st.overtake ? 18 : 10; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
   if(typeof stopFX==='function') stopFX(rank,pp,trank,tp,err);
@@ -245,6 +245,11 @@ const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手�
     <li><b>紅燈</b>：前方有列車，必須在號誌前停車等待，燈號會轉黃。衝太快時 ATP 會緊急煞車並扣 30 分，闖過紅燈扣 150 分。</li>
   </ul>
   <p>花東線志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。阿里山祝山線沒有這架號誌。</p></section>
+<section><h3>京急本線</h3>
+  <ul>
+    <li>品川往立會川。品川是高架車站，出站後是急彎（限速 45 km/h），接著下到地面經過北品川的平交道，再爬上高架。</li>
+    <li>鮫洲只停普通車：停車時會等一班紅色的快特從右邊超車過去。解鎖 2100 形「唱歌的電車」，起步時變頻器會唱出音階。</li>
+  </ul></section>
 <section><h3>JR 京葉線</h3>
   <ul>
     <li>新木場往市川鹽濱，高架雙線、沿著東京灣。列車其實開往蘇我，你的班在市川鹽濱換手。</li>
@@ -308,8 +313,12 @@ function showOverlay(kind){
   } else if(kind==='title'){
     ovCard.className='card';
     const AL=ROUTE.key==='alishan', first=stName(STATIONS[0]), last=stName(STATIONS[STATIONS.length-1]), mids=STATIONS.slice(1,-1).map(stName).join(L('、',', ','、')), hhmm=fmtClock(BASE_CLOCK).slice(0,5);
-    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo';
-    const story = KY
+    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo', KK=ROUTE.key==='keikyu';
+    const story = KK
+      ? L(`你是${ENV.word} ${hhmm} 從品川出發、開往浦賀的京急普通車司機，你的班開到${last}換手。從高架的品川出發後，下到地面經過北品川的平交道，再爬上高架；在鮫洲要停下來等快特通過。`,
+          `You're driving the ${hhmm} Keikyū local from Shinagawa bound for Uraga ${ENV.word}; your shift hands over at ${last}. From elevated Shinagawa you drop to street level past the Kita-shinagawa crossings, climb back onto the viaduct, and wait at Samezu for a limited express to overtake.`,
+          `${ENV.word} ${hhmm} 品川発 浦賀行きの京急普通列車を担当し、${last}で乗務員交代です。高架の品川を出て地上に下り、北品川の踏切を抜けて再び高架へ。鮫洲では快特の通過待ちをします。`)
+      : KY
       ? L(`你是${ENV.word} ${hhmm} 從新木場出發、開往蘇我的京葉線各站停車司機，你的班開到${last}換手。高架雙線沿著東京灣，途經${mids}；右邊看得到葛西臨海公園的摩天輪和海，對向列車不時從右邊開過。`,
           `You're driving the ${hhmm} Keiyō Line local from Shin-Kiba bound for Soga ${ENV.word}; your shift hands over at ${last}. It's elevated double track along Tokyo Bay via ${mids}, with the Kasai Ferris wheel and the sea on your right and oncoming trains passing by.`,
           `${ENV.word} ${hhmm} 新木場発 蘇我行きの京葉線各駅停車を担当し、${last}で乗務員交代です。東京湾沿いの高架複線を${mids}と進み、右手には葛西臨海公園の観覧車と海、対向列車がすれ違います。`)
@@ -335,18 +344,19 @@ function showOverlay(kind){
       <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
       <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
       <section class="tabpane" data-pane="go"${tab==='go'?'':' hidden'}>
-      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='keiyo'?'🎡':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
+      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='keiyo'?'🎡':r.key==='keikyu'?'🔴':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
       <p class="story">${story}</p>
       ${departPicksHTML()}
       <details class="howto-box"><summary>${L('駕駛重點','Driving tips','運転のポイント')}</summary><ul class="howto">
         <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
         <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
-        <li>${KY ? L('最高 100 km/h，高架雙線沒有平交道；10 輛編成長 200 m，月台很長','Top speed 100 km/h on elevated double track with no level crossings; 10 cars, 200 m long','最高 100 km/h、踏切のない高架複線。10両・全長 200 m')
+        <li>${KK ? L('品川出站急彎限速 45 km/h，北品川一帶是地面區間有平交道；鮫洲停車時會有快特從右邊超車','45 km/h on the sharp curve out of Shinagawa, level crossings at street level around Kita-shinagawa, and an express overtakes you at Samezu','品川を出てすぐの急カーブは 45 km/h、北品川付近は地上区間で踏切あり。鮫洲では快特が右側を追い抜きます')
+             : KY ? L('最高 100 km/h，高架雙線沒有平交道；10 輛編成長 200 m，月台很長','Top speed 100 km/h on elevated double track with no level crossings; 10 cars, 200 m long','最高 100 km/h、踏切のない高架複線。10両・全長 200 m')
              : TS ? L('最高 80 km/h，雙線區間沒有平交道；淡水站前限速 35 km/h','Top speed 80 km/h, double track with no level crossings; 35 km/h into Tamsui','最高 80 km/h、複線で踏切なし。淡水駅手前は 35 km/h')
              : JP ? L('最高 45 km/h，路面區間 25 km/h；鎌倉高校前站旁就是知名的平交道，記得鳴笛','Top speed 45 km/h, 25 km/h on the street section; the famous level crossing is right by Kamakura-Kōkōmae — sound the horn','最高 45 km/h、併用軌道は 25 km/h。鎌倉高校前駅のすぐ横に有名な踏切があるので警笛を')
              : AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
-        <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))(JP?'笛':'鳴')}</li>
+        <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))((JP||ROUTE.jpSign)?'笛':'鳴')}</li>
       </ul></details>
       <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       </section>`;

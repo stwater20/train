@@ -13,6 +13,7 @@ const ACHS=[
   {id:'enoshima', icon:'🌊', name:L('抵達江之島','Made it to Enoshima','江ノ島到着'), desc:L('把江之電開到江之島','Drive the Enoden all the way to Enoshima','江ノ電で江ノ島まで走り切る')},
   {id:'tamsui', icon:'🚇', name:L('抵達淡水','Made it to Tamsui','淡水到着'), desc:L('把捷運開到淡水','Drive the metro all the way to Tamsui','MRTで淡水まで走り切る')},
   {id:'keiyo', icon:'🎡', name:L('灣岸通勤','Bayside commuter','ベイエリア通勤'), desc:L('把京葉線開到市川鹽濱','Drive the Keiyō Line to Ichikawashiohama','京葉線で市川塩浜まで走り切る')},
+  {id:'keikyu', icon:'🔴', name:L('紅色電車','The red train','赤い電車'), desc:L('把京急線開到立會川','Drive the Keikyū line to Tachiaigawa','京急線で立会川まで走り切る')},
   {id:'sunrise', icon:'🌄', name:L('祝山看日出','Sunrise at Zhushan','祝山のご来光'), desc:L('開日出列車準點抵達祝山','Reach Zhushan on time with the sunrise train','ご来光列車で祝山に定時到着')},
   {id:'perfect', icon:'🎯', name:L('一公分都不差','Spot on','ピタ止め'), desc:L('任一站停車誤差 0.5 m 以內','Stop within 0.5 m at any station','どこかの駅で誤差 0.5 m 以内')},
   {id:'sniper',  icon:'📏', name:L('人體尺規','Human ruler','人間定規'),   desc:L('每一站停車誤差都在 1 m 以內','Stop within 1 m at every station','全駅で誤差 1 m 以内')},
@@ -62,15 +63,20 @@ const nm = st => ({zh:st.name, en:st.en, ja:st.ja||st.name});
 const ANN = {
   welcome(){ const n=nm(STATIONS[1]), t=nm(STATIONS[STATIONS.length-1]);
     if(ROUTE.japan) return {ja:`本日も江ノ電をご利用いただきまして、ありがとうございます。この電車は${t.ja}行きです。次は${n.ja}です。`, en:`Thank you for riding the Enoden. This train is bound for ${t.en}. The next station is ${n.en}.`, zh:`感謝您今天搭乘江之電。本列車開往${t.zh}，下一站${n.zh}。`};
+    if(ROUTE.key==='keikyu') return {ja:`本日も京急線をご利用いただきまして、ありがとうございます。この電車は普通、浦賀行きです。次は${n.ja}です。`, en:`This is a local train bound for Uraga. The next station is ${n.en}, station number ${STATIONS[1].no}.`, zh:`感謝搭乘京急線。本列車為普通車，開往浦賀，下一站${n.zh}。`};
     if(ROUTE.key==='keiyo') return {ja:`本日もJR東日本をご利用いただきまして、ありがとうございます。この電車は京葉線、各駅停車、蘇我行きです。次は${n.ja}です。`, en:`This is the Keiyō Line local train bound for Soga. The next station is ${n.en}.`, zh:`感謝搭乘 JR 東日本。本列車為京葉線各站停車，開往蘇我，下一站${n.zh}。`};
     if(ROUTE.key==='tamsui') return {zh:`歡迎搭乘台北捷運，本列車開往${t.zh}，下一站${n.zh}。`, en:`Welcome aboard the Taipei Metro. This train is bound for ${t.en}. The next station is ${n.en}.`, ja:`台北MRTをご利用いただきありがとうございます。この電車は${t.ja}行きです。次は${n.ja}です。`};
     if(ROUTE.key==='alishan') return {zh:`歡迎搭乘阿里山林業鐵路祝山線${ENV.key==='dawn'?'日出列車':''}。沿途坡陡彎多，請坐穩扶好；山上氣溫低，請注意保暖。下一站${n.zh}。`, en:`Welcome aboard the Alishan Forest Railway Zhushan Line. The line is steep and curvy, so please stay seated, and keep warm in the mountain air. The next station is ${n.en}.`, ja:`阿里山森林鉄道 祝山線にご乗車ありがとうございます。急勾配と急カーブが続きますので、お席にお掛けください。山の上は冷えますので暖かくしてお過ごしください。次は${n.ja}です。`};
     return {zh:`各位旅客您好，歡迎搭乘臺鐵區間車。本列車開往${t.zh}，下一站${n.zh}。車門關閉時請勿強行上下車。`, en:`Welcome aboard this Taiwan Railway local train to ${t.en}. The next station is ${n.en}.`, ja:`台湾鉄道の区間車をご利用いただきありがとうございます。この列車は${t.ja}行きです。次は${n.ja}です。`}; },
   next(st,last){ const n=nm(st); if(ROUTE.continues) last=false;
+    if(ROUTE.key==='keikyu') return {ja:`次は${n.ja}、${n.ja}。`, en:`The next station is ${n.en}, station number ${st.no}.`, zh:`下一站，${n.zh}。`};
     if(ROUTE.key==='keiyo') return {ja:`次は${n.ja}、${n.ja}。`, en:`The next station is ${n.en}.`, zh:`下一站，${n.zh}。`};
     if(ROUTE.japan) return {ja:`次は${last?'終点、':''}${n.ja}です。`, en:`The next station is ${n.en}${last?', the last stop':''}.`, zh:`下一站，${last?'終點':''}${n.zh}。`};
     return {zh:`下一站，${n.zh}${last?'，本列車終點站':''}。`, en:`The next station is ${n.en}${last?', the terminal station':''}.`, ja:`次は${last?'終点、':''}${n.ja}です。`}; },
   approach(st,last){ const n=nm(st);
+    if(ROUTE.key==='keikyu') return st.overtake
+      ? {ja:`まもなく${n.ja}です。この電車は、快特の待ち合わせのため、しばらく停車いたします。`, en:`We will soon arrive at ${n.en}. This train will wait here for a limited express to pass.`, zh:`即將抵達${n.zh}。本列車在此等候快特通過，將停車一段時間。`}
+      : {ja:`まもなく${n.ja}、${n.ja}です。`, en:`We will soon arrive at ${n.en}.`, zh:`即將抵達${n.zh}。`};
     if(ROUTE.key==='keiyo') return {ja:`まもなく、${n.ja}、${n.ja}。お出口は左側です。${st.name==='新木場'?'':''}`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
     if(ROUTE.japan) return last
       ? {ja:`まもなく終点、${n.ja}です。湘南モノレールはお乗り換えです。お出口は左側です。お忘れ物のないようご注意ください。`, en:`We will soon arrive at ${n.en}, the last stop. Please change here for the Shonan Monorail. The doors on the left side will open. Please take all your belongings with you.`, zh:`即將抵達終點${n.zh}，轉乘湘南單軌電車的旅客請在本站下車。左側車門開啟，請別忘了隨身物品。`}
@@ -135,6 +141,7 @@ function extrasEnd(grade){
   const log=S.log, P=S.pens;
   const stopsAll=S.log.filter(r=>!r.miss);
   giveStamp(STATIONS[0]);
+  if(ROUTE.key==='keikyu'){ unlockAch('keikyu'); if(grade==='S'||grade==='A') setFlag('gradeA_keikyu'); }
   if(ROUTE.key==='keiyo'){ unlockAch('keiyo'); if(grade==='S'||grade==='A') setFlag('gradeA_keiyo'); }
   if(ROUTE.key==='tamsui'){ unlockAch('tamsui'); if(grade==='S'||grade==='A') setFlag('gradeA_tamsui'); }
   if(ROUTE.japan) unlockAch('enoshima');
@@ -185,6 +192,8 @@ const LINKS={
   ndhu:   {zh:'https://www.ndhu.edu.tw/', en:'https://www.ndhu.edu.tw/', ja:'https://www.ndhu.edu.tw/', name:L('國立東華大學','National Dong Hwa University','国立東華大学')},
   alinsa: {zh:'https://www.ali-nsa.net/', en:'https://www.ali-nsa.net/en/', ja:'https://www.ali-nsa.net/ja/', name:L('阿里山國家風景區','Alishan National Scenic Area','阿里山国家風景区')},
   afrch:  {zh:'https://afrch.forest.gov.tw/', en:'https://afrch.forest.gov.tw/En', ja:'https://afrch.forest.gov.tw/Ja', name:L('阿里山林業鐵路及文化資產管理處','Alishan Forest Railway','阿里山林業鉄道')},
+  keikyuweb:{zh:'https://www.keikyu.co.jp/', en:'https://www.keikyu.co.jp/', ja:'https://www.keikyu.co.jp/', name:L('京急電鐵官方網站','Keikyū official site','京急電鉄 公式サイト')},
+  shinagawa:{zh:'https://www.gotokyo.org/tc/', en:'https://www.gotokyo.org/en/', ja:'https://shinagawa-kanko.or.jp/', name:L('東京觀光官方網站','GO TOKYO','しながわ観光協会')},
   jreast: {zh:'https://www.jreast.co.jp/multi/zh-CHT/', en:'https://www.jreast.co.jp/multi/en/', ja:'https://www.jreast.co.jp/', name:L('JR 東日本','JR East','JR東日本')},
   gotokyo:{zh:'https://www.gotokyo.org/tc/', en:'https://www.gotokyo.org/en/', ja:'https://www.gotokyo.org/jp/', name:L('東京觀光官方網站','GO TOKYO','東京の観光公式サイト')},
   kasai:  {zh:'https://www.tokyo-park.or.jp/park/kasairinkai/', en:'https://www.tokyo-park.or.jp/park/kasairinkai/', ja:'https://www.tokyo-park.or.jp/park/kasairinkai/', name:L('葛西臨海公園','Kasai Rinkai Park','葛西臨海公園')},
@@ -204,6 +213,12 @@ const FACTS={
   '志學':{link:'ndhu', t:L('國立東華大學的校園就在志學一帶。','The campus of National Dong Hwa University is right around Zhixue.','志学駅の周辺には国立東華大学のキャンパスがあります。')},
   '平和':{link:'erv', t:L('壽豐鄉的小站，四周是稻田，往西望就是中央山脈。','A small station in Shoufeng Township surrounded by rice paddies, with the Central Mountain Range to the west.','寿豊郷の小さな駅。周りは田んぼで、西には中央山脈が見えます。')},
   '壽豐':{link:'erv', t:L('壽豐鄉有鯉魚潭、雲山水，還有以黃金蜆出名的立川漁場。','Shoufeng Township is home to Liyu Lake, the Yunshanshui ponds and Lichuan Aquafarm, famous for golden clams.','寿豊郷には鯉魚潭や雲山水、黄金シジミで知られる立川漁場があります。')},
+  '品川':{link:'keikyuweb', t:L('京急品川站目前是高架車站，往羽田機場與橫濱方向的列車都從這裡出發；這一帶正在進行改成地面車站的立體交叉工程。','Keikyū Shinagawa is currently an elevated station where trains leave for Haneda Airport and Yokohama; a grade-separation project will rebuild it at ground level.','京急品川駅は現在高架駅で、羽田空港・横浜方面の列車が発着します。連続立体交差事業で地上駅になる計画です。')},
+  '北品川':{link:'shinagawa', t:L('北品川站的前身是開業時的品川（八ツ山）站，1924 年往南移了約 200 公尺後改名。站旁就是舊東海道的品川宿。','Kita-shinagawa was the line’s original Shinagawa (Yatsuyama) station, moved about 200 m south and renamed in 1924. The old Tōkaidō post town of Shinagawa-juku is right here.','北品川駅は開業時の品川（八ツ山）駅が1924年に約200m南へ移転・改称したもの。旧東海道の品川宿がすぐそばです。')},
+  '新馬場':{link:'shinagawa', t:L('新馬場站是 1976 年高架化時，由北馬場站和南馬場站合併而成。旁邊就是品川神社和目黑川。','Shimbamba was created in 1976 when Kita-bamba and Minami-bamba stations were merged as part of the elevation work. Shinagawa Shrine and the Meguro River are right beside it.','新馬場駅は1976年の高架化で北馬場駅と南馬場駅が統合されて誕生。品川神社と目黒川がすぐそばです。')},
+  '青物橫丁':{link:'shinagawa', t:L('站名來自江戶時代附近農民在這裡擺攤賣蔬菜（青物）的市集。','The name recalls the Edo-period market where local farmers sold their vegetables (aomono).','駅名は、江戸時代に近くの農民が青物（野菜）を売った市に由来します。')},
+  '鮫洲':{link:'keikyuweb', t:L('鮫洲只停普通車，常在這裡等快特通過；這裡也是鮫洲運轉免許試驗場的最近車站。','Only local trains stop at Samezu, often waiting here for an express to overtake. It is also the station for the Samezu driver licence test centre.','鮫洲駅は普通列車のみ停車し、ここで快特の通過待ちをすることも。鮫洲運転免許試験場の最寄り駅です。')},
+  '立會川':{link:'shinagawa', t:L('立會川附近有濱川砲台遺址，據說年輕的坂本龍馬曾在這裡擔任警備。列車繼續開往浦賀，你的班在這裡換手。','Near Tachiaigawa is the site of the Hamagawa battery, where a young Sakamoto Ryōma is said to have stood guard. The train continues to Uraga — your shift hands over here.','立会川駅の近くには浜川砲台跡があり、若き坂本龍馬が警備に就いたと伝えられます。列車は浦賀へ向かい、ここで乗務員交代です。')},
   '新木場':{link:'gotokyo', t:L('新木場一帶是木材批發的集散地，站名就是從「木場」來的。可以在這裡轉乘有樂町線和臨海線。','Shin-Kiba grew up around the timber trade — hence “kiba”, lumberyard. Change here for the Yūrakuchō and Rinkai lines.','新木場は材木問屋が集まる街で、駅名もそこから。有楽町線・りんかい線に乗り換えられます。')},
   '葛西臨海公園':{link:'kasai', t:L('站前就是葛西臨海公園，有高 117 公尺的「鑽石與花大摩天輪」和葛西臨海水族園。','Right outside is Kasai Rinkai Park, with the 117 m Diamond and Flower Ferris Wheel and the Tokyo Sea Life Park aquarium.','駅前は葛西臨海公園。高さ 117 m の「ダイヤと花の大観覧車」や葛西臨海水族園があります。')},
   '舞濱':{link:'gotokyo', t:L('舞濱站是東京迪士尼度假區的最近車站，月台上常見拿著紀念品的遊客。','Maihama is the nearest station to Tokyo Disney Resort, and the platforms are full of visitors carrying souvenirs.','舞浜駅は東京ディズニーリゾートの最寄り駅。お土産を持った人たちでにぎわいます。')},
@@ -241,9 +256,9 @@ function sightsHTML(){
 }
 /* 結算畫面：去現場搭一次 */
 function rideRealHTML(){
-  const AL=ROUTE.key==='alishan', JPR=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo', k=KY?'jreast':TS?'metro':JPR?'enoden':AL?'afrch':'tra';
-  return `<a class="promo ride" href="${linkOf(k)}" target="_blank" rel="noopener"><span>${KY?'🎡':TS?'🚇':JPR?'🌊':AL?'🌄':'🚉'}</span>
-    <span><b>${L('到現場搭一次！','Ride it for real','実際に乗ってみよう')}</b><small>${KY?L('JR 東日本的路線與車票','JR East routes and tickets','JR東日本の路線ときっぷ'):TS?L('台北捷運的路線圖與票價','Taipei Metro maps and fares','台北MRTの路線図と運賃'):JPR?L('江之電的路線、車票與沿線景點','Enoden routes, tickets and sights','江ノ電の路線・きっぷ・沿線観光'):AL?L('阿里山林鐵的時刻與訂票','Alishan Forest Railway timetables and tickets','阿里山林業鉄道の時刻表ときっぷ'):L('臺鐵花東線的時刻與訂票','Taiwan Railway timetables and tickets','台湾鉄道の時刻表ときっぷ')}</small></span><span aria-hidden="true">↗</span></a>`;
+  const AL=ROUTE.key==='alishan', JPR=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo', KK=ROUTE.key==='keikyu', k=KK?'keikyuweb':KY?'jreast':TS?'metro':JPR?'enoden':AL?'afrch':'tra';
+  return `<a class="promo ride" href="${linkOf(k)}" target="_blank" rel="noopener"><span>${KK?'🔴':KY?'🎡':TS?'🚇':JPR?'🌊':AL?'🌄':'🚉'}</span>
+    <span><b>${L('到現場搭一次！','Ride it for real','実際に乗ってみよう')}</b><small>${KK?L('京急電鐵的路線與車票','Keikyū routes and tickets','京急電鉄の路線ときっぷ'):KY?L('JR 東日本的路線與車票','JR East routes and tickets','JR東日本の路線ときっぷ'):TS?L('台北捷運的路線圖與票價','Taipei Metro maps and fares','台北MRTの路線図と運賃'):JPR?L('江之電的路線、車票與沿線景點','Enoden routes, tickets and sights','江ノ電の路線・きっぷ・沿線観光'):AL?L('阿里山林鐵的時刻與訂票','Alishan Forest Railway timetables and tickets','阿里山林業鉄道の時刻表ときっぷ'):L('臺鐵花東線的時刻與訂票','Taiwan Railway timetables and tickets','台湾鉄道の時刻表ときっぷ')}</small></span><span aria-hidden="true">↗</span></a>`;
 }
 
 /* ---------- overlay fragments ---------- */
@@ -293,7 +308,7 @@ function endExtrasHTML(info,grade){
 }
 function shareText(grade){
   const rows=S.log.map(r=>r.miss?`${nameOf(r.name)} ${L('過站','overran','通過')}`:`${nameOf(r.name)} ${fmtErr(r.err)} ${trWord(r.trank)}`).join('\n');
-  return `${ROUTE.key==='alishan'?'🌲':ROUTE.japan?'🌊':ROUTE.key==='tamsui'?'🚇':ROUTE.key==='keiyo'?'🎡':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\nhttps://train.sectools.tw${LANG_PATH[LANG]}`;
+  return `${ROUTE.key==='alishan'?'🌲':ROUTE.japan?'🌊':ROUTE.key==='tamsui'?'🚇':ROUTE.key==='keiyo'?'🎡':ROUTE.key==='keikyu'?'🔴':'🚃'} ${ROUTE.title}｜${stName(STATIONS[0])}→${stName(STATIONS[STATIONS.length-1])}（${ENV.name}）\n${L('評價','Grade','評価')} ${grade}・${Math.round(S.score)} ${L('分','pts','点')}\n${rows}\nhttps://train.sectools.tw${LANG_PATH[LANG]}`;
 }
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;
@@ -332,7 +347,7 @@ function trainPickHTML(){
 }
 
 /* ---------- 車站紀念章（在地特色） ---------- */
-const STAMP_ART={'新木場':'🪵','葛西臨海公園':'🎡','舞濱':'🎢','新浦安':'🏙️','市川鹽濱':'⚓','北投':'♨️','復興崗':'🎖️','忠義':'⛰️','關渡':'🌉','竹圍':'🚲','紅樹林':'🌿','淡水':'🌇','花蓮':'🏞️','吉安':'⛩️','志學':'🎓','平和':'🌾','壽豐':'🐚','阿里山':'🌸','對高岳':'🌲','祝山':'🌄','稻村崎':'🌅','七里濱':'🏄','鎌倉高校前':'🏀','腰越':'🐟','江之島':'🗼'};
+const STAMP_ART={'品川':'🚉','北品川':'🏯','新馬場':'⛩️','青物橫丁':'🥬','鮫洲':'🚗','立會川':'⚓','新木場':'🪵','葛西臨海公園':'🎡','舞濱':'🎢','新浦安':'🏙️','市川鹽濱':'⚓','北投':'♨️','復興崗':'🎖️','忠義':'⛰️','關渡':'🌉','竹圍':'🚲','紅樹林':'🌿','淡水':'🌇','花蓮':'🏞️','吉安':'⛩️','志學':'🎓','平和':'🌾','壽豐':'🐚','阿里山':'🌸','對高岳':'🌲','祝山':'🌄','稻村崎':'🌅','七里濱':'🏄','鎌倉高校前':'🏀','腰越':'🐟','江之島':'🗼'};
 let STAMPS=load('cabStamps',{});
 function allStations(){ return Object.values(ROUTES).flatMap(r=>r.stations.map(st=>({st,route:r}))); }
 function giveStamp(st){

@@ -54,6 +54,11 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
     <li><b>Red</b>: a train is ahead. Stop before the signal and wait for it to change. Approaching too fast triggers ATP (−30); passing it costs 150.</li>
   </ul>
   <p>On the Hualien line there is block signal No. 32 between Zhixue and Pinghe. The Alishan line has no signal.</p></section>
+<section><h3>Keikyū Main Line</h3>
+  <ul>
+    <li>Shinagawa to Tachiaigawa. Shinagawa is elevated, followed by a sharp 45 km/h curve; the line then drops to street level past the Kita-shinagawa level crossings and climbs back onto the viaduct.</li>
+    <li>Only locals stop at Samezu, where you wait while a red limited express overtakes on your right. Unlock the 2100 “singing train”, whose inverter plays a scale as it pulls away.</li>
+  </ul></section>
 <section><h3>JR Keiyō Line</h3>
   <ul>
     <li>Shin-Kiba to Ichikawashiohama on elevated double track along Tokyo Bay. The train actually runs on to Soga — your shift hands over at Ichikawashiohama.</li>
@@ -154,6 +159,11 @@ const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンド�
     <li><b>赤（停止）</b>：前方に列車あり。信号の手前で停車して変わるのを待ちます。速すぎると ATP 作動（−30）、冒進は −150。</li>
   </ul>
   <p>花東線の志学〜平和間に第32号閉塞信号機があります。阿里山線には信号機はありません。</p></section>
+<section><h3>京急本線</h3>
+  <ul>
+    <li>品川から立会川へ。高架の品川を出るとすぐ急カーブ（45 km/h）、地上に下りて北品川の踏切を抜け、再び高架へ。</li>
+    <li>鮫洲は普通列車のみ停車。停車中に赤い快特が右側を追い抜きます。2100形「歌う電車」を解除すると、発車時にインバータが音階を奏でます。</li>
+  </ul></section>
 <section><h3>JR京葉線</h3>
   <ul>
     <li>新木場から市川塩浜まで、東京湾沿いの高架複線。列車は蘇我行きで、市川塩浜で乗務員交代です。</li>

@@ -8,7 +8,7 @@ let TUT_STEPS=[];
 function buildTut(){
   const s0=stName(STATIONS[0]), s1=stName(STATIONS[1]), sEnd=stName(STATIONS[STATIONS.length-1]);
   const L0=LIMITS.find(x=>x.s<=0), lim0=L0?L0.v:LINE_MAX, e0=L0?L0.e:0, coastAt=Math.max(10,lim0-5);
-  const c1=CROSSINGS.find(c=>c<STATIONS[1].pos), w=ROUTE.japan?'笛':'鳴';
+  const c1=CROSSINGS.find(c=>c<STATIONS[1].pos), w=(ROUTE.japan||ROUTE.jpSign)?'笛':'鳴';
   const AL=ROUTE.key==='alishan', JP=!!ROUTE.japan;
   const steps=[
   {title:L('歡迎來到駕駛室','Welcome to the cab','運転台へようこそ'), hi:[],
@@ -61,7 +61,10 @@ function buildTut(){
    doing:()=>L('按空白鍵開門','Press Space to open the doors','Space でドア開'),
    cond:()=>S.doors || S.next>1},
   {title:L('新手教學完成 🎉','Tutorial complete 🎉','チュートリアル完了 🎉'), hi:[],
-   text: ROUTE.key==='keiyo' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。高架雙線、對向列車會從右邊開過；E233 系加速快，記得提早煞車。想複習隨時按 <kbd>?</kbd>。`,
+   text: ROUTE.key==='keikyu' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。北品川一帶是地面區間、平交道很多；鮫洲停車時會等快特從右邊超車。想複習隨時按 <kbd>?</kbd>。`,
+                `Drive on to <b>${sEnd}</b>, where your shift hands over. Around Kita-shinagawa you run at street level over many level crossings, and at Samezu you wait while an express overtakes on the right. Press <kbd>?</kbd> any time for the handbook.`,
+                `このまま<b>${sEnd}</b>まで運転して交代です。北品川付近は地上区間で踏切が多く、鮫洲では快特の通過待ちをします。<kbd>?</kbd> でいつでも操作説明を。`)
+        : ROUTE.key==='keiyo' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。高架雙線、對向列車會從右邊開過；E233 系加速快，記得提早煞車。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>, where your shift hands over. Elevated double track with oncoming trains on your right; the E233 accelerates hard, so brake early. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま<b>${sEnd}</b>まで運転して交代です。高架複線で対向列車が右側を通過します。E233系は加速が良いので早めのブレーキを。<kbd>?</kbd> でいつでも操作説明を。`)
         : ROUTE.key==='tamsui' ? L(`接下來自己開到終點<b>${sEnd}</b>吧。這是雙線區間，對向列車會從右邊開過；捷運加速快，記得提早煞車，淡水站前限速 35 km/h。想複習隨時按 <kbd>?</kbd>。`,

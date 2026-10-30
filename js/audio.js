@@ -16,7 +16,7 @@ function noiseBuf(ctx,sec,kind){
     else d[i]=w; }
   return b;
 }
-let DIESEL=TRAIN.sound==='diesel', STEAM=TRAIN.sound==='steam', RESIST=TRAIN.sound==='resistor';
+let DIESEL=TRAIN.sound==='diesel', STEAM=TRAIN.sound==='steam', RESIST=TRAIN.sound==='resistor'; /* 'doremi' 也走 VVVF 路徑 */
 function auRetune(){ DIESEL=TRAIN.sound==='diesel'; STEAM=TRAIN.sound==='steam'; RESIST=TRAIN.sound==='resistor'; }
 
 function auInit(){
@@ -93,7 +93,8 @@ const AXLES=[0,BOG, CARL-2.4-BOG,CARL-2.4, CARL,CARL+BOG];
 function vvvf(kmh,eff,braking){
   const fm=Math.max(0.5,kmh*1.55)*(TRAIN.pitch||1);   // 馬達電氣頻率（Hz）
   let carrier, fmDepth, hum=fm*6;
-  if(fm<22){ carrier=(TRAIN.pitch||1)>1.05?1050:780; fmDepth=fm*2; }      // 起步：固定載波「嗡—」
+  if(fm<22){ carrier=(TRAIN.pitch||1)>1.05?1050:780; fmDepth=fm*2;          // 起步：固定載波「嗡—」
+    if(TRAIN.sound==='doremi'){ const SC=[349,392,440,466,523,587,659,698,784]; carrier=SC[Math.min(SC.length-1,Math.floor(kmh/2.6))]*2; fmDepth=0; } } // 2100 形：ファソラシドレミファソ
   else if(fm<70){ const N=fm<35?27:fm<50?15:9; carrier=fm*N; fmDepth=fm*0.6; } // 同步模式：音高跟著速度往上，換段時往下掉
   else { carrier=fm*3; fmDepth=0; }                                          // 高速：單／三脈衝，主要是馬達聲
   AU.car.frequency.setTargetAtTime(carrier,actx.currentTime,0.04); AU.fmOsc.frequency.setTargetAtTime(fm*2,actx.currentTime,0.05); ramp(AU.fmDepth.gain,fmDepth,0.05);
@@ -141,7 +142,7 @@ function audioTick(dt){
   } else {
     ramp(AU.dslG.gain,0,0.3); ramp(AU.turboG.gain,0,0.3);
     if(RESIST){ resistorMotor(kmh,eff,braking); if(run && eff>0 && eff!==AU.lastEff) camClick(); }
-    else vvvf(kmh,eff,braking);
+    else vvvf(kmh,eff,braking||(TRAIN.sound==='doremi'&&eff<0&&v>2));
   }
 
   // 煞車排氣
@@ -169,7 +170,7 @@ function audioTick(dt){
   // 平交道警鈴：日本是電子音「カンカン」，台灣是鐘聲「噹噹」
   const near=CROSSINGS.map(c=>({c,d:Math.abs(S.pos-c)})).find(x=>S.pos>x.c-450 && S.pos<x.c+TRAIN_LEN+5);
   if(run && near){ AU.bellT-=dt; if(AU.bellT<=0){ const vol=0.14/(1+near.d/90);
-    if(ROUTE.japan){ AU.bellT=0.42; ping(760,0.22,vol,'square'); ping(1520,0.1,vol*0.25,'sine'); }
+    if(ROUTE.japan||ROUTE.jpSign){ AU.bellT=0.42; ping(760,0.22,vol,'square'); ping(1520,0.1,vol*0.25,'sine'); }
     else { AU.bellT=0.5; ping(1250,0.5,vol,'triangle'); ping(2510,0.25,vol*0.3,'sine'); ping(3760,0.12,vol*0.12,'sine'); } } }
 
   // ATP 警報

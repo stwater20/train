@@ -10,7 +10,7 @@ let W=0,H=0, R3=null;
 const PMIN=-700, PMAX=END+1000, PN=PMAX-PMIN+1;
 const PXa=new Float64Array(PN), PZa=new Float64Array(PN), PTa=new Float64Array(PN), PYa=new Float64Array(PN);
 const BLOCK = STYLE==='block';
-const AL = ROUTE.key==='alishan', JP = !!ROUTE.japan, TS = ROUTE.key==='tamsui', KY = ROUTE.key==='keiyo', PL = ROUTE.platLen||215;
+const AL = ROUTE.key==='alishan', JP = !!ROUTE.japan, TS = ROUTE.key==='tamsui', KY = ROUTE.key==='keiyo', KK = ROUTE.key==='keikyu', PL = ROUTE.platLen||215;
 const signName = st => (JP||ROUTE.jpSign) ? st.ja : st.name;
 /* 會車用的側線：在右側 4.2 m，兩端 45 m 漸漸併回主線 */
 const LOOP_LAT=4.2;
@@ -264,6 +264,55 @@ function init3D(){
   }
   const jpMounts=[], jpFar=[]; let jpLamp=null;
 
+  /* ---------- 京急：品川的高樓、八ツ山橋、北品川的地面區間（品川宿老房子、電線桿）、目黑川、品川神社、濱川砲台遺址 ---------- */
+  function buildKeikyu(){
+    const S0=PMIN+30, S1=PMAX-30, mid={...fr(END/2)}, GY=-8;
+    { const g=new T.PlaneGeometry(GS,GS); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,std({map:grassTex,color:0x9c9e92})); m.material.map.repeat.set(GS/30,GS/30); m.position.set(mid.x,GY,mid.z); m.receiveShadow=true; scene.add(m); }
+    // 街道路面（沿線兩側的小路）
+    ribbon(S0,S1,4,[[6,0.02],[12,0.02]],M.asphalt,{});  // 會隨軌道高程，所以只在地面區間看得到；高架段被下面的地面取代
+    const ground=s=>elevAt(s)<-6;
+    // 高架橋：護牆與橋墩（只在高架段）
+    const nearSt=p=>STATIONS.some(x=>p>x.pos-PL-8 && p<x.pos+30);
+    for(const wl of [-3.4, LOOP_LAT+3.4]){ let a=null; for(let sv=S0; sv<=S1; sv+=8){ const ok=!nearSt(sv) && !ground(sv); if(ok && a==null) a=sv; if((!ok||sv+8>S1) && a!=null){ ribbon(a,sv,2,[[wl,-0.2],[wl,1.05],[wl+Math.sign(wl)*0.25,1.05],[wl+Math.sign(wl)*0.25,-0.2]],M.concrete,{closed:true}); a=null; } } }
+    const piers=[]; for(let sv=Math.ceil(S0/24)*24; sv<S1; sv+=24){ const e=elevAt(sv); if(e>-6) piers.push({s:sv,lat:LOOP_LAT/2,h:GY-e,sy:-GY+e-0.4}); }
+    const pg=new T.BoxGeometry(2.4,1,2); pg.translate(0,0.5,0); inst(pg,M.concrete,piers,{cast:true});
+    // 八ツ山橋：鋼樑側板，底下是 JR 的一大片軌道
+    const steel=std({color:0x5d7a73,roughness:0.5,metalness:0.4});
+    for(const wl of [-3.2, LOOP_LAT+3.2]) ribbon(230,400,2,[[wl,-0.3],[wl,1.9],[wl+Math.sign(wl)*0.35,1.9],[wl+Math.sign(wl)*0.35,-0.3]],steel,{closed:true});
+    { const f=fr(315); const bed=new T.Mesh(new T.PlaneGeometry(70,300),std({map:ballastTex,color:0xc8c2b6})); bed.geometry.rotateX(-Math.PI/2); bed.position.set(f.x,GY+0.05,f.z); bed.rotation.y=-f.th+0.5; bed.receiveShadow=true; scene.add(bed);
+      for(let i=-6;i<=6;i++){ for(const g of [-0.53,0.53]){ const r=new T.Mesh(new T.BoxGeometry(0.08,0.12,300),M.steel); const lx=i*5+g; r.position.set(f.x+Math.cos(-f.th+0.5)*lx, GY+0.15, f.z-Math.sin(-f.th+0.5)*lx); r.rotation.y=-f.th+0.5; scene.add(r); } } }
+    // 目黑川（新馬場旁）、立會川
+    [[1480,26],[3545,12]].forEach(([sc,w])=>{ const f=fr(sc); const g=new T.PlaneGeometry(4000,w); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,std({color:0x4f7a86,roughness:0.25,metalness:0.1})); m.position.set(f.x,GY+0.06,f.z); m.rotation.y=-f.th; scene.add(m);
+      [-1,1].forEach(sd=>{ const bank=new T.Mesh(new T.BoxGeometry(4000,0.9,0.6),M.concrete); bank.position.set(f.x+f.dx*sd*w/2,GY+0.45,f.z+f.dz*sd*w/2); bank.rotation.y=-f.th+Math.PI/2; scene.add(bank); }); });
+    // 建築：品川一帶是高樓，北品川是品川宿的低矮木造房子，其他是中低層住商
+    const aptT=tex(128,256,(x,w,h)=>{ x.fillStyle='#dcd7cb'; x.fillRect(0,0,w,h); for(let r=0;r<14;r++) for(let c=0;c<4;c++){ x.fillStyle=Math.random()<0.15?'#e8d9a8':'#4f5c66'; x.fillRect(8+c*30,6+r*18,20,10); } x.fillStyle=['#c8222c','#2f6fb6','#e0a83c','#3f8f5a'][(Math.random()*4)|0]; x.fillRect(0,h-30,w,14); });
+    const aptG=tex(128,256,(x,w,h)=>{ x.fillStyle='#000'; x.fillRect(0,0,w,h); for(let r=0;r<14;r++) for(let c=0;c<4;c++){ if(Math.random()<0.45){ x.fillStyle='#ffd68a'; x.fillRect(8+c*30,6+r*18,20,10); } } x.fillStyle='#ffffff'; x.fillRect(0,h-30,w,14); });
+    const aptM=std({map:aptT,emissiveMap:aptG,emissive:0x000000}); M.apt=aptM;
+    const towerM=std({color:0x9fb3c2,roughness:0.3,metalness:0.4});
+    const blocks=[], towers=[], olds=[], oldRoofs=[], poles=[], parms=[];
+    for(let sv=Math.ceil(S0/14)*14; sv<S1; sv+=14){ const k=Math.round(sv);
+      if([[1480,40],[3545,26]].some(([c,w])=>Math.abs(sv-c)<w/2)) continue;
+      for(const sd of [-1,1]) for(let row=0;row<4;row++){ const kk=k*9+row*2+(sd>0?1:0); if(rnd(kk)<0.22) continue;
+        const lat=sd*(sd>0?LOOP_LAT:0)+sd*(14+row*20+rnd(kk+1)*6);
+        if(sv<420){ if(row>=2 && sv>-350 && Math.round(sv)%56<14 && rnd(kk+7)<0.6) towers.push({s:sv,lat:sd*(80+(row-2)*70+rnd(kk+8)*20),h:GY-elevAt(sv),sx:34,sy:55+rnd(kk+2)*80,sz:34}); else if(row<2) blocks.push({s:sv,lat:sd*(sd>0?LOOP_LAT:0)+sd*(16+row*22),h:GY-elevAt(sv),sx:14,sy:12+rnd(kk+3)*14,sz:14}); continue; }
+        if(ground(sv) && row<2){ const lt=sd*(sd>0?LOOP_LAT:0)+sd*(9+row*9); olds.push({s:sv,lat:lt,h:GY-elevAt(sv),sx:7,sy:5.5,sz:8,c:[0x6b4f3a,0x7a5c44,0x5e4634,0xd9cfbd][(rnd(kk+3)*4)|0]}); oldRoofs.push({s:sv,lat:lt,h:GY-elevAt(sv)+5.5,sx:8,sy:1.8,sz:9,c:[0x3b4248,0x4a5058,0x2f353a][(rnd(kk+4)*3)|0]}); continue; }
+        blocks.push({s:sv,lat,h:GY-elevAt(sv),sx:12+rnd(kk+2)*6,sy:9+rnd(kk+3)*(row>1?26:16),sz:12}); }
+      if(ground(sv) && Math.round(sv)%28<14) for(const lt of [-6.5,LOOP_LAT+6.5]){ poles.push({s:sv,lat:lt,h:0,sy:9}); parms.push({s:sv,lat:lt,h:8.4}); } }
+    const bg=new T.BoxGeometry(1,1,1); bg.translate(0,0.5,0);
+    inst(bg,aptM,blocks,{cast:true,receive:true}); inst(bg,towerM,towers,{cast:true}); inst(bg,M.wall,olds,{cast:true,receive:true}); inst(roofG2(),std({color:0xffffff,roughness:0.7}),oldRoofs,{cast:true});
+    const pgeo=GEO.trunk(0.13,0.17,7); inst(pgeo,M.pole,poles,{cast:true}); inst(new T.BoxGeometry(1.4,0.1,0.1),M.pole,parms,{});
+    // 品川神社的石鳥居（新馬場旁）與社殿
+    { const g=new T.Group(); const stone=std({color:0x9a9a92,roughness:0.9}); [-2.6,2.6].forEach(x=>{ const p=new T.Mesh(BLOCK?new T.BoxGeometry(0.7,7,0.7):new T.CylinderGeometry(0.34,0.38,7,12),stone); p.position.set(x,3.5,0); g.add(p); });
+      const kasagi=new T.Mesh(new T.BoxGeometry(8,0.6,0.8),stone); kasagi.position.y=7; g.add(kasagi); const nuki=new T.Mesh(new T.BoxGeometry(6.4,0.4,0.5),stone); nuki.position.y=5.8; g.add(nuki);
+      for(let i=0;i<6;i++){ const st=new T.Mesh(new T.BoxGeometry(6,0.5,1.4),stone); st.position.set(0,0.25+i*0.5,-1-i*1.4); g.add(st); }
+      const hall=new T.Mesh(new T.BoxGeometry(9,4,7),std({color:0x8a3a2e})); hall.position.set(0,3+2,-14); g.add(hall); const hr=new T.Mesh(roofG2(),std({color:0x3e4a44})); hr.scale.set(11,3,9); hr.position.set(0,7,-14); g.add(hr);
+      g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } }); place(g,1330,LOOP_LAT+34,GY-elevAt(1330),Math.PI/2); scene.add(g); }
+    // 濱川砲台遺址（立會川附近）：大砲複製品
+    { const g=new T.Group(); const iron=std({color:0x2b2d30,roughness:0.5,metalness:0.6}); const barrel=new T.Mesh(new T.CylinderGeometry(0.35,0.5,3.2,14),iron); barrel.rotation.z=Math.PI/2-0.15; barrel.position.set(0,1.3,0); g.add(barrel);
+      const carr=new T.Mesh(new T.BoxGeometry(2.4,0.8,1.2),std({color:0x5a3f28})); carr.position.y=0.5; g.add(carr); const base=new T.Mesh(new T.BoxGeometry(6,0.3,4),M.concrete); base.position.y=0.15; g.add(base);
+      g.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); place(g,3680,LOOP_LAT+30,GY-elevAt(3680),0.6); scene.add(g); }
+  }
+
   /* ---------- 京葉線：高架橋、東京灣、荒川與舊江戶川、摩天輪、度假飯店、新浦安高樓、幕張天際線 ---------- */
   function buildKeiyo(){
     const S0=PMIN+30, S1=PMAX-30, mid={...fr(END/2)}, GY=-12;
@@ -428,7 +477,7 @@ function init3D(){
 
   /* mountains: Central Range to the west (+X, right of the train), Coastal Range to the east (−X) */
   const mountMats=[];
-  if(!JP && !TS && !KY) (function(){
+  if(!JP && !TS && !KY && !KK) (function(){
     const mid={...fr(END/2)}; const BY=AL?mid.y-320:0, HS=AL?1.8:1; const segs=900, pos=[], col=[], idx=[]; const c=new T.Color(), hz=new T.Color(HAZE);
     const ridgeN=a=> (Math.sin(a*7+1.3)*0.5+0.5)*0.45 + (Math.sin(a*19+0.4)*0.5+0.5)*0.3 + (Math.sin(a*41+2.2)*0.5+0.5)*0.17 + Math.abs(Math.sin(a*97+0.9))*0.05;
     for(let i=0;i<=segs;i++){
@@ -468,6 +517,7 @@ function init3D(){
   if(JP){ buildJapan(); }
   else if(TS){ buildTamsui(); }
   else if(KY){ buildKeiyo(); }
+  else if(KK){ buildKeikyu(); }
   else if(!AL){
   { const mid=fr(END/2); const g=new T.PlaneGeometry(GS,GS); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,M.ground); m.position.set(mid.x,0,mid.z); m.receiveShadow=true; scene.add(m); }
   ribbon(S0,S1,2,[[-9,0.015],[-2.7,0.015]],M.grass,{u:0.25,v:0.25});
@@ -530,7 +580,7 @@ function init3D(){
   }
 
   /* provincial highway on the east side, with utility poles */
-  if(!AL && !JP && !TS && !KY){
+  if(!AL && !JP && !TS && !KY && !KK){
   ribbon(S0,S1,4,[[-42,0.05],[-34,0.05]],M.road,{u:1/8,v:1/12});
   const poles=[], parms=[];
   for(let s=Math.ceil(S0/40)*40; s<S1; s+=40){ poles.push({s,lat:-44.5,h:5}); parms.push({s,lat:-44.5,h:9.3}); }
@@ -561,7 +611,7 @@ function init3D(){
       ctrunks.push({s,lat,h:0,sx:R*0.12,sy:H*0.3,sz:R*0.12,terr:true});
     }
   }
-  if(!AL && !JP && !TS && !KY) for(let c=Math.floor(S0/14); c*14<S1; c++){
+  if(!AL && !JP && !TS && !KY && !KK) for(let c=Math.floor(S0/14); c*14<S1; c++){
     for(const sd of [-1,1]) for(const layer of [0,1]){
       const key=c*4+(sd>0?1:0)+layer*2; if(rnd(key)<(layer?0.55:0.3)) continue;
       const s=c*14+rnd(key*7+3)*14;
@@ -606,7 +656,7 @@ function init3D(){
     const FLW = JP ? [0x6f7fd6,0x8a6fd0,0x5f9fe0,0xc58ad8,0xe7a1c4] : AL ? null : [0xf3d34a,0xffffff,0xf29bb8,0xe8664f,0xb59be6];
     for(let s=Math.ceil(S0/3.2)*3.2; s<S1; s+=3.2){ const k=Math.round(s*7);
       for(const sd of [-1,1]){ const key=k*2+(sd>0?1:0); if(rnd(key)<0.45) continue;
-        if(KY) continue;
+        if(KY||KK) continue;
         if(nearStnX(s) && sd<0) continue; if(CROSSINGS.some(c=>Math.abs(c-s)<9)) continue; if(ROUTE.street && s>ROUTE.street.s-10 && s<ROUTE.street.e+10) continue;
         if(sd>0 && loopAt(s)) continue;
         const lat=sd*(3.3+rnd(key+3)*2.6), sc=0.35+rnd(key+5)*0.45;
@@ -622,7 +672,7 @@ function init3D(){
   function signAt(s,lat,hBoard,w,h,map){ const g=new T.Group(); g.add(postMesh(hBoard,0.045)); const b=board(w,h,0.05,map); b.position.y=hBoard+h/2; b.castShadow=true; g.add(b); place(g,s,lat,0); scene.add(g); return g; }
   LIMITS.forEach(Lm=>{ if(Lm.s>0) signAt(Lm.s,-2.5,2.4,0.8,0.62,numTex(String(Lm.v),'#fbfbf6','#151515','#151515'));
     signAt(Lm.e,-2.5,2.4,0.62,0.62,signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=18; x.beginPath(); x.moveTo(0,h); x.lineTo(w,0); x.stroke(); x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); })); });
-  const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(JP?'笛':'鳴',w/2,h/2+6); });
+  const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((JP||ROUTE.jpSign)?'笛':'鳴',w/2,h/2+6); });
   CROSSINGS.forEach(c=>signAt(c-300,-2.5,2.1,0.6,0.6,whistle));
   for(let s=100; s<END+700; s+=100){ const t=signTex(128,88,(x,w,h)=>{ x.fillStyle='#f6f6f0'; x.fillRect(0,0,w,h); x.fillStyle='#151515'; x.font='700 60px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((s/1000).toFixed(1),w/2,h/2+4); });
     signAt(s,2.3,0.55,0.42,0.29,t); }
@@ -651,7 +701,7 @@ function init3D(){
   const armTex=tex(256,16,(x,w,h)=>{ for(let i=0;i<8;i++){ x.fillStyle=i%2?'#151515':'#f2c418'; x.fillRect(i*32,0,32,h); } });
   const armMat=new T.MeshStandardMaterial({map:armTex,roughness:0.6});
   CROSSINGS.forEach(c=>{
-    const XW=AL?22:160;
+    const XW=AL?22:KK?40:160;
     ribbon(c-4,c+4,0.5,[[-XW,0.06],[-2.8,0.06]],M.asphalt,{}); ribbon(c-4,c+4,0.5,[[2.8,0.06],[XW,0.06]],M.asphalt,{});
     ribbon(c-4,c+4,0.5,[[-2.8,0.06],[-2.8,RT-0.015],[2.8,RT-0.015],[2.8,0.06]],M.gray,{closed:true,caps:true});
     ribbon(c-0.12,c+0.12,0.24,[[-XW,0.07],[-7,0.07]],M.yellow,{}); ribbon(c-0.12,c+0.12,0.24,[[7,0.07],[XW,0.07]],M.yellow,{});
@@ -687,7 +737,7 @@ function init3D(){
     ribbon(a,b,2,[[-2.45,PT+0.005],[-2.25,PT+0.005]],M.tact,{u:5,v:5});
     ribbon(a,b,2,[[-2.25,PT+0.004],[-1.88,PT+0.004]],M.gray,{});
     ribbon(a,b,2,[[-1.88,PT+0.006],[-1.75,PT+0.006]],M.white,{});
-    if(ROUTE.double){ const o=LOOP_LAT;
+    if(ROUTE.double && !st.overtake){ const o=LOOP_LAT;
       ribbon(a,b,2,[[o+1.75,0],[o+1.75,PT],[o+9,PT],[o+9,0]],M.concrete,{closed:true,caps:true,cast:true});
       ribbon(a,b,2,[[o+2.45,PT+0.004],[o+9,PT+0.004]],M.tile,{u:0.5,v:0.5});
       ribbon(a,b,2,[[o+2.25,PT+0.005],[o+2.45,PT+0.005]],M.tact,{u:5,v:5});
@@ -703,13 +753,14 @@ function init3D(){
     const bx=new T.Mesh(new T.BoxGeometry(9,5,24),M.building); bx.position.y=2.5; bx.castShadow=bx.receiveShadow=true; bld.add(bx);
     const rf=new T.Mesh(roofG,M.tileRoof); rf.scale.set(10.4,2.6,25.5); rf.position.y=5; rf.castShadow=true; bld.add(rf);
     for(let k=-2;k<=2;k++){ const wdw=new T.Mesh(new T.PlaneGeometry(1.6,1.6),M.win); wdw.rotation.y=Math.PI/2; wdw.position.set(4.52,2.6,k*4.4); bld.add(wdw); }
-    const bsign=board(0.1,1.0,4.6,null); bsign.material[0]=new T.MeshStandardMaterial({map:signTex(512,112,(x,w,h)=>{ x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':TS?'#d71f26':KY?'#a0233a':'#1d3f6e'; x.fillRect(0,0,w,h); x.fillStyle='#fff'; x.font='700 76px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(signName(st)+((JP||ROUTE.jpSign)?'駅':TS?'站':'車站'),w/2,h/2+4); }),roughness:0.6});
+    const bsign=board(0.1,1.0,4.6,null); bsign.material[0]=new T.MeshStandardMaterial({map:signTex(512,112,(x,w,h)=>{ x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':TS?'#d71f26':KY?'#a0233a':KK?'#c8222c':'#1d3f6e'; x.fillRect(0,0,w,h); x.fillStyle='#fff'; x.font='700 76px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(signName(st)+((JP||ROUTE.jpSign)?'駅':TS?'站':'車站'),w/2,h/2+4); }),roughness:0.6});
     bsign.material[0].map.center.set(0.5,0.5); bsign.position.set(4.56,4.1,0); bld.add(bsign);
-    if(KY) bld.visible=false;
+    if(KY||KK) bld.visible=false;
     place(bld,st.pos-PL*0.44,JP?-12:-17,0); if(JP) bld.scale.set(0.6,0.75,0.45); scene.add(bld);
     // name board
     const prev=STATIONS[i-1], nxt=STATIONS[i+1];
-    const nb=signTex(760,230,(x,w,h)=>{ x.fillStyle=AL?'#f3e6cf':'#f5f4ef'; x.fillRect(0,0,w,h); x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':TS?'#d71f26':KY?'#a0233a':'#1d3f6e'; x.fillRect(0,h-62,w,62);
+    const nb=signTex(760,230,(x,w,h)=>{ x.fillStyle=AL?'#f3e6cf':'#f5f4ef'; x.fillRect(0,0,w,h); x.fillStyle=AL?'#5a3a22':JP?'#2f6b45':TS?'#d71f26':KY?'#a0233a':KK?'#c8222c':'#1d3f6e'; x.fillRect(0,h-62,w,62);
+      if(st.no){ x.fillStyle=KK?'#c8222c':'#333'; x.beginPath(); x.roundRect? x.roundRect(18,18,118,62,12) : x.rect(18,18,118,62); x.fill(); x.fillStyle='#fff'; x.font='700 34px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(st.no,77,50); }
       x.fillStyle='#141414'; x.textAlign='center'; x.textBaseline='middle'; x.font=(signName(st).length>4?'700 76px ':'700 104px ')+FONT; x.fillText(signName(st),w/2,70); x.font='500 30px '+FONT; x.fillStyle='#3a3a3a'; x.fillText(st.en,w/2,138);
       x.fillStyle='#fff'; x.font='500 32px '+FONT; if(prev){ x.textAlign='left'; x.fillText('◀ '+signName(prev),22,h-31); } if(nxt){ x.textAlign='right'; x.fillText(signName(nxt)+' ▶',w-22,h-31); } });
     const ng=new T.Group(); [-1.5,1.5].forEach(dx=>{ const p=postMesh(1.0,0.05); p.position.x=dx; ng.add(p); }); const nbm=board(3.8,1.15,0.06,nb); nbm.position.y=1.0+0.575; nbm.castShadow=true; ng.add(nbm);
@@ -732,7 +783,7 @@ function init3D(){
       // LED 列車資訊看板（掛在雨棚下）
       const nextSt=STATIONS[Math.min(i+1,STATIONS.length-1)], dest=STATIONS[STATIONS.length-1];
       const ledT=signTex(512,96,(x,w,h)=>{ x.fillStyle='#0b0b0b'; x.fillRect(0,0,w,h); x.fillStyle='#ffa31a'; x.font='700 40px '+FONT; x.textBaseline='middle';
-        x.textAlign='left'; x.fillText(((JP||ROUTE.jpSign)?'各停 ':TS?'往 ':'區間 ')+(ROUTE.dest?ROUTE.dest.ja:signName(dest))+((JP||ROUTE.jpSign)?' 行':''),14,h/2+2); x.textAlign='right'; x.fillStyle='#7dff7a'; x.font='700 30px '+FONT; x.fillText((JP||ROUTE.jpSign)?'まもなく':TS?'即將進站':L('即將進站','Arriving','まもなく'),w-14,h/2+2); });
+        x.textAlign='left'; x.fillText((KK?'普通 ':(JP||ROUTE.jpSign)?'各停 ':TS?'往 ':'區間 ')+(ROUTE.dest?ROUTE.dest.ja:signName(dest))+((JP||ROUTE.jpSign)?' 行':''),14,h/2+2); x.textAlign='right'; x.fillStyle='#7dff7a'; x.font='700 30px '+FONT; x.fillText((JP||ROUTE.jpSign)?'まもなく':TS?'即將進站':L('即將進站','Arriving','まもなく'),w-14,h/2+2); });
       const led=board(0.08,0.42,2.3,null,M.dark); led.material[0]=new T.MeshBasicMaterial({map:ledT}); led.material[1]=led.material[0];
       const lg=new T.Group(); led.position.y=PT+2.65; lg.add(led); [-0.9,0.9].forEach(z=>{ const r=new T.Mesh(new T.BoxGeometry(0.03,0.55,0.03),M.post); r.position.set(0,PT+3.1,z); lg.add(r); });
       place(lg,st.pos-PL*0.55,-4.1,0,0); scene.add(lg);
@@ -767,7 +818,7 @@ function init3D(){
 
   /* traffic on the highway */
   const cars=[]; const carCols=[0xf2f2f2,0x2c3e50,0xb33a2f,0x8a9aa6,0xe0b03a,0x355f4a];
-  for(let i=0;i<(AL||KY?0:JP?14:10);i++){ const g=new T.Group(); const col=carCols[i%carCols.length];
+  for(let i=0;i<(AL||KY||KK?0:JP?14:10);i++){ const g=new T.Group(); const col=carCols[i%carCols.length];
     const big=i%4===0; const body=new T.Mesh(new T.BoxGeometry(1.8,big?2.2:0.8,big?7.5:4.3),std({color:col,roughness:0.35,metalness:0.3})); body.position.y=big?1.5:0.62; body.castShadow=true; g.add(body);
     if(!big){ const cb=new T.Mesh(new T.BoxGeometry(1.6,0.6,2.2),std({color:0x1f272b,roughness:0.15})); cb.position.set(0,1.3,0.1); g.add(cb); }
     scene.add(g); const dir=i%2?1:-1; cars.push({g,s:rnd(700+i)*END,v:(JP?(9+rnd(710+i)*5):(14+rnd(710+i)*8))*dir,lat:JP?(dir>0?-16.5:-20):TS?(dir>0?17.5:21.5):(dir>0?-36:-40)}); }
@@ -845,6 +896,7 @@ function init3D(){
                : JP ? {body:'#2f7d4f', top:'#efe6c6', stripe:'#2f7d4f', cars:2, len:12.6, w:2.5, h:3.0}
                : ROUTE.key==='tamsui' ? {body:'#c9cfd4', top:'#c9cfd4', stripe:'#2457a6', cars:6, len:23.5, w:3.1, h:3.3}
                : KY ? {body:'#d7dcdf', top:'#d7dcdf', stripe:'#a0233a', cars:10, len:20, w:2.95, h:3.3}
+               : KK ? {body:'#c8222c', top:'#c8222c', stripe:'#f4f4f0', cars:6, len:18, w:2.8, h:3.2}
                : {body:'#e6e9ec', top:'#e6e9ec', stripe:'#2f6fb6', cars:4, len:20, w:2.9, h:3.2};
   const sideTex=tex(512,128,(x,w,h)=>{ x.fillStyle=LIVERY.top; x.fillRect(0,0,w,h*0.55); x.fillStyle=LIVERY.body; x.fillRect(0,h*0.55,w,h*0.45);
     x.fillStyle=LIVERY.stripe; x.fillRect(0,h*0.58,w,h*0.09); x.fillStyle='#24323b'; for(let i=0;i<7;i++) x.fillRect(18+i*70,h*0.18,52,h*0.3);
@@ -866,6 +918,8 @@ function init3D(){
   const meets=(ROUTE.loops||[]).map(L=>({L, cars:makeTrain(), front:STATIONS[L.st].pos-15, v:0, state:'wait', st:L.st, tooted:false, passed:false}));
   /* 雙線：對向列車一班接一班從對面開過來 */
   const streams = ROUTE.double ? [0,1].map(()=>({cars:makeTrain(), front:1e9, v:0, wait:0})) : [];
+  /* 京急鮫洲：停車等快特從右邊超車（同方向） */
+  const otIdx=STATIONS.findIndex(x=>x.overtake), overtake = otIdx>0 ? {cars:makeTrain(), idx:otIdx, state:'wait', front:0, v:0, passed:false} : null;
 
   /* 鳥群：幾群 V 字形的鳥慢慢飛過 */
   const birds=[];
@@ -952,7 +1006,7 @@ function init3D(){
   const blitScene=new T.Scene(), blitCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
   const bq=new T.Mesh(new T.PlaneGeometry(2,2),blitMat); bq.frustumCulled=false; blitScene.add(bq);
   R3={renderer,scene,cam,sun,sky,SUNDIR,sig,xings,stations,cars,rt,blitMat,blitScene,blitCam,makeRT,
-    hemi,skyMat,clouds,mountMats:mountMats.concat(jpMounts),M,head,stars,rain,rainSeed,stLights,sea,jpLamp,jpFar,birds,glare,petals,meets,streams,LIVERY,cabUI:{mcPivot,needle,doorLamp,atpLamp,drawCard,cardKey:'',gaugeMax:(LINE_MAX<=40?40:LINE_MAX<=60?60:120)}};
+    hemi,skyMat,clouds,mountMats:mountMats.concat(jpMounts),M,head,stars,rain,rainSeed,stLights,sea,jpLamp,jpFar,birds,glare,petals,meets,streams,overtake,LIVERY,cabUI:{mcPivot,needle,doorLamp,atpLamp,drawCard,cardKey:'',gaugeMax:(LINE_MAX<=40?40:LINE_MAX<=60?60:120)}};
   applyEnv(); resize();
 }
 
@@ -1075,7 +1129,16 @@ function render(dt){
     if(m.state==='gone'){ m.cars.forEach(g=>g.visible=false); return; }
     placeTrain(m.cars,m.front);
   });
+  // 快特超車：車頭從後方 350 m 追上來，以約 100 km/h 從右邊開過去（我們停車 18 秒內通過）
+  const OT=R3.overtake;
+  if(OT){ const st=STATIONS[OT.idx];
+    if(S.phase!=='run'){ OT.state='wait'; OT.cars.forEach(g=>g.visible=false); }
+    else if(OT.state==='wait' && S.boarded[OT.idx]!==undefined && S.t-S.boarded[OT.idx]>4){ OT.state='go'; OT.front=st.pos-350; OT.v=28; OT.passed=false; }
+    if(OT.state==='go'){ const prev=OT.front; OT.front+=OT.v*dt; if(!OT.passed && prev<S.pos && OT.front>=S.pos){ OT.passed=true; if(typeof whoosh==='function') whoosh(0.9); }
+      OT.cars.forEach((g,k)=>{ const sc=OT.front-k*R3.LIVERY.len-R3.LIVERY.len/2; g.visible=sc>S.pos-600 && sc<S.pos+1600; if(g.visible) place(g,sc,LOOP_LAT,0,0); });
+      if(OT.front-R3.LIVERY.len*R3.LIVERY.cars>S.pos+1600) { OT.state='done'; OT.cars.forEach(g=>g.visible=false); } } }
   R3.streams.forEach((t,i)=>{
+    if(OT && OT.state==='go'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=20; return; }
     if(S.phase!=='run'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=i*45+10; return; }
     if(t.front>S.pos+5000 || t.front<S.pos-700){ t.wait-=dt; if(t.wait<=0){ t.front=S.pos+1500+Math.random()*400; t.v=17; t.passed=false; } else { t.cars.forEach(g=>g.visible=false); return; } }
     // 接近對面月台時減速（看起來像要進站）

@@ -115,6 +115,26 @@ const ROUTES = {
     signal:null,
     grades:[ {s:-800,e:300,g:0}, {s:300,e:650,g:6}, {s:650,e:1050,g:0}, {s:1050,e:1450,g:-6}, {s:1450,e:2050,g:0}, {s:2050,e:2350,g:5}, {s:2350,e:2650,g:-5}, {s:2650,e:99999,g:0} ],
   },
+  keikyu:{
+    key:'keikyu', cars:6, name:L('京急本線','Keikyū Main Line','京急本線'), title:L('京急線駕駛室','Keikyū Line Cab','京急線運転台'), train:L('京急 1000 形 6 輛','6-car Keikyū 1000','京急1000形 6両'), desc:L('品川出發・高架與平交道','from Shinagawa, viaducts and level crossings','品川発・高架と踏切'),
+    trainLen:108, lineMax:90, gauge:1.435, electric:true, double:true, elevated:true, visElevate:true, jpSign:true, continues:true, dest:{ja:'浦賀',name:'浦賀',en:'Uraga'}, oppDest:'品川',
+    elev0:8, elevScale:1, railLen:25, platLen:125, sunMap:'south',
+    power:1.05, ebDecel:1.45, brakeStep:0.14,
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'品川',   en:'Shinagawa',      ja:'品川',   no:'KK02', pos:0},
+      {name:'北品川', en:'Kita-shinagawa', ja:'北品川', no:'KK03', pos:700,  leg:99},
+      {name:'新馬場', en:'Shimbamba',      ja:'新馬場', no:'KK04', pos:1400, leg:86},
+      {name:'青物橫丁', en:'Aomono-yokochō', ja:'青物横丁', no:'KK05', pos:2200, leg:88},
+      {name:'鮫洲',   en:'Samezu',         ja:'鮫洲',   no:'KK06', pos:2800, leg:77, overtake:true},
+      {name:'立會川', en:'Tachiaigawa',    ja:'立会川', no:'KK07', pos:3600, leg:100},
+    ],
+    limits:[ {s:0,e:420,v:45}, {s:560,e:880,v:55}, {s:1640,e:1880,v:70}, {s:3080,e:3320,v:70} ],
+    curves:[ {s:120,e:380,k:0.0048}, {s:1640,e:1880,k:-0.0022}, {s:3080,e:3320,k:0.0022} ],
+    crossings:[610, 755],
+    signal:null,
+    grades:[ {s:-800,e:150,g:0}, {s:150,e:520,g:-21.6}, {s:520,e:860,g:0}, {s:860,e:1260,g:20}, {s:1260,e:99999,g:0} ],
+  },
 };
 let ROUTE = LANG==='ja' ? ROUTES.enoden : ROUTES.hualien; // 日文版預設先開江之電
 try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
@@ -143,7 +163,7 @@ function trainGrade(p){ let t=0; for(let k=0;k<5;k++) t+=gradeAt(p-k*TRAIN_LEN/4
 const EL_STEP=2, EL_MIN=-800, EL_N=Math.ceil((END+2000-EL_MIN)/EL_STEP)+2, ELEV=new Float32Array(EL_N);
 (function(){ const i0=-EL_MIN/EL_STEP; for(let i=i0+1;i<EL_N;i++) ELEV[i]=ELEV[i-1]+gradeAt(EL_MIN+(i-0.5)*EL_STEP)/1000*EL_STEP; for(let i=i0-1;i>=0;i--) ELEV[i]=ELEV[i+1]-gradeAt(EL_MIN+(i+0.5)*EL_STEP)/1000*EL_STEP; })();
 function elevAt(p){ const x=clamp((p-EL_MIN)/EL_STEP,0,EL_N-1.001), i=Math.floor(x); return ELEV[i]+(ELEV[i+1]-ELEV[i])*(x-i); }
-const visElev = p => ROUTE.key==='alishan' ? elevAt(p) : 0;
+const visElev = p => (ROUTE.key==='alishan'||ROUTE.visElevate) ? elevAt(p) : 0;
 /* 顯示用海拔（遊戲距離有壓縮，阿里山線依比例換算成真實高差 2216 → 2451 m） */
 const altitude = p => Math.round(ROUTE.elev0 + elevAt(p)*ROUTE.elevScale);
 
@@ -198,6 +218,11 @@ const TRAINS = {
     {key:'k209', name:L('209 系 500 番台','209-500 series','209系500番台'), power:0.95, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.92, frame:'#11161a',
      req:'gradeA_keiyo', reqText:L('京葉線拿到 A 以上評價','Get an A or better on the Keiyō Line','京葉線で A 以上の評価')},
   ],
+  keikyu:[
+    {key:'kk1000', name:L('京急 1000 形','Keikyū 1000 series','京急1000形'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.05, frame:'#0d1215'},
+    {key:'kk2100', name:L('京急 2100 形「唱歌的電車」','Keikyū 2100 “singing train”','京急2100形「歌う電車」'), power:1.1, brakeStep:0.14, ebDecel:1.45, sound:'doremi', pitch:1.0, frame:'#1a1012',
+     req:'gradeA_keikyu', reqText:L('京急線拿到 A 以上評價','Get an A or better on the Keikyū line','京急線で A 以上の評価')},
+  ],
   enoden:[
     {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},
     {key:'e300', name:L('江之電 300 形（305 編成）','Enoden Type 300 (set 305)','江ノ電 300形（305編成）'), power:0.78, brakeStep:0.12, ebDecel:1.3, sound:'resistor', pitch:0.7, frame:'#16201a',
@@ -212,6 +237,7 @@ const SIGHTS = {
   '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],
   '阿里山':['神木群 →'], '祝山':['觀日平台 →'],
   '北投':['北投溫泉 →'], '關渡':['關渡宮 →','關渡自然公園 →'], '紅樹林':['紅樹林保護區 →'], '淡水':['淡水老街 →','漁人碼頭 →'],
+  '北品川':['旧東海道 品川宿 →'],
   '七里濱':['七里ヶ浜海岸 →'], '鎌倉高校前':['踏切 撮影はマナーを守って'], '腰越':['腰越漁港 →'], '江之島':['江の島 →','江島神社 →'],
 };
 let BASE_CLOCK = ENV.clock;
