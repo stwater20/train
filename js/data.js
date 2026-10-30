@@ -95,6 +95,24 @@ const ROUTES = {
     signal:null,
     grades:[ {s:-800,e:950,g:0}, {s:950,e:1450,g:10}, {s:1450,e:1750,g:0}, {s:1750,e:2250,g:-12}, {s:2250,e:2550,g:0}, {s:2550,e:3250,g:6}, {s:3250,e:3550,g:0}, {s:3550,e:4150,g:-5}, {s:4150,e:4450,g:0}, {s:4450,e:5150,g:4}, {s:5150,e:99999,g:0} ],
   },
+  keiyo:{
+    key:'keiyo', name:L('JR 京葉線','JR Keiyō Line','JR京葉線'), title:L('京葉線駕駛室','Keiyō Line Cab','京葉線運転台'), train:L('E233 系 10 輛','10-car E233','E233系 10両'), desc:L('高架雙線・沿東京灣','elevated double track along Tokyo Bay','高架複線・東京湾沿い'),
+    trainLen:200, lineMax:100, gauge:1.067, electric:true, double:true, elevated:true, jpSign:true, continues:true, dest:{ja:'蘇我',name:'蘇我',en:'Soga'}, oppDest:'東京', elev0:12, elevScale:1, railLen:25,
+    power:1.05, ebDecel:1.45, brakeStep:0.14, platLen:215, sunMap:'east',
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'新木場',     en:'Shin-Kiba',         ja:'新木場',     pos:0},
+      {name:'葛西臨海公園', en:'Kasai-Rinkai-Kōen', ja:'葛西臨海公園', pos:1800, leg:140},
+      {name:'舞濱',       en:'Maihama',           ja:'舞浜',       pos:2900, leg:99},
+      {name:'新浦安',     en:'Shin-Urayasu',      ja:'新浦安',     pos:4100, leg:103},
+      {name:'市川鹽濱',   en:'Ichikawashiohama',  ja:'市川塩浜',   pos:5200, leg:99},
+    ],
+    limits:[ {s:0,e:260,v:55}, {s:2650,e:3060,v:75}, {s:5000,e:5240,v:70} ],
+    curves:[ {s:450,e:800,k:0.0014}, {s:2650,e:3000,k:-0.0024}, {s:4350,e:4700,k:0.0014} ],
+    crossings:[],
+    signal:null,
+    grades:[ {s:-800,e:300,g:0}, {s:300,e:650,g:6}, {s:650,e:1050,g:0}, {s:1050,e:1450,g:-6}, {s:1450,e:2050,g:0}, {s:2050,e:2350,g:5}, {s:2350,e:2650,g:-5}, {s:2650,e:99999,g:0} ],
+  },
 };
 let ROUTE = LANG==='ja' ? ROUTES.enoden : ROUTES.hualien; // 日文版預設先開江之電
 try{ const k=JSON.parse(localStorage.getItem('cabRoute')); if(ROUTES[k]) ROUTE=ROUTES[k]; }catch(e){}
@@ -172,6 +190,11 @@ const TRAINS = {
     {key:'c381', name:L('C381 型電聯車','Type C381 train','C381形 電車'), power:1.1, brakeStep:0.14, ebDecel:1.4, sound:'vvvf', pitch:1.2, frame:'#0d1215'},
     {key:'c301', name:L('C301 型電聯車（第一代）','Type C301 train (first generation)','C301形 電車（初代）'), power:0.95, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.8, frame:'#141a20',
      req:'gradeA_tamsui', reqText:L('淡水線拿到 A 以上評價','Get an A or better on the Tamsui Line','淡水線で A 以上の評価')},
+  ],
+  keiyo:[
+    {key:'e233', name:L('E233 系 5000 番台','E233-5000 series','E233系5000番台'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.1, frame:'#0d1215'},
+    {key:'k209', name:L('209 系 500 番台','209-500 series','209系500番台'), power:0.95, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.92, frame:'#11161a',
+     req:'gradeA_keiyo', reqText:L('京葉線拿到 A 以上評價','Get an A or better on the Keiyō Line','京葉線で A 以上の評価')},
   ],
   enoden:[
     {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},

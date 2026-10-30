@@ -242,6 +242,11 @@ const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手�
     <li><b>紅燈</b>：前方有列車，必須在號誌前停車等待，燈號會轉黃。衝太快時 ATP 會緊急煞車並扣 30 分，闖過紅燈扣 150 分。</li>
   </ul>
   <p>花東線志學到平和之間有一架第 32 號閉塞號誌，靠近時記得先減速。阿里山祝山線沒有這架號誌。</p></section>
+<section><h3>JR 京葉線</h3>
+  <ul>
+    <li>新木場往市川鹽濱，高架雙線、沿著東京灣。列車其實開往蘇我，你的班在市川鹽濱換手。</li>
+    <li>10 輛編成、長 200 m，最高 100 km/h；E233 系加速快，進站要提早煞車。右邊是海和葛西臨海公園的摩天輪。</li>
+  </ul></section>
 <section><h3>台北捷運淡水信義線</h3>
   <ul>
     <li>北投往淡水，雙線區間、第三軌供電，沒有架空線和平交道。實際上平常是自動駕駛，這裡是讓你練習的手動駕駛模式。</li>
@@ -300,8 +305,12 @@ function showOverlay(kind){
   } else if(kind==='title'){
     ovCard.className='card';
     const AL=ROUTE.key==='alishan', first=stName(STATIONS[0]), last=stName(STATIONS[STATIONS.length-1]), mids=STATIONS.slice(1,-1).map(stName).join(L('、',', ','、')), hhmm=fmtClock(BASE_CLOCK).slice(0,5);
-    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui';
-    const story = TS
+    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo';
+    const story = KY
+      ? L(`你是${ENV.word} ${hhmm} 從新木場出發、開往蘇我的京葉線各站停車司機，你的班開到${last}換手。高架雙線沿著東京灣，途經${mids}；右邊看得到葛西臨海公園的摩天輪和海，對向列車不時從右邊開過。`,
+          `You're driving the ${hhmm} Keiyō Line local from Shin-Kiba bound for Soga ${ENV.word}; your shift hands over at ${last}. It's elevated double track along Tokyo Bay via ${mids}, with the Kasai Ferris wheel and the sea on your right and oncoming trains passing by.`,
+          `${ENV.word} ${hhmm} 新木場発 蘇我行きの京葉線各駅停車を担当し、${last}で乗務員交代です。東京湾沿いの高架複線を${mids}と進み、右手には葛西臨海公園の観覧車と海、対向列車がすれ違います。`)
+      : TS
       ? L(`你是${ENV.word} ${hhmm} 從北投開往淡水的捷運司機，今天用手動駕駛模式上線。途經${mids}，左邊是關渡平原、淡水河和觀音山，右邊是大屯山。雙線區間，對向列車會從右邊開過。`,
           `You're driving the ${hhmm} metro train from Beitou to Tamsui ${ENV.word} in manual mode, calling at ${mids}. The Guandu plain, the Tamsui River and Guanyin Mountain are on your left, the Datun mountains on your right, and oncoming trains pass on the right.`,
           `${ENV.word} ${hhmm} 北投発 淡水行きのMRTを手動運転で担当します。${mids}に停車し、左手には関渡平原・淡水河・観音山、右手には大屯山。複線なので対向列車が右側を通過します。`)
@@ -323,13 +332,14 @@ function showOverlay(kind){
       <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
       <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
       <section class="tabpane" data-pane="go"${tab==='go'?'':' hidden'}>
-      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
+      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='keiyo'?'🎡':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
       <p class="story">${story}</p>
       ${departPicksHTML()}
       <details class="howto-box"><summary>${L('駕駛重點','Driving tips','運転のポイント')}</summary><ul class="howto">
         <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
         <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
-        <li>${TS ? L('最高 80 km/h，雙線區間沒有平交道；淡水站前限速 35 km/h','Top speed 80 km/h, double track with no level crossings; 35 km/h into Tamsui','最高 80 km/h、複線で踏切なし。淡水駅手前は 35 km/h')
+        <li>${KY ? L('最高 100 km/h，高架雙線沒有平交道；10 輛編成長 200 m，月台很長','Top speed 100 km/h on elevated double track with no level crossings; 10 cars, 200 m long','最高 100 km/h、踏切のない高架複線。10両・全長 200 m')
+             : TS ? L('最高 80 km/h，雙線區間沒有平交道；淡水站前限速 35 km/h','Top speed 80 km/h, double track with no level crossings; 35 km/h into Tamsui','最高 80 km/h、複線で踏切なし。淡水駅手前は 35 km/h')
              : JP ? L('最高 45 km/h，路面區間 25 km/h；鎌倉高校前站旁就是知名的平交道，記得鳴笛','Top speed 45 km/h, 25 km/h on the street section; the famous level crossing is right by Kamakura-Kōkōmae — sound the horn','最高 45 km/h、併用軌道は 25 km/h。鎌倉高校前駅のすぐ横に有名な踏切があるので警笛を')
              : AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>

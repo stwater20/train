@@ -61,7 +61,10 @@ function buildTut(){
    doing:()=>L('按空白鍵開門','Press Space to open the doors','Space でドア開'),
    cond:()=>S.doors || S.next>1},
   {title:L('新手教學完成 🎉','Tutorial complete 🎉','チュートリアル完了 🎉'), hi:[],
-   text: ROUTE.key==='tamsui' ? L(`接下來自己開到終點<b>${sEnd}</b>吧。這是雙線區間，對向列車會從右邊開過；捷運加速快，記得提早煞車，淡水站前限速 35 km/h。想複習隨時按 <kbd>?</kbd>。`,
+   text: ROUTE.key==='keiyo' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。高架雙線、對向列車會從右邊開過；E233 系加速快，記得提早煞車。想複習隨時按 <kbd>?</kbd>。`,
+                `Drive on to <b>${sEnd}</b>, where your shift hands over. Elevated double track with oncoming trains on your right; the E233 accelerates hard, so brake early. Press <kbd>?</kbd> any time for the handbook.`,
+                `このまま<b>${sEnd}</b>まで運転して交代です。高架複線で対向列車が右側を通過します。E233系は加速が良いので早めのブレーキを。<kbd>?</kbd> でいつでも操作説明を。`)
+        : ROUTE.key==='tamsui' ? L(`接下來自己開到終點<b>${sEnd}</b>吧。這是雙線區間，對向列車會從右邊開過；捷運加速快，記得提早煞車，淡水站前限速 35 km/h。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>. This is double track, so oncoming trains pass on your right. The metro accelerates quickly — brake early, and it’s 35 km/h into Tamsui. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま終点の<b>${sEnd}</b>へ。複線なので対向列車が右側を通過します。加速が良いので早めのブレーキを。淡水駅手前は 35 km/h。<kbd>?</kbd> でいつでも操作説明を。`)
         : JP ? L(`接下來自己開到終點<b>${sEnd}</b>吧。腰越之後是<b>路面併用軌道</b>：電車和汽車共用道路，限速 25 km/h，進江之島前的急彎只有 15 km/h。想複習隨時按 <kbd>?</kbd>。`,

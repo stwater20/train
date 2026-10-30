@@ -54,6 +54,11 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
     <li><b>Red</b>: a train is ahead. Stop before the signal and wait for it to change. Approaching too fast triggers ATP (−30); passing it costs 150.</li>
   </ul>
   <p>On the Hualien line there is block signal No. 32 between Zhixue and Pinghe. The Alishan line has no signal.</p></section>
+<section><h3>JR Keiyō Line</h3>
+  <ul>
+    <li>Shin-Kiba to Ichikawashiohama on elevated double track along Tokyo Bay. The train actually runs on to Soga — your shift hands over at Ichikawashiohama.</li>
+    <li>Ten cars, 200 m long, top speed 100 km/h. The E233 accelerates hard, so brake early. The sea and the Kasai Ferris wheel are on your right.</li>
+  </ul></section>
 <section><h3>Taipei Metro Tamsui Line</h3>
   <ul>
     <li>Beitou to Tamsui on double track with third-rail power — no overhead wires and no level crossings. In real service it runs automatically; here you drive it in manual mode.</li>
@@ -149,6 +154,11 @@ const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンド�
     <li><b>赤（停止）</b>：前方に列車あり。信号の手前で停車して変わるのを待ちます。速すぎると ATP 作動（−30）、冒進は −150。</li>
   </ul>
   <p>花東線の志学〜平和間に第32号閉塞信号機があります。阿里山線には信号機はありません。</p></section>
+<section><h3>JR京葉線</h3>
+  <ul>
+    <li>新木場から市川塩浜まで、東京湾沿いの高架複線。列車は蘇我行きで、市川塩浜で乗務員交代です。</li>
+    <li>10両・全長 200 m、最高 100 km/h。E233系は加速が良いので早めのブレーキを。右手に海と葛西臨海公園の観覧車。</li>
+  </ul></section>
 <section><h3>台北MRT 淡水信義線</h3>
   <ul>
     <li>北投から淡水へ。複線・第三軌条集電で、架線も踏切もありません。実際は自動運転ですが、ここでは手動運転モードで運転します。</li>
