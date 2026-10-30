@@ -714,8 +714,8 @@ function init3D(){
       x.fillStyle='#fff'; x.font='500 32px '+FONT; if(prev){ x.textAlign='left'; x.fillText('◀ '+signName(prev),22,h-31); } if(nxt){ x.textAlign='right'; x.fillText(signName(nxt)+' ▶',w-22,h-31); } });
     const ng=new T.Group(); [-1.5,1.5].forEach(dx=>{ const p=postMesh(1.0,0.05); p.position.x=dx; ng.add(p); }); const nbm=board(3.8,1.15,0.06,nb); nbm.position.y=1.0+0.575; nbm.castShadow=true; ng.add(nbm);
     place(ng,st.pos-PL*0.37,-4.6,PT); scene.add(ng);
-    // stop position marker "4"
-    const sm=new T.Group(); sm.add(postMesh(1.3,0.035,M.white)); const smb=board(0.55,0.55,0.04,numTex('4','#1f5fbf','#ffffff','#ffffff')); smb.position.y=1.3+0.275; sm.add(smb);
+    // 停車位置牌：數字是這班車的輛數
+    const sm=new T.Group(); sm.add(postMesh(1.3,0.035,M.white)); const smb=board(0.55,0.55,0.04,numTex(CARS(),'#1f5fbf','#ffffff','#ffffff')); smb.position.y=1.3+0.275; sm.add(smb);
     place(sm,st.pos,-2.05,PT); scene.add(sm);
     // 觀光景點指示牌（咖啡底白字）
     (SIGHTS[st.name]||[]).forEach((txt,k)=>{ const t=signTex(420,110,(x,w,h)=>{ x.fillStyle='#6b3f22'; x.fillRect(0,0,w,h); x.strokeStyle='#fff'; x.lineWidth=5; x.strokeRect(7,7,w-14,h-14); x.fillStyle='#fff'; x.font='700 52px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(txt,w/2,h/2+3); });

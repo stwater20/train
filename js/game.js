@@ -138,13 +138,16 @@ function action(){
 let actx=null;
 function horn(){
   if(S.phase==='run') S.hornPos=S.pos;
+  if(!sfxOn) return;
   if(TRAIN.sound==='steam'){ whistle(); return; }
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
-    const t=actx.currentTime, g=actx.createGain(), lp=actx.createBiquadFilter();
-    lp.type='lowpass'; lp.frequency.value=1700; lp.connect(g); g.connect(actx.destination);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.14,t+0.05); g.gain.setValueAtTime(0.14,t+0.75); g.gain.linearRampToValueAtTime(0,t+0.95);
-    [311,370,466].forEach(fr=>{ const o=actx.createOscillator(); o.type='sawtooth'; o.frequency.value=fr; o.connect(lp); o.start(t); o.stop(t+1); });
+    // 雙音空氣喇叭：兩個音一起響、開頭音高稍微往下壓，再加一點顫音
+    const t=actx.currentTime, g=actx.createGain(), lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2200; lp.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.12,t+0.06); g.gain.setValueAtTime(0.12,t+0.8); g.gain.linearRampToValueAtTime(0,t+1.0);
+    const vib=actx.createOscillator(), vd=actx.createGain(); vib.frequency.value=5.5; vd.gain.value=2.5; vib.connect(vd); vib.start(t); vib.stop(t+1.05);
+    [[349,'sawtooth',0.6],[440,'sawtooth',0.5],[349,'triangle',0.8],[440,'triangle',0.7]].forEach(([fr,ty,a])=>{ const o=actx.createOscillator(), og=actx.createGain(); og.gain.value=a*0.5; o.type=ty;
+      o.frequency.setValueAtTime(fr*0.94,t); o.frequency.linearRampToValueAtTime(fr,t+0.08); vd.connect(o.frequency); o.connect(og); og.connect(lp); o.start(t); o.stop(t+1.05); });
   }catch(e){}
 }
 /* 蒸汽汽笛：三個音加上氣流聲 */
@@ -225,7 +228,7 @@ const HELP_ZH=`<div class="helphead"><div><p class="eyebrow">區間車司機手�
     <li>看「距停車位置」的數字，月台在列車左側。</li>
     <li>估好煞車距離再開始煞：從 90 km/h 用 B8 大約要 300 m，用 B4 大約要 600 m。</li>
     <li>剩 80 m 時下方會出現「停車誤差」量尺，黃色三角形是車頭位置，藍線是停車位置標。</li>
-    <li>最後幾公尺改用 B1–B2 微調，讓車頭停在月台上藍色「4」標前面。</li>
+    <li>最後幾公尺改用 B1–B2 微調，讓車頭停在月台上藍色「${CARS()}」標前面。</li>
     <li>完全停住後按 <kbd>空白鍵</kbd> 開門，旅客上車 10 秒後自動關門，就能再出發。</li>
   </ol>
   <p>停車誤差在 0.5 m 內 <b>+100</b>，1 m 內 +80，3 m 內 +55，8 m 內 +25，15 m 內 +5。衝過停車位置 15 m 以上算<b>過站，−60</b>。停太前面（還差 15 m 以上）則不能開門，要再慢慢往前移。</p></section>
@@ -322,9 +325,9 @@ function showOverlay(kind){
       ? L(`你是${ENV.word} ${hhmm} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。`,
           `You're driving the ${hhmm} Zhushan Line train out of Alishan ${ENV.word}, carrying passengers up the mountain via ${mids} to Zhushan, at 2,451 m the highest station in Taiwan. It's uphill all the way with tight curves: keep to the limits and stop on the mark.`,
           `${ENV.word} ${hhmm} 阿里山発の祝山線列車の運転士として、乗客を山の上へ運びます。${mids}を経て、終点は標高 2,451 m、台湾で最も高い祝山駅。ずっと上り勾配で急カーブも多いので、制限速度を守りつつ停止位置にぴたりと止めましょう。`)
-      : L(`你是${ENV.word} ${hhmm} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「4」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
-          `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “4” board on each platform — the closer, the higher your score — and keep to the timetable.`,
-          `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「4」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
+      : L(`你是${ENV.word} ${hhmm} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「${CARS()}」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
+          `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “${CARS()}” board on each platform — the closer, the higher your score — and keep to the timetable.`,
+          `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「${CARS()}」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
     const tab=window.titleTab||'go';
     ovCard.className='card menu';
     ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p></header>

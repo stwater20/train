@@ -45,7 +45,7 @@ function hud(now){
   if(st){
     const txt = dist>=100 ? Math.round(dist)+' m' : dist>=-15 ? (dist>=0?'':'+')+Math.abs(dist).toFixed(1)+' m' : '—';
     el.dist.textContent=txt; el.dist.classList.toggle('warn',dist<0);
-    el.distSub.textContent= dist<0 ? L('已超過停車位置','Past the stop mark','停止位置を超過') : dist<300 ? L('藍色「4」停車位置標','Blue “4” stop board','青い「4」停止位置目標') : L('月台在左側','Platform on the left','ホームは左側');
+    el.distSub.textContent= dist<0 ? L('已超過停車位置','Past the stop mark','停止位置を超過') : dist<300 ? L('藍色「'+CARS()+'」停車位置標','Blue “'+CARS()+'” stop board','青い「'+CARS()+'」停止位置目標') : L('月台在左側','Platform on the left','ホームは左側');
     el.hDist.textContent=txt;
     const err=-dist;
     if(dist<DIFF.gauge && dist>-30){ el.ptr.hidden=false; el.ptr.style.left=((clamp(err,-15,15)+15)/30*100)+'%'; el.err.textContent=fmtErr(err); el.err.classList.add('num'); }

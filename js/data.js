@@ -14,12 +14,14 @@ const L=(zh,en,ja)=> LANG==='en'?en : LANG==='ja'?(ja??en) : zh;
 const LANG_PATH={zh:'/',en:'/en/',ja:'/ja/'};
 function setLang(l){ try{ localStorage.setItem('cabLang',l); }catch(e){} location.href=pagePath(l, window.FORCE_ROUTE||null); }
 const stName = st => L(st.name, st.en, st.ja||st.name);
+/* 停車位置牌上的數字＝這班車的輛數 */
+const CARS = () => String(ROUTE.cars||4);
 
 /* ---------- route data ---------- */
 /* 兩條路線：花東線區間車、阿里山林業鐵路祝山線。用 localStorage 記住選擇，切換時重新載入頁面 */
 const ROUTES = {
   hualien:{
-    key:'hualien', name:L('花東線','Hualien–Taitung Line','花東線'), title:L('花東線駕駛室','Hualien Line Cab','花東線運転台'), train:L('區間車 4 輛編成','4-car local EMU','区間車 4両編成'), desc:L('單線電化區間','single-track electrified','単線電化区間'),
+    key:'hualien', cars:4, name:L('花東線','Hualien–Taitung Line','花東線'), title:L('花東線駕駛室','Hualien Line Cab','花東線運転台'), train:L('區間車 4 輛編成','4-car local EMU','区間車 4両編成'), desc:L('單線電化區間','single-track electrified','単線電化区間'),
     trainLen:80, lineMax:90, gauge:1.067, electric:true, elev0:20, elevScale:1, railLen:25,
     power:0.95, ebDecel:1.45, brakeStep:0.13,
     envs:['morning','dusk','night','rain'],
@@ -38,7 +40,7 @@ const ROUTES = {
     grades:[ {s:-800,e:200,g:0}, {s:200,e:900,g:5}, {s:900,e:1250,g:0}, {s:1250,e:2100,g:8}, {s:2100,e:2700,g:0}, {s:2700,e:3300,g:-6}, {s:3300,e:3950,g:0}, {s:3950,e:4800,g:10}, {s:4800,e:5150,g:-4}, {s:5150,e:99999,g:0} ],
   },
   alishan:{
-    key:'alishan', name:L('阿里山祝山線','Alishan Zhushan Line','阿里山祝山線'), title:L('阿里山小火車','Alishan Forest Railway','阿里山森林鉄道'), train:L('柴油機車 + 3 節客車','diesel loco + 3 coaches','ディーゼル機関車＋客車3両'), desc:L('762 mm 窄軌登山鐵道','762 mm narrow-gauge mountain railway','762 mm 軌間の登山鉄道'),
+    key:'alishan', cars:4, name:L('阿里山祝山線','Alishan Zhushan Line','阿里山祝山線'), title:L('阿里山小火車','Alishan Forest Railway','阿里山森林鉄道'), train:L('柴油機車 + 3 節客車','diesel loco + 3 coaches','ディーゼル機関車＋客車3両'), desc:L('762 mm 窄軌登山鐵道','762 mm narrow-gauge mountain railway','762 mm 軌間の登山鉄道'),
     trainLen:52, lineMax:30, gauge:0.762, electric:false, elev0:2216, elevScale:1.475, railLen:12,
     power:0.9, ebDecel:1.25, brakeStep:0.13,
     envs:['dawn','clear','mist'],
@@ -56,7 +58,7 @@ const ROUTES = {
     grades:[ {s:-800,e:150,g:0}, {s:150,e:900,g:45}, {s:900,e:1500,g:60}, {s:1500,e:2300,g:50}, {s:2300,e:2600,g:0}, {s:2600,e:3400,g:62}, {s:3400,e:99999,g:0} ],
   },
   enoden:{
-    key:'enoden', name:L('江之電','Enoden','江ノ電'), title:L('江之電駕駛室','Enoden Cab','江ノ電運転台'), train:L('江之電 4 輛編成','4-car Enoden EMU','江ノ電 4両編成'), desc:L('沿海單線・路面併用軌道','coastal single track with street running','海沿いの単線・併用軌道'),
+    key:'enoden', cars:4, name:L('江之電','Enoden','江ノ電'), title:L('江之電駕駛室','Enoden Cab','江ノ電運転台'), train:L('江之電 4 輛編成','4-car Enoden EMU','江ノ電 4両編成'), desc:L('沿海單線・路面併用軌道','coastal single track with street running','海沿いの単線・併用軌道'),
     trainLen:50, lineMax:45, gauge:1.067, electric:true, elev0:5, elevScale:1, railLen:25,
     power:0.9, ebDecel:1.4, brakeStep:0.13, platLen:95, japan:true,
     envs:['morning','dusk','night','rain'],
@@ -76,8 +78,8 @@ const ROUTES = {
     grades:[ {s:-800,e:250,g:0}, {s:250,e:850,g:-6}, {s:850,e:1250,g:0}, {s:1250,e:1800,g:5}, {s:1800,e:2200,g:0}, {s:2200,e:2800,g:-4}, {s:2800,e:99999,g:0} ],
   },
   tamsui:{
-    key:'tamsui', name:L('捷運淡水信義線','Taipei Metro Tamsui Line','台北MRT淡水信義線'), title:L('台北捷運駕駛室','Taipei Metro Cab','台北MRT運転台'), train:L('捷運 6 節編成','6-car metro train','MRT 6両編成'), desc:L('雙線・第三軌供電','double track, third rail','複線・第三軌条'),
-    trainLen:141, lineMax:80, gauge:1.435, electric:true, thirdRail:true, double:true, elev0:10, elevScale:1, railLen:25,
+    key:'tamsui', cars:6, name:L('捷運淡水信義線','Taipei Metro Tamsui Line','台北MRT淡水信義線'), title:L('台北捷運駕駛室','Taipei Metro Cab','台北MRT運転台'), train:L('捷運 6 節編成','6-car metro train','MRT 6両編成'), desc:L('雙線・第三軌供電','double track, third rail','複線・第三軌条'),
+    trainLen:141, lineMax:80, gauge:1.435, electric:true, thirdRail:true, double:true, elev0:10, elevScale:1, railLen:120,
     power:1.1, ebDecel:1.4, brakeStep:0.14, platLen:170, sunFlip:true,
     envs:['morning','dusk','night','rain'],
     stations:[
@@ -96,8 +98,8 @@ const ROUTES = {
     grades:[ {s:-800,e:950,g:0}, {s:950,e:1450,g:10}, {s:1450,e:1750,g:0}, {s:1750,e:2250,g:-12}, {s:2250,e:2550,g:0}, {s:2550,e:3250,g:6}, {s:3250,e:3550,g:0}, {s:3550,e:4150,g:-5}, {s:4150,e:4450,g:0}, {s:4450,e:5150,g:4}, {s:5150,e:99999,g:0} ],
   },
   keiyo:{
-    key:'keiyo', name:L('JR 京葉線','JR Keiyō Line','JR京葉線'), title:L('京葉線駕駛室','Keiyō Line Cab','京葉線運転台'), train:L('E233 系 10 輛','10-car E233','E233系 10両'), desc:L('高架雙線・沿東京灣','elevated double track along Tokyo Bay','高架複線・東京湾沿い'),
-    trainLen:200, lineMax:100, gauge:1.067, electric:true, double:true, elevated:true, jpSign:true, continues:true, dest:{ja:'蘇我',name:'蘇我',en:'Soga'}, oppDest:'東京', elev0:12, elevScale:1, railLen:25,
+    key:'keiyo', cars:10, name:L('JR 京葉線','JR Keiyō Line','JR京葉線'), title:L('京葉線駕駛室','Keiyō Line Cab','京葉線運転台'), train:L('E233 系 10 輛','10-car E233','E233系 10両'), desc:L('高架雙線・沿東京灣','elevated double track along Tokyo Bay','高架複線・東京湾沿い'),
+    trainLen:200, lineMax:100, gauge:1.067, electric:true, double:true, elevated:true, jpSign:true, continues:true, dest:{ja:'蘇我',name:'蘇我',en:'Soga'}, oppDest:'東京', elev0:12, elevScale:1, railLen:100,
     power:1.05, ebDecel:1.45, brakeStep:0.14, platLen:215, sunMap:'east',
     envs:['morning','dusk','night','rain'],
     stations:[

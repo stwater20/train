@@ -98,6 +98,7 @@ function extrasTick(dt){
   if(ROUTE.street && !A.street && S.pos>ROUTE.street.s-250){ A.street=true; annSay({zh:'【司機提醒】前方進入路面併用軌道，和汽車共用道路，限速 25 km/h，注意行人。',en:'[Driver note] Street running ahead: sharing the road with cars at 25 km/h. Watch for pedestrians.',ja:'【運転メモ】この先は併用軌道。車と道路を共有し 25 km/h、歩行者に注意。'},true); }
 }
 function chime(){
+  if(!sfxOn) return;
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
     const t0=actx.currentTime;

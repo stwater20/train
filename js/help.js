@@ -37,7 +37,7 @@ const HELP_EN=`<div class="helphead"><div><p class="eyebrow">Driver's handbook</
     <li>Watch the “Distance to stop” readout. The platform is on the left.</li>
     <li>Judge your braking distance: from 90 km/h, B8 needs about 300 m and B4 about 600 m.</li>
     <li>From 80 m out, the stop-error gauge appears. The yellow triangle is the front of the train; the blue line is the stop mark.</li>
-    <li>Use B1–B2 for the last few metres so the front stops at the blue “4” board on the platform.</li>
+    <li>Use B1–B2 for the last few metres so the front stops at the blue “${CARS()}” board on the platform.</li>
     <li>Once fully stopped, press <kbd>Space</kbd> to open the doors. They close by themselves after 10 seconds.</li>
   </ol>
   <p>Stop within 0.5 m for <b>+100</b>, 1 m +80, 3 m +55, 8 m +25, 15 m +5. Running more than 15 m past the mark is an <b>overrun, −60</b>. Stopping more than 15 m short means the doors won't open; creep forward.</p></section>
@@ -137,7 +137,7 @@ const HELP_JA=`<div class="helphead"><div><p class="eyebrow">運転士ハンド�
     <li>「停止位置まで」の距離を確認。ホームは左側です。</li>
     <li>制動距離の目安：90 km/h から B8 で約 300 m、B4 で約 600 m。</li>
     <li>残り 80 m で停止誤差ゲージが出ます。黄色の三角が先頭、青い線が停止位置目標です。</li>
-    <li>最後の数メートルは B1–B2 で微調整し、ホームの青い「4」標識に先頭を合わせます。</li>
+    <li>最後の数メートルは B1–B2 で微調整し、ホームの青い「${CARS()}」標識に先頭を合わせます。</li>
     <li>完全に止まったら <kbd>Space</kbd> でドアを開扉。10 秒後に自動で閉まります。</li>
   </ol>
   <p>誤差 0.5 m 以内 <b>+100</b>、1 m 以内 +80、3 m 以内 +55、8 m 以内 +25、15 m 以内 +5。15 m 以上行き過ぎると<b>通過扱いで −60</b>。15 m 以上手前ではドアが開かないので、少しずつ前進してください。</p></section>
