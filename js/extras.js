@@ -48,13 +48,20 @@ const NATIVE = (ROUTE.japan||ROUTE.jpSign) ? 'ja' : 'zh';
 const annEl=document.createElement('div'); annEl.className='ann'; annEl.hidden=true; annEl.setAttribute('aria-live','polite');
 document.querySelector('.stage').appendChild(annEl);
 let annTimer=0;
-function caption(icon,txt){
-  annEl.innerHTML=`<span class="ai">${icon}</span><span>${txt}</span>`; annEl.hidden=false;
-  clearTimeout(annTimer); annTimer=setTimeout(()=>annEl.hidden=true, 2500+txt.length*(LANG==='en'?55:130));
+let subsOn=load('cabSubs',true);
+function setSubs(on){ subsOn=on; save('cabSubs',on); if(!on) annEl.hidden=true; }
+/* 字幕：第一行是實際播出的語言（日本路線日語、台灣路線國語），第二行是翻譯（介面語言；介面同語言時給英文） */
+function caption(icon,main,sub,tag){
+  if(!subsOn) return;
+  annEl.innerHTML=`<span class="ai">${icon}</span><span class="at">${tag?`<small class="tag">${tag}</small>`:''}<b class="main">${main}</b>${sub&&sub!==main?`<span class="sub">${sub}</span>`:''}</span>`; annEl.hidden=false;
+  const len=main.length*(NATIVE==='zh'||NATIVE==='ja'?1:0.45)+(sub?sub.length*0.35:0);
+  clearTimeout(annTimer); annTimer=setTimeout(()=>annEl.hidden=true, 3200+len*110);
 }
 /* m = {zh, en, ja}；radio=true 表示行車調度無線電，只出字幕不播語音 */
 function annSay(m, radio){
-  caption(radio?'📻':'📢', LANG==='en'?m.en : LANG==='ja'?(m.ja||m.en) : m.zh);
+  const main = radio ? (LANG==='en'?m.en : LANG==='ja'?(m.ja||m.en) : m.zh) : (m[NATIVE]||m.en);
+  const subLang = radio ? null : (LANG!==NATIVE ? LANG : 'en');
+  caption(radio?'📻':'📢', main, subLang ? (m[subLang]||m.en) : null, radio?L('行車無線電','Radio','無線'):L('車內廣播','Announcement','車内放送'));
   if(radio || !voiceOn || !('speechSynthesis' in window)) return;
   const say=(txt,lang)=>{ const u=new SpeechSynthesisUtterance(txt); u.lang=lang; u.rate=0.95; speechSynthesis.speak(u); };
   try{ speechSynthesis.cancel(); if(NATIVE==='ja') say(m.ja,'ja-JP'); else say(m.zh,'zh-TW'); if(m.en) say(m.en,'en-US'); }catch(e){}
@@ -89,6 +96,20 @@ const ANN = {
       ? {zh:`本列車即將抵達終點站${n.zh}，請帶好隨身行李，下車時請注意月台間隙，謝謝搭乘。`, en:`We are arriving at ${n.en}, the terminal station. Please take all your belongings and mind the gap. Thank you for travelling with us.`, ja:`まもなく終点${n.ja}です。お忘れ物のないよう、また足元にご注意ください。ご乗車ありがとうございました。`}
       : {zh:`${n.zh}站快到了，要下車的旅客請準備，下車時請注意月台間隙。`, en:`We are now arriving at ${n.en}. Please mind the gap when leaving the train.`, ja:`まもなく${n.ja}です。お降りの際は足元にご注意ください。`}; },
   late(min){ return {zh:`本列車目前延誤約 ${min} 分鐘，造成您的不便，敬請見諒。`, en:`This train is running about ${min} minute${min>1?'s':''} late. We apologise for the inconvenience.`, ja:`ただいまこの電車は約${min}分遅れております。ご迷惑をおかけしております。`}; },
+  doors(){
+    if(ROUTE.japan||ROUTE.jpSign) return {ja:'ドアが閉まります。ご注意ください。', en:'The doors are closing. Please stand clear.', zh:'車門即將關閉，請注意。'};
+    if(ROUTE.key==='tamsui') return {zh:'車門即將關閉，請勿強行進出。', en:'The doors are closing. Please do not force your way in or out.', ja:'ドアが閉まります。無理な乗り降りはおやめください。'};
+    return {zh:'車門即將關閉，請勿強行上下車。', en:'The doors are closing. Please do not force your way in or out.', ja:'ドアが閉まります。無理な乗り降りはおやめください。'}; },
+  manners(){
+    if(ROUTE.japan||ROUTE.jpSign) return {ja:'車内では、携帯電話はマナーモードに設定の上、通話はご遠慮ください。優先席付近では、混雑時には電源をお切りください。', en:'Please set your mobile phone to silent mode and refrain from talking on the phone. Near the priority seats, please turn your phone off when the train is crowded.', zh:'車內請將手機設為靜音，並請勿講電話；車廂擁擠時，博愛座附近請關機。'};
+    if(ROUTE.key==='tamsui') return {zh:'捷運車廂內禁止飲食，請將博愛座讓給需要的旅客。', en:'Eating and drinking are not allowed on the Metro. Please offer the priority seats to those who need them.', ja:'MRT車内での飲食は禁止です。優先席は必要な方にお譲りください。'};
+    if(ROUTE.key==='alishan') return {zh:'沿途彎道多，請勿將頭手伸出窗外，也請小心不要讓物品掉出車外。', en:'There are many curves ahead. Please keep your head and hands inside the windows and take care not to drop anything outside.', ja:'カーブが続きます。窓から顔や手を出さないでください。物を落とさないようご注意ください。'};
+    return {zh:'為了您的安全，行車中請勿倚靠車門，並請照顧好身邊的小朋友。', en:'For your safety, please do not lean against the doors while the train is moving, and keep an eye on young children.', ja:'安全のため、走行中はドアに寄りかからないでください。お子様から目を離さないようお願いします。'}; },
+  transfer(st){
+    const T={ '舞濱':{ja:'ディズニーリゾートラインはお乗り換えです。',en:'Please change here for the Disney Resort Line.',zh:'轉乘迪士尼度假區線的旅客請在本站下車。'},
+              '新木場':{ja:'東京メトロ有楽町線、りんかい線はお乗り換えです。',en:'Please change here for the Tokyo Metro Yūrakuchō Line and the Rinkai Line.',zh:'轉乘有樂町線、臨海線的旅客請在本站下車。'} };
+    return T[st.name]||null; },
+  handover(st){ const n=nm(st); return {zh:`【行車無線電】下一站${n.zh}換手，交班前請確認列車狀態。`, en:`[Radio] Crew change at ${n.en}. Check the train before handing over.`, ja:`【無線】次の${n.ja}で乗務員交代です。引き継ぎ前に車両状態を確認してください。`}; },
   altitude(m){ return {zh:`列車目前在海拔約 ${m.toLocaleString()} 公尺的地方。`, en:`We are now at about ${m.toLocaleString()} m above sea level.`, ja:`ただいま標高およそ ${m.toLocaleString()} m を走行中です。`}; },
 };
 /* 每個畫格呼叫：歡迎廣播、即將到站、延誤致歉、海拔、無線電 */
@@ -101,6 +122,14 @@ function extrasTick(dt){
   if(st && !S.doors && !A.appr[S.next]){ const d=st.pos-S.pos; if(S.v>1 && d>0 && d<Math.max(150,S.v*22)){ A.appr[S.next]=true; annSay(ANN.approach(st, S.next===STATIONS.length-1)); } }
   if(ROUTE.key==='alishan') [2300,2400].forEach(m=>{ if(!A.alt[m] && altitude(S.pos)>=m){ A.alt[m]=true; annSay(ANN.altitude(m)); } });
   if(ROUTE.signal!=null && S.sig.phase===1 && A.sig===0){ A.sig=1; annSay({zh:'【行車調度】32 號號誌前方區間還有列車沒有出清，請在號誌前停車等候。',en:'[Dispatcher] The block beyond signal 32 is still occupied. Stop before the signal and wait.',ja:'【指令】32号信号機の先に列車が在線しています。信号の手前で停車して待機してください。'},true); }
+  // 關門前 3 秒：關門廣播
+  if(S.doors && S.dwell<3.4 && A.doorAt!==S.next && S.next<STATIONS.length-1){ A.doorAt=S.next; annSay(ANN.doors()); }
+  // 發車後一陣子：車內禮儀／安全廣播（每班兩次）
+  if(!S.doors && S.v>4){ A.runT=(A.runT||0)+dt; if(A.runT>22 && (A.manners||0)<2 && A.lastMan!==S.next){ A.lastMan=S.next; A.manners=(A.manners||0)+1; A.runT=0; annSay(ANN.manners()); } } else A.runT=0;
+  // 轉乘資訊（接近時）
+  if(st && !S.doors && A.appr[S.next] && !A.xfer?.[S.next]){ const t=ANN.transfer(st); A.xfer=A.xfer||{}; if(t){ const d=st.pos-S.pos; if(d<Math.max(60,S.v*8)){ A.xfer[S.next]=true; annSay(t); } } }
+  // 換手前的無線電（列車還要繼續開的路線）
+  if(ROUTE.continues && S.next===STATIONS.length-1 && !A.hand && !S.doors && STATIONS[S.next].pos-S.pos<600){ A.hand=true; annSay(ANN.handover(STATIONS[S.next]),true); }
   if(ROUTE.street && !A.street && S.pos>ROUTE.street.s-250){ A.street=true; annSay({zh:'【司機提醒】前方進入路面併用軌道，和汽車共用道路，限速 25 km/h，注意行人。',en:'[Driver note] Street running ahead: sharing the road with cars at 25 km/h. Watch for pedestrians.',ja:'【運転メモ】この先は併用軌道。車と道路を共有し 25 km/h、歩行者に注意。'},true); }
 }
 function chime(){
@@ -283,7 +312,8 @@ function collectHTML(){
 function settingsHTML(){
   return `<div class="pickrow"><span class="lab">${L('畫面風格','Visual style','グラフィック')}</span><div class="diffpick" role="radiogroup">${[['block','🧱',L('方塊','Blocky','ブロック'),L('像積木一樣的方塊世界','A chunky, blocky world','積み木のようなブロックの世界')],['smooth','🌄',L('寫實','Realistic','リアル'),L('比較接近真實的山和樹','Smoother hills and trees','なめらかな山や木')]].map(([k,ic,n,d])=>`<button type="button" role="radio" aria-checked="${STYLE===k}" class="stylebtn diffbtn${STYLE===k?' on':''}" data-style="${k}"><b>${ic} ${n}</b><small>${d}</small></button>`).join('')}</div></div>
     <div class="pickrow"><span class="lab">${L('聲音','Sound','サウンド')}</span><div class="toggles"><label class="toggle"><input type="checkbox" id="sfxTog"${sfxOn?' checked':''}> ${L('列車音效','Train sounds','走行音')}</label>
-    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> ${L('車內語音廣播','Onboard announcements','車内放送')}</label></div></div>
+    <label class="toggle"><input type="checkbox" id="voiceTog"${voiceOn?' checked':''}> ${L('車內語音廣播','Onboard announcements','車内放送')}</label>
+    <label class="toggle"><input type="checkbox" id="subsTog"${subsOn?' checked':''}> ${L('顯示廣播字幕','Show announcement subtitles','放送の字幕を表示')}</label></div></div>
     <div class="pickrow"><span class="lab">${L('語言','Language','言語')}</span>${langPickHTML()}</div>
     <div class="pickrow"><span class="lab">${L('其他','More','その他')}</span><div class="btnrow"><button class="btn" id="ovHelp2" type="button">${L('操作說明','How to drive','操作説明')}</button>${('standalone' in navigator || window.matchMedia)?`<button class="btn" id="ovInstall" type="button" hidden>${L('📲 安裝到主畫面','📲 Install app','📲 ホーム画面に追加')}</button>`:''}</div></div>
     ${promoHTML()}`;
@@ -291,6 +321,7 @@ function settingsHTML(){
 function titleExtrasHTML(){ return ''; }
 function bindTitleExtras(){
   const v=document.getElementById('voiceTog'); if(v) v.addEventListener('change',()=>setVoice(v.checked));
+  const sb=document.getElementById('subsTog'); if(sb) sb.addEventListener('change',()=>setSubs(sb.checked));
   const f=document.getElementById('sfxTog'); if(f) f.addEventListener('change',()=>setSfx(f.checked));
   document.querySelectorAll('.diffbtn:not(.stylebtn)').forEach(b=>b.addEventListener('click',()=>{ setDiff(b.dataset.diff); showOverlay('title'); }));
   document.querySelectorAll('.stylebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.style!==STYLE) setStyle(b.dataset.style); }));
