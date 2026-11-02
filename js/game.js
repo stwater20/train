@@ -77,7 +77,7 @@ function step(dt){
   CROSSINGS.forEach((c,i)=>{
     if(prev<c && S.pos>=c && !S.crossDone[i]){
       S.crossDone[i]=true;
-      if(S.hornPos>=c-350 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast(L('平交道前鳴笛確認 +10','Horn before the crossing +10','踏切前で警笛 +10'),'good'); }
+      if(S.hornPos>=WHISTLES[i]-50 && S.hornPos<=c){ S.score+=10; S.bonus+=10; toast(L('平交道前鳴笛確認 +10','Horn before the crossing +10','踏切前で警笛 +10'),'good'); }
       else { const w=(ROUTE.japan||ROUTE.jpSign)?'笛':'鳴'; toast(L('通過平交道：下次記得在「'+w+'」標附近鳴笛','Level crossing passed: sound the horn after the 「'+w+'」 board next time','踏切通過：次は「'+w+'」標識の後で警笛を')); }
     }
   });
@@ -328,16 +328,16 @@ function showOverlay(kind){
           `You're driving the ${hhmm} metro train from Beitou to Tamsui ${ENV.word} in manual mode, calling at ${mids}. The Guandu plain, the Tamsui River and Guanyin Mountain are on your left, the Datun mountains on your right, and oncoming trains pass on the right.`,
           `${ENV.word} ${hhmm} 北投発 淡水行きのMRTを手動運転で担当します。${mids}に停車し、左手には関渡平原・淡水河・観音山、右手には大屯山。複線なので対向列車が右側を通過します。`)
       : JP
-      ? L(`你是${ENV.word} ${hhmm} 從稻村崎開往江之島的江之電司機。左手邊是相模灣，天氣好時前方看得到江之島和富士山。途經${mids}；腰越之後是和汽車共用道路的路面區間，速度要放慢。`,
-          `You're driving the ${hhmm} Enoden train from Inamuragasaki to Enoshima ${ENV.word}. Sagami Bay is on your left, and on a clear day Enoshima and Mt Fuji rise ahead. You'll call at ${mids}; after Koshigoe the line runs down the middle of the street alongside cars, so take it slow.`,
-          `${ENV.word} ${hhmm} 稲村ヶ崎発 江ノ島行きの江ノ電を運転します。左手には相模湾、晴れていれば前方に江の島と富士山。${mids}に停車し、腰越の先は車と道路を共有する併用軌道なので、速度を落として進みましょう。`)
+      ? L(`你是${ENV.word} ${hhmm} 從稻村崎出發、開往藤澤的江之電司機，你的班開到江之島換手。左手邊是相模灣，天氣好時前方看得到江之島和富士山。途經${mids}；腰越之後是和汽車共用道路的路面區間，速度要放慢。`,
+          `You're driving the ${hhmm} Enoden train from Inamuragasaki bound for Fujisawa ${ENV.word}; your shift hands over at Enoshima. Sagami Bay is on your left, and on a clear day Enoshima and Mt Fuji rise ahead. You'll call at ${mids}; after Koshigoe the line runs down the middle of the street alongside cars, so take it slow.`,
+          `${ENV.word} ${hhmm} 稲村ヶ崎発 藤沢行きの江ノ電を運転し、江ノ島で交代します。左手には相模湾、晴れていれば前方に江の島と富士山。${mids}に停車し、腰越の先は車と道路を共有する併用軌道なので、速度を落として進みましょう。`)
       : AL
       ? L(`你是${ENV.word} ${hhmm} 從阿里山開出的祝山線列車司機，載著旅客上山。途經${mids}，終點是海拔 2,451 公尺、全台最高的祝山車站。全線上坡、彎道又急，要守住速限，也要把車停準。`,
           `You're driving the ${hhmm} Zhushan Line train out of Alishan ${ENV.word}, carrying passengers up the mountain via ${mids} to Zhushan, at 2,451 m the highest station in Taiwan. It's uphill all the way with tight curves: keep to the limits and stop on the mark.`,
           `${ENV.word} ${hhmm} 阿里山発の祝山線列車の運転士として、乗客を山の上へ運びます。${mids}を経て、終点は標高 2,451 m、台湾で最も高い祝山駅。ずっと上り勾配で急カーブも多いので、制限速度を守りつつ停止位置にぴたりと止めましょう。`)
-      : L(`你是${ENV.word} ${hhmm} 從${first}開出的區間車司機。沿途停靠${mids}，終點${last}。把車頭停在月台上藍色「${CARS()}」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
-          `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, calling at ${mids} and terminating at ${last}. Stop the front of the train at the blue “${CARS()}” board on each platform — the closer, the higher your score — and keep to the timetable.`,
-          `${ENV.word} ${hhmm} ${first}発の区間車の運転士です。${mids}に停車し、終点は${last}。ホームの青い「${CARS()}」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
+      : L(`你是${ENV.word} ${hhmm} 從${first}開往玉里的區間車司機，你的班開到${last}換手。沿途停靠${mids}。把車頭停在月台上藍色「${CARS()}」停車位置標前面，誤差越小分數越高，也別忘了趕上時刻表。`,
+          `You're the driver of the ${hhmm} local train from ${first} ${ENV.word}, bound for Yuli, calling at ${mids}; your shift hands over at ${last}. Stop the front of the train at the blue “${CARS()}” board on each platform — the closer, the higher your score — and keep to the timetable.`,
+          `${ENV.word} ${hhmm} ${first}発 玉里行きの区間車の運転士です。${mids}に停車し、${last}で乗務員交代。ホームの青い「${CARS()}」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
     const tab=window.titleTab||'go';
     ovCard.className='card menu';
     ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p></header>

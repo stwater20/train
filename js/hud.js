@@ -72,7 +72,7 @@ function hud(now){
   const items=[];
   LIMITS.forEach(Lm=>{ const d=Lm.s-p; if(Lm.s>0 && d>0 && d<900) items.push([d,L('限速 ','Limit ','制限 ')+Lm.v]); });
   if(dSig>0 && dSig<900) items.push([dSig,L('號誌 ','Signal ','信号 ')+SIGNAME[S.sig.aspect]]);
-  CROSSINGS.forEach(c=>{ const d=c-p; if(d>0 && d<700) items.push([d,L('平交道','Level crossing','踏切')]); const dw=c-300-p; if(dw>0&&dw<500) items.push([dw,L('鳴笛標','Whistle board','汽笛標識')]); });
+  CROSSINGS.forEach(c=>{ const d=c-p; if(d>0 && d<700) items.push([d,L('平交道','Level crossing','踏切')]); const dw=WHISTLES[CROSSINGS.indexOf(c)]-p; if(dw>0&&dw<500) items.push([dw,L('鳴笛標','Whistle board','汽笛標識')]); });
   GRADES.forEach((G,k)=>{ const d=G.s-p, pg=GRADES[k-1]; if(k>0 && d>0 && d<900 && pg.g!==G.g) items.push([d, G.g>0?L('上坡 ','Up ','上り ')+G.g+'‰':G.g<0?L('下坡 ','Down ','下り ')+(-G.g)+'‰':L('坡度變水平','Level track','平坦')]); });
   items.sort((a,b)=>a[0]-b[0]);
   el.ahead.innerHTML = items.length ? items.slice(0,2).map(([d,t])=>'<div>'+t+' · <span>'+Math.round(d)+' m</span></div>').join('') : '<div>'+L('線路淨空','Line clear','前方異常なし')+'</div>';

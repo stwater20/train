@@ -86,7 +86,7 @@ function speak(txt,lang){ if(!txt) return; const u=new SpeechSynthesisUtterance(
 function unlockSpeech(){ if(!voiceOn || !('speechSynthesis' in window)) return; try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){} }
 const nm = st => ({zh:st.name, en:st.en, ja:st.ja||st.name});
 const ANN = {
-  welcome(){ const n=nm(STATIONS[1]), t=nm(STATIONS[STATIONS.length-1]);
+  welcome(){ const n=nm(STATIONS[1]), t=ROUTE.dest?{zh:ROUTE.dest.name,ja:ROUTE.dest.ja,en:ROUTE.dest.en}:nm(STATIONS[STATIONS.length-1]);
     if(ROUTE.japan) return {ja:`本日も江ノ電をご利用いただきまして、ありがとうございます。この電車は${t.ja}行きです。次は${n.ja}です。`, en:`Thank you for riding the Enoden. This train is bound for ${t.en}. The next station is ${n.en}.`, zh:`感謝您今天搭乘江之電。本列車開往${t.zh}，下一站${n.zh}。`};
     if(ROUTE.key==='keikyu') return {ja:`本日も京急線をご利用いただきまして、ありがとうございます。この電車は普通、浦賀行きです。次は${n.ja}です。`, en:`This is a local train bound for Uraga. The next station is ${n.en}, station number ${STATIONS[1].no}.`, zh:`感謝搭乘京急線。本列車為普通車，開往浦賀，下一站${n.zh}。`};
     if(ROUTE.key==='keiyo') return {ja:`本日もJR東日本をご利用いただきまして、ありがとうございます。この電車は京葉線、各駅停車、蘇我行きです。次は${n.ja}です。`, en:`This is the Keiyō Line local train bound for Soga. The next station is ${n.en}.`, zh:`感謝搭乘 JR 東日本。本列車為京葉線各站停車，開往蘇我，下一站${n.zh}。`};
@@ -103,14 +103,14 @@ const ANN = {
       ? {ja:`まもなく${n.ja}です。この電車は、快特の待ち合わせのため、しばらく停車いたします。`, en:`We will soon arrive at ${n.en}. This train will wait here for a limited express to pass.`, zh:`即將抵達${n.zh}。本列車在此等候快特通過，將停車一段時間。`}
       : {ja:`まもなく${n.ja}、${n.ja}です。`, en:`We will soon arrive at ${n.en}.`, zh:`即將抵達${n.zh}。`};
     if(ROUTE.key==='keiyo') return {ja:`まもなく、${n.ja}、${n.ja}。お出口は左側です。${st.name==='新木場'?'':''}`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
-    if(ROUTE.japan) return last
+    if(ROUTE.japan) return (last && !ROUTE.continues)
       ? {ja:`まもなく終点、${n.ja}です。湘南モノレールはお乗り換えです。お出口は左側です。お忘れ物のないようご注意ください。`, en:`We will soon arrive at ${n.en}, the last stop. Please change here for the Shonan Monorail. The doors on the left side will open. Please take all your belongings with you.`, zh:`即將抵達終點${n.zh}，轉乘湘南單軌電車的旅客請在本站下車。左側車門開啟，請別忘了隨身物品。`}
       : {ja:`まもなく、${n.ja}です。お出口は左側です。`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
     if(ROUTE.key==='tamsui') return last
       ? {zh:`終點站${n.zh}到了，請全部旅客下車，別忘了您的隨身物品。`, en:`This is the terminal station, ${n.en}. All passengers please leave the train, and remember your belongings.`, ja:`終点、${n.ja}です。お忘れ物のないようご注意ください。`}
       : {zh:`${n.zh}站到了，下車時請小心月台間隙。`, en:`Arriving at ${n.en}. Please mind the gap when you exit the train.`, ja:`まもなく${n.ja}です。お降りの際は足元にご注意ください。`};
     if(ROUTE.key==='alishan' && last) return {zh:`祝山站快到了，海拔 2,451 公尺，是全台最高的火車站。下車後步行就能到觀日平台，請小心腳步。`, en:`We are arriving at Zhushan, 2,451 m above sea level — the highest station in Taiwan. The sunrise viewing platform is a short walk away. Please watch your step.`, ja:`まもなく祝山です。標高 2,451 m、台湾で最も高い駅です。展望台へは歩いてすぐです。足元にお気をつけください。`};
-    return last
+    return (last && !ROUTE.continues)
       ? {zh:`本列車即將抵達終點站${n.zh}，請帶好隨身行李，下車時請注意月台間隙，謝謝搭乘。`, en:`We are arriving at ${n.en}, the terminal station. Please take all your belongings and mind the gap. Thank you for travelling with us.`, ja:`まもなく終点${n.ja}です。お忘れ物のないよう、また足元にご注意ください。ご乗車ありがとうございました。`}
       : {zh:`${n.zh}站快到了，要下車的旅客請準備，下車時請注意月台間隙。`, en:`We are now arriving at ${n.en}. Please mind the gap when leaving the train.`, ja:`まもなく${n.ja}です。お降りの際は足元にご注意ください。`}; },
   late(min){ return {zh:`本列車目前延誤約 ${min} 分鐘，造成您的不便，敬請見諒。`, en:`This train is running about ${min} minute${min>1?'s':''} late. We apologise for the inconvenience.`, ja:`ただいまこの電車は約${min}分遅れております。ご迷惑をおかけしております。`}; },
@@ -124,7 +124,8 @@ const ANN = {
     if(ROUTE.key==='alishan') return {zh:'沿途彎道多，請勿將頭手伸出窗外，也請小心不要讓物品掉出車外。', en:'There are many curves ahead. Please keep your head and hands inside the windows and take care not to drop anything outside.', ja:'カーブが続きます。窓から顔や手を出さないでください。物を落とさないようご注意ください。'};
     return {zh:'為了您的安全，行車中請勿倚靠車門，並請照顧好身邊的小朋友。', en:'For your safety, please do not lean against the doors while the train is moving, and keep an eye on young children.', ja:'安全のため、走行中はドアに寄りかからないでください。お子様から目を離さないようお願いします。'}; },
   transfer(st){
-    const T={ '舞濱':{ja:'ディズニーリゾートラインはお乗り換えです。',en:'Please change here for the Disney Resort Line.',zh:'轉乘迪士尼度假區線的旅客請在本站下車。'},
+    const T={ '江之島':{ja:'湘南モノレールはお乗り換えです。',en:'Please change here for the Shonan Monorail.',zh:'轉乘湘南單軌電車的旅客請在本站下車。'},
+              '舞濱':{ja:'ディズニーリゾートラインはお乗り換えです。',en:'Please change here for the Disney Resort Line.',zh:'轉乘迪士尼度假區線的旅客請在本站下車。'},
               '新木場':{ja:'東京メトロ有楽町線、りんかい線はお乗り換えです。',en:'Please change here for the Tokyo Metro Yūrakuchō Line and the Rinkai Line.',zh:'轉乘有樂町線、臨海線的旅客請在本站下車。'} };
     return T[st.name]||null; },
   handover(st){ const n=nm(st); return {zh:`【行車無線電】下一站${n.zh}換手，交班前請確認列車狀態。`, en:`[Radio] Crew change at ${n.en}. Check the train before handing over.`, ja:`【無線】次の${n.ja}で乗務員交代です。引き継ぎ前に車両状態を確認してください。`}; },

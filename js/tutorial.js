@@ -8,7 +8,7 @@ let TUT_STEPS=[];
 function buildTut(){
   const s0=stName(STATIONS[0]), s1=stName(STATIONS[1]), sEnd=stName(STATIONS[STATIONS.length-1]);
   const L0=LIMITS.find(x=>x.s<=0), lim0=L0?L0.v:LINE_MAX, e0=L0?L0.e:0, coastAt=Math.max(10,lim0-5);
-  const c1=CROSSINGS.find(c=>c<STATIONS[1].pos), w=(ROUTE.japan||ROUTE.jpSign)?'笛':'鳴';
+  const c1=CROSSINGS.find(c=>c<STATIONS[1].pos), w1=c1!=null?WHISTLES[CROSSINGS.indexOf(c1)]:0, w=(ROUTE.japan||ROUTE.jpSign)?'笛':'鳴';
   const AL=ROUTE.key==='alishan', JP=!!ROUTE.japan;
   const steps=[
   {title:L('歡迎來到駕駛室','Welcome to the cab','運転台へようこそ'), hi:[],
@@ -36,12 +36,12 @@ function buildTut(){
    cond:()=>S.pos>e0+TRAIN_LEN && S.notch>0},
   ];
   if(c1!=null) steps.push(
-  {title:L('平交道：記得鳴笛','Level crossing: sound the horn','踏切：警笛を鳴らす'), hi:['#bHorn','#roAhead'], when:()=>S.pos>=c1-310,
+  {title:L('平交道：記得鳴笛','Level crossing: sound the horn','踏切：警笛を鳴らす'), hi:['#bHorn','#roAhead'], when:()=>S.pos>=w1-10,
    text:L(`前方有<b>平交道</b>。路旁寫著「${w}」的鳴笛標過了之後、到平交道之前，按 <kbd>H</kbd>（或「鳴笛」）提醒路人，通過時 +10 分。`,
           `A <b>level crossing</b> is ahead. After the whistle board marked 「${w}」 and before the crossing, press <kbd>H</kbd> (or “Horn”) to warn people. +10 when you pass.`,
           `前方に<b>踏切</b>があります。「${w}」の標識を過ぎてから踏切までに <kbd>H</kbd>（「警笛」）を押すと、通過時に +10 点。`),
    doing:()=>L('按 H 鳴笛（平交道還有 ','Press H (crossing in ','H で警笛（踏切まで ')+Math.max(0,Math.round(c1-S.pos))+L(' m）',' m)',' m）'),
-   cond:()=>S.hornPos>=c1-300 || S.pos>c1});
+   cond:()=>S.hornPos>=w1-50 || S.pos>c1});
   steps.push(
   {title:L('準備進站：開始煞車','Approaching: start braking','駅接近：ブレーキ開始'), hi:['#roDist','#bDown'],
    when:()=>distJian()<=Math.max(200, S.v*S.v/(2*0.45)+70),
@@ -70,15 +70,15 @@ function buildTut(){
         : ROUTE.key==='tamsui' ? L(`接下來自己開到終點<b>${sEnd}</b>吧。這是雙線區間，對向列車會從右邊開過；捷運加速快，記得提早煞車，淡水站前限速 35 km/h。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>. This is double track, so oncoming trains pass on your right. The metro accelerates quickly — brake early, and it’s 35 km/h into Tamsui. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま終点の<b>${sEnd}</b>へ。複線なので対向列車が右側を通過します。加速が良いので早めのブレーキを。淡水駅手前は 35 km/h。<kbd>?</kbd> でいつでも操作説明を。`)
-        : JP ? L(`接下來自己開到終點<b>${sEnd}</b>吧。腰越之後是<b>路面併用軌道</b>：電車和汽車共用道路，限速 25 km/h，進江之島前的急彎只有 15 km/h。想複習隨時按 <kbd>?</kbd>。`,
-                `Drive on to <b>${sEnd}</b>. After Koshigoe comes <b>street running</b>: you share the road with cars at 25 km/h, and the sharp curve into Enoshima is 15 km/h. Press <kbd>?</kbd> any time for the handbook.`,
-                `このまま終点の<b>${sEnd}</b>へ。腰越の先は<b>併用軌道</b>で、車と道路を共有し 25 km/h、江ノ島手前の急カーブは 15 km/h です。<kbd>?</kbd> でいつでも操作説明を。`)
+        : JP ? L(`接下來自己開到<b>${sEnd}</b>換手吧。腰越之後是<b>路面併用軌道</b>：電車和汽車共用道路，限速 25 km/h，進江之島前的急彎只有 15 km/h。想複習隨時按 <kbd>?</kbd>。`,
+                `Drive on to <b>${sEnd}</b>, where your shift hands over. After Koshigoe comes <b>street running</b>: you share the road with cars at 25 km/h, and the sharp curve into Enoshima is 15 km/h. Press <kbd>?</kbd> any time for the handbook.`,
+                `このまま<b>${sEnd}</b>まで運転して交代です。腰越の先は<b>併用軌道</b>で、車と道路を共有し 25 km/h、江ノ島手前の急カーブは 15 km/h です。<kbd>?</kbd> でいつでも操作説明を。`)
         : AL ? L(`接下來自己開到終點<b>${sEnd}</b>吧。全線都是上坡：停在半路要用 <b>P3 以上</b>才爬得動；急彎會聽到車輪摩擦的尖聲。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>. It’s uphill all the way: restarting on the slope needs <b>P3 or more</b>, and you’ll hear the wheels squeal on tight curves. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま終点の<b>${sEnd}</b>へ。ずっと上り勾配なので、坂の途中から発車するには <b>P3 以上</b>が必要。急カーブではフランジのきしみ音がします。<kbd>?</kbd> でいつでも操作説明を。`)
-        : L(`接下來自己開到終點<b>${sEnd}</b>吧。提醒：志學到平和之間有一架<b>閉塞號誌</b>，紅燈一定要停。想複習隨時按 <kbd>?</kbd> 看操作說明。`,
-            `Drive on to the terminus at <b>${sEnd}</b>. Note: there is a <b>block signal</b> between Zhixue and Pinghe — always stop at red. Press <kbd>?</kbd> any time for the handbook.`,
-            `このまま終点の<b>${sEnd}</b>まで。志学〜平和間には<b>閉塞信号機</b>があり、赤なら必ず停車。<kbd>?</kbd> でいつでも操作説明を開けます。`),
+        : L(`接下來自己開到<b>${sEnd}</b>換手吧。提醒：志學到平和之間有一架<b>閉塞號誌</b>，紅燈一定要停。想複習隨時按 <kbd>?</kbd> 看操作說明。`,
+            `Drive on to <b>${sEnd}</b>, where your shift hands over. Note: there is a <b>block signal</b> between Zhixue and Pinghe — always stop at red. Press <kbd>?</kbd> any time for the handbook.`,
+            `このまま<b>${sEnd}</b>まで運転して交代です。志学〜平和間には<b>閉塞信号機</b>があり、赤なら必ず停車。<kbd>?</kbd> でいつでも操作説明を開けます。`),
    cond:()=>true, last:true});
   return steps;
 }

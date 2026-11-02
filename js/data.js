@@ -21,7 +21,7 @@ const CARS = () => String(ROUTE.cars||4);
 /* 兩條路線：花東線區間車、阿里山林業鐵路祝山線。用 localStorage 記住選擇，切換時重新載入頁面 */
 const ROUTES = {
   hualien:{
-    key:'hualien', cars:4, name:L('花東線','Hualien–Taitung Line','花東線'), title:L('花東線駕駛室','Hualien Line Cab','花東線運転台'), train:L('區間車 4 輛編成','4-car local EMU','区間車 4両編成'), desc:L('單線電化區間','single-track electrified','単線電化区間'),
+    key:'hualien', cars:4, continues:true, dest:{ja:'玉里',name:'玉里',en:'Yuli'}, name:L('花東線','Hualien–Taitung Line','花東線'), title:L('花東線駕駛室','Hualien Line Cab','花東線運転台'), train:L('區間車 4 輛編成','4-car local EMU','区間車 4両編成'), desc:L('單線電化區間','single-track electrified','単線電化区間'),
     trainLen:80, lineMax:90, gauge:1.067, electric:true, elev0:20, elevScale:1, railLen:25,
     power:0.95, ebDecel:1.45, brakeStep:0.13,
     envs:['morning','dusk','night','rain'],
@@ -58,7 +58,7 @@ const ROUTES = {
     grades:[ {s:-800,e:150,g:0}, {s:150,e:900,g:45}, {s:900,e:1500,g:60}, {s:1500,e:2300,g:50}, {s:2300,e:2600,g:0}, {s:2600,e:3400,g:62}, {s:3400,e:99999,g:0} ],
   },
   enoden:{
-    key:'enoden', cars:4, name:L('江之電','Enoden','江ノ電'), title:L('江之電駕駛室','Enoden Cab','江ノ電運転台'), train:L('江之電 4 輛編成','4-car Enoden EMU','江ノ電 4両編成'), desc:L('沿海單線・路面併用軌道','coastal single track with street running','海沿いの単線・併用軌道'),
+    key:'enoden', cars:4, continues:true, dest:{ja:'藤沢',name:'藤澤',en:'Fujisawa'}, oppDest:'鎌倉', name:L('江之電','Enoden','江ノ電'), title:L('江之電駕駛室','Enoden Cab','江ノ電運転台'), train:L('江之電 4 輛編成','4-car Enoden EMU','江ノ電 4両編成'), desc:L('沿海單線・路面併用軌道','coastal single track with street running','海沿いの単線・併用軌道'),
     trainLen:50, lineMax:45, gauge:1.067, electric:true, elev0:5, elevScale:1, railLen:25,
     power:0.9, ebDecel:1.4, brakeStep:0.13, platLen:95, japan:true,
     envs:['morning','dusk','night','rain'],
@@ -154,6 +154,8 @@ const LIMITS = ROUTE.limits;
 const CURVES = ROUTE.curves;
 const CROSSINGS = ROUTE.crossings;
 const SIGNAL_POS = ROUTE.signal==null ? 1e9 : ROUTE.signal;
+/* 鳴笛標：平交道前 300 m；如果落在月台上，就移到月台開始之前 */
+const WHISTLES = CROSSINGS.map(c=>{ const PLx=ROUTE.platLen||215; let ws=c-300; const st=STATIONS.find(x=>ws>x.pos-PLx-10 && ws<x.pos+35); if(st) ws=st.pos-PLx-12; return ws; });
 /* 坡度（‰，正值為上坡）。車站一帶保持水平 */
 const GRADES = ROUTE.grades;
 function gradeAt(p){ for(const G of GRADES) if(p>=G.s && p<G.e) return G.g; return 0; }

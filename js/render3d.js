@@ -269,7 +269,7 @@ function init3D(){
     const S0=PMIN+30, S1=PMAX-30, mid={...fr(END/2)}, GY=-8;
     { const g=new T.PlaneGeometry(GS,GS); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,std({map:grassTex,color:0x9c9e92})); m.material.map.repeat.set(GS/30,GS/30); m.position.set(mid.x,GY,mid.z); m.receiveShadow=true; scene.add(m); }
     // 街道路面（沿線兩側的小路）
-    ribbon(S0,S1,4,[[6,0.02],[12,0.02]],M.asphalt,{});  // 會隨軌道高程，所以只在地面區間看得到；高架段被下面的地面取代
+    ribbon(530,850,4,[[LOOP_LAT+3.5,0.02],[LOOP_LAT+9,0.02]],M.asphalt,{}); ribbon(530,850,4,[[-9,0.02],[-3.5,0.02]],M.asphalt,{});  // 路旁小路只在地面區間
     const ground=s=>elevAt(s)<-6;
     // 高架橋：護牆與橋墩（只在高架段）
     const nearSt=p=>STATIONS.some(x=>p>x.pos-PL-8 && p<x.pos+30);
@@ -674,7 +674,7 @@ function init3D(){
     signAt(Lm.e,-2.5,2.4,0.62,0.62,signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=18; x.beginPath(); x.moveTo(0,h); x.lineTo(w,0); x.stroke(); x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); })); });
   const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((JP||ROUTE.jpSign)?'笛':'鳴',w/2,h/2+6); });
   // 鳴笛標放在平交道前 300 m；如果剛好落在月台上，就往前移到月台開始之前
-  CROSSINGS.forEach(c=>{ let ws=c-300; const st=STATIONS.find(x=>ws>x.pos-PL-10 && ws<x.pos+35); if(st) ws=st.pos-PL-12; signAt(ws,-2.5,2.1,0.6,0.6,whistle); });
+  WHISTLES.forEach(ws=>signAt(ws,-2.5,2.1,0.6,0.6,whistle));
   for(let s=100; s<END+700; s+=100){ const t=signTex(128,88,(x,w,h)=>{ x.fillStyle='#f6f6f0'; x.fillRect(0,0,w,h); x.fillStyle='#151515'; x.font='700 60px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((s/1000).toFixed(1),w/2,h/2+4); });
     signAt(s,2.3,0.55,0.42,0.29,t); }
   /* 坡度標：坡度改變處，右側，寫千分比與坡向 */
@@ -1007,7 +1007,7 @@ function init3D(){
   const blitScene=new T.Scene(), blitCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
   const bq=new T.Mesh(new T.PlaneGeometry(2,2),blitMat); bq.frustumCulled=false; blitScene.add(bq);
   R3={renderer,scene,cam,sun,sky,SUNDIR,sig,xings,stations,cars,rt,blitMat,blitScene,blitCam,makeRT,
-    hemi,skyMat,clouds,mountMats:mountMats.concat(jpMounts),M,head,stars,rain,rainSeed,stLights,sea,jpLamp,jpFar,birds,glare,petals,meets,streams,overtake,LIVERY,cabUI:{mcPivot,needle,doorLamp,atpLamp,drawCard,cardKey:'',gaugeMax:(LINE_MAX<=40?40:LINE_MAX<=60?60:120)}};
+    hemi,skyMat,clouds,mountMats:mountMats.concat(jpMounts),M,head,stars,rain,rainSeed,stLights,sea,jpLamp,jpFar,birds,glare,petals,meets,streams,overtake,LIVERY,cabUI:{group:cab,mcPivot,needle,doorLamp,atpLamp,drawCard,cardKey:'',gaugeMax:(LINE_MAX<=40?40:LINE_MAX<=60?60:120)}};
   applyEnv(); resize();
 }
 
@@ -1151,7 +1151,8 @@ function render(dt){
     if(t.front<S.pos-700){ t.wait=25+Math.random()*30; }
     placeTrain(t.cars,t.front);
   });
-  // 駕駛台
+  // 駕駛台（手機直式時藏起來，避免和下方儀表重複）
+  R3.cabUI.group.visible = !(innerWidth<=640 && innerHeight>innerWidth && document.body.classList.contains('playing'));
   { const C=R3.cabUI, n=S.phase==='run'?S.notch:-8; const target= n>0 ? -0.12*n : n===0 ? 0 : n===-9 ? 0.85 : 0.07*(-n);
     C.mcPivot.rotation.x += ((0.32+target)-C.mcPivot.rotation.x)*Math.min(1,dt*12);
     const A0=Math.PI*0.75, A1=Math.PI*2.25, a=A0+(A1-A0)*clamp(S.v*3.6/C.gaugeMax,0,1); C.needle.rotation.z=-(a+Math.PI/2);
