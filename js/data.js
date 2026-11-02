@@ -204,6 +204,8 @@ const TRAINS = {
     {key:'emu800', name:L('EMU800 型區間車','EMU800 local train','EMU800形 区間車'), power:0.95, brakeStep:0.13, ebDecel:1.45, sound:'vvvf', pitch:1.0, frame:'#0d1215'},
     {key:'emu900', name:L('EMU900 型區間車','EMU900 local train','EMU900形 区間車'), power:1.12, brakeStep:0.145, ebDecel:1.55, sound:'vvvf', pitch:1.25, frame:'#10161c',
      req:'gradeA_hualien', reqText:L('花東線拿到 A 以上評價','Get an A or better on the Hualien line','花東線で A 以上の評価')},
+    {key:'emu500', name:L('EMU500 型區間車','EMU500 local train','EMU500形 区間車'), power:0.86, brakeStep:0.125, ebDecel:1.4, sound:'vvvf', pitch:0.82, frame:'#141a1f',
+     req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
   alishan:[
     {key:'dl', name:L('柴油機車','Diesel locomotive','ディーゼル機関車'), power:0.9, brakeStep:0.13, ebDecel:1.25, sound:'diesel', frame:'#0d1215'},
@@ -214,21 +216,29 @@ const TRAINS = {
     {key:'c381', name:L('C381 型電聯車','Type C381 train','C381形 電車'), power:1.1, brakeStep:0.14, ebDecel:1.4, sound:'vvvf', pitch:1.2, frame:'#0d1215'},
     {key:'c301', name:L('C301 型電聯車（第一代）','Type C301 train (first generation)','C301形 電車（初代）'), power:0.95, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.8, frame:'#141a20',
      req:'gradeA_tamsui', reqText:L('淡水線拿到 A 以上評價','Get an A or better on the Tamsui Line','淡水線で A 以上の評価')},
+    {key:'c371', name:L('C371 型電聯車','Type C371 train','C371形 電車'), power:1.02, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:1.0, frame:'#10161b',
+     req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
   keiyo:[
     {key:'e233', name:L('E233 系 5000 番台','E233-5000 series','E233系5000番台'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.1, frame:'#0d1215'},
     {key:'k209', name:L('209 系 500 番台','209-500 series','209系500番台'), power:0.95, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.92, frame:'#11161a',
      req:'gradeA_keiyo', reqText:L('京葉線拿到 A 以上評價','Get an A or better on the Keiyō Line','京葉線で A 以上の評価')},
+    {key:'k205', name:L('205 系（京葉線舊型車）','205 series (former Keiyō stock)','205系（京葉線の旧型）'), power:0.88, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.85, frame:'#151a1d',
+     req:'rank3', reqText:L('司機員等級達到「資深司機員」','Reach driver rank “Senior driver”','運転士ランク「ベテラン運転士」に到達')},
   ],
   keikyu:[
     {key:'kk1000', name:L('京急 1000 形','Keikyū 1000 series','京急1000形'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.05, frame:'#0d1215'},
     {key:'kk2100', name:L('京急 2100 形「唱歌的電車」','Keikyū 2100 “singing train”','京急2100形「歌う電車」'), power:1.1, brakeStep:0.14, ebDecel:1.45, sound:'doremi', pitch:1.0, frame:'#1a1012',
      req:'gradeA_keikyu', reqText:L('京急線拿到 A 以上評價','Get an A or better on the Keikyū line','京急線で A 以上の評価')},
+    {key:'kk800', name:L('京急 800 形（普通車專用）','Keikyū 800 series (local service)','京急800形（普通専用）'), power:1.0, brakeStep:0.14, ebDecel:1.45, sound:'resistor', pitch:0.95, frame:'#1c1012',
+     req:'rank3', reqText:L('司機員等級達到「資深司機員」','Reach driver rank “Senior driver”','運転士ランク「ベテラン運転士」に到達')},
   ],
   enoden:[
     {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},
     {key:'e300', name:L('江之電 300 形（305 編成）','Enoden Type 300 (set 305)','江ノ電 300形（305編成）'), power:0.78, brakeStep:0.12, ebDecel:1.3, sound:'resistor', pitch:0.7, frame:'#16201a',
      req:'pro_enoden', reqText:L('用專業模式把江之電開到江之島','Finish the Enoden in Pro mode','上級モードで江ノ電を完走')},
+    {key:'e500', name:L('江之電 500 形','Enoden Type 500','江ノ電 500形'), power:0.92, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:1.0, frame:'#0f1a14',
+     req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
 };
 let TRAIN = TRAINS[ROUTE.key][0];

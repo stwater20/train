@@ -17,15 +17,40 @@ const ACHS=[
   {id:'sunrise', icon:'🌄', name:L('祝山看日出','Sunrise at Zhushan','祝山のご来光'), desc:L('開日出列車準點抵達祝山','Reach Zhushan on time with the sunrise train','ご来光列車で祝山に定時到着')},
   {id:'perfect', icon:'🎯', name:L('一公分都不差','Spot on','ピタ止め'), desc:L('任一站停車誤差 0.5 m 以內','Stop within 0.5 m at any station','どこかの駅で誤差 0.5 m 以内')},
   {id:'sniper',  icon:'📏', name:L('人體尺規','Human ruler','人間定規'),   desc:L('每一站停車誤差都在 1 m 以內','Stop within 1 m at every station','全駅で誤差 1 m 以内')},
-  {id:'ontime',  icon:'⏱️', name:L('台灣之光準點','Like clockwork','定時運転'), desc:L('每一站都準點到達','Arrive on time at every station','全駅に定時到着')},
+  {id:'ontime',  icon:'⏱️', name:L('分秒不差','Like clockwork','定時運転'), desc:L('每一站都準點到達','Arrive on time at every station','全駅に定時到着')},
   {id:'clean',   icon:'🧼', name:L('零扣分','Clean sheet','減点ゼロ'),     desc:L('一整班沒有任何扣分','A whole run with no penalties','一度も減点なしで完走')},
-  {id:'horn',    icon:'📯', name:L('喇叭手','Horn master','警笛マスター'),     desc:L('三個平交道都有鳴笛','Sound the horn at all three crossings','3か所の踏切すべてで警笛')},
+  {id:'horn',    icon:'📯', name:L('喇叭手','Horn master','警笛マスター'),     desc:L('一班車經過的每個平交道都有鳴笛','Sound the horn before every level crossing on a run','すべての踏切の手前で警笛')},
   {id:'gradeS',  icon:'🏆', name:L('S 級司機員','S-rank driver','Sランク運転士'), desc:L('拿到 S 評價','Get an S grade','S評価を獲得')},
   {id:'proS',    icon:'💎', name:L('專業司機員','Pro driver','プロ運転士'), desc:L('專業模式拿到 S 評價','Get an S grade in Pro mode','上級モードで S 評価')},
   {id:'stamps',  icon:'📮', name:L('集章達人','Stamp collector','スタンプラリー達人'), desc:L('集滿全部車站紀念章','Collect every station stamp','全駅のスタンプを集める')},
   {id:'redrun',  icon:'🚨', name:L('紅燈戰士','Red-light runner','信号無視'),   desc:L('……闖過紅燈（不太光彩）','…passed a red signal (not proud of it)','……赤信号を冒進（自慢にならない）')},
   {id:'skip',    icon:'💨', name:L('過站不停','Express service','通過列車'),   desc:L('錯過一個車站（旅客很錯愕）','Miss a station (passengers were not amused)','駅を通過してしまう（乗客びっくり）')},
+  {id:'night',   icon:'🌙', name:L('夜班司機','Night shift','夜勤'),     desc:L('在夜間開完一班','Finish a run at night','夜の運転を完走')},
+  {id:'rain',    icon:'☔', name:L('風雨無阻','Rain or shine','雨にも負けず'), desc:L('雨天拿到 B 以上評價','Get a B or better in the rain','雨の日に B 以上')},
+  {id:'overtake', icon:'🚄', name:L('待避完成','Stand aside','待避完了'), desc:L('京急鮫洲站準點，讓快特先走','Be on time at Samezu and let the express overtake','京急・鮫洲に定時到着し快特を待避')},
+  {id:'allroutes', icon:'🗾', name:L('全線制霸','Every line','全線制覇'), desc:L('六條路線都開完一次','Finish all six lines','6路線すべてを完走'), prog:()=>[ROUTE_KEYS.filter(k=>FLAGS['done_'+k]).length,ROUTE_KEYS.length]},
+  {id:'proall',  icon:'🎖️', name:L('專業全線制霸','Pro on every line','上級で全線制覇'), desc:L('六條路線都用專業模式開完','Finish all six lines in Pro mode','6路線すべてを上級モードで完走'), prog:()=>[ROUTE_KEYS.filter(k=>FLAGS['pro_'+k]).length,ROUTE_KEYS.length]},
+  {id:'runs10',  icon:'🔟', name:L('十班老手','Ten runs','10回乗務'),   desc:L('累計開完 10 班','Finish 10 runs','累計 10 回運転'), prog:()=>[Math.min(10,load('cabRuns',0)),10]},
+  {id:'runs30',  icon:'🛤️', name:L('鐵道人生','Life on the rails','鉄道人生'), desc:L('累計開完 30 班','Finish 30 runs','累計 30 回運転'), prog:()=>[Math.min(30,load('cabRuns',0)),30]},
+  {id:'rank3',   icon:'🧢', name:L('資深司機員','Senior driver','ベテラン運転士'), desc:L('司機員等級達到「資深司機員」','Reach the Senior driver rank','ランク「ベテラン運転士」に到達')},
+  {id:'rank5',   icon:'👑', name:L('傳奇司機員','Legendary driver','伝説の運転士'), desc:L('司機員等級達到最高級','Reach the top driver rank','最高ランクに到達')},
+  {id:'garage',  icon:'🏬', name:L('車庫收藏家','Full depot','車両コンプリート'), desc:L('解鎖全部車種','Unlock every train','すべての車両を解除'), prog:()=>{ const all=Object.values(TRAINS).flat(); return [all.filter(trainUnlocked).length,all.length]; }},
 ];
+const ROUTE_KEYS=Object.keys(ROUTES);
+/* ---------- 司機員等級：每班的得分累積成經驗值 ---------- */
+const RANKS=[
+  {xp:0,     icon:'🔰', name:L('見習司機員','Trainee','見習い運転士')},
+  {xp:1500,  icon:'🚃', name:L('司機員','Driver','運転士')},
+  {xp:5000,  icon:'🧢', name:L('資深司機員','Senior driver','ベテラン運転士')},
+  {xp:12000, icon:'🎖️', name:L('主任司機員','Chief driver','主任運転士')},
+  {xp:25000, icon:'👑', name:L('傳奇司機員','Legendary driver','伝説の運転士')},
+];
+const rankOf=xp=>{ let i=0; RANKS.forEach((r,k)=>{ if(xp>=r.xp) i=k; }); return i; };
+function rankHTML(xp,gain){
+  const i=rankOf(xp), r=RANKS[i], nx=RANKS[i+1];
+  const pct=nx?Math.round((xp-r.xp)/(nx.xp-r.xp)*100):100;
+  return `<div class="rank"><span class="ri">${r.icon}</span><div class="rb"><div class="rt"><b>${r.name}</b><small>Lv.${i+1}${gain?` · <em>+${gain} XP</em>`:''}</small><small class="rn">${nx?L(`還差 ${nx.xp-xp} XP 升到「${nx.name}」`,`${nx.xp-xp} XP to “${nx.name}”`,`「${nx.name}」まで ${nx.xp-xp} XP`):L('最高等級','Top rank','最高ランク')}</small></div><div class="rbar"><i style="width:${pct}%"></i></div></div></div>`;
+}
 let ACH=load('cabAch',{});
 let lastNew=[];
 function unlockAch(id){
@@ -37,7 +62,7 @@ function unlockAch(id){
 }
 function achGridHTML(highlight){
   return `<div class="achs">${ACHS.map(a=>`<div class="ach${ACH[a.id]?' on':''}${highlight&&highlight.includes(a.id)?' new':''}" title="${a.desc}">
-    <span class="ai">${ACH[a.id]?a.icon:'🔒'}</span><span class="an">${a.name}</span><span class="ad">${a.desc}</span></div>`).join('')}</div>`;
+    <span class="ai">${ACH[a.id]?a.icon:'🔒'}</span><span class="an">${a.name}</span><span class="ad">${a.desc}</span>${!ACH[a.id]&&a.prog?(([c,m])=>`<span class="ap"><span class="trk"><i style="width:${Math.round(c/m*100)}%"></i></span><small>${c}/${m}</small></span>`)(a.prog()):''}</div>`).join('')}</div>`;
 }
 
 /* ---------- sound & announcements ---------- */
@@ -199,20 +224,31 @@ function extrasEnd(grade){
   if(stops.length===STATIONS.length-1 && stops.every(r=>Math.abs(r.err)<=1)) unlockAch('sniper');
   if(stops.length===STATIONS.length-1 && stops.every(r=>r.trank==='準點')) unlockAch('ontime');
   if(!Object.values(P).some(v=>v>0)) unlockAch('clean');
-  if(S.bonus>=CROSSINGS.length*10) unlockAch('horn');
+  if(CROSSINGS.length && S.bonus>=CROSSINGS.length*10) unlockAch('horn');
   if(grade==='S') unlockAch('gradeS');
   if(P.spad>0) unlockAch('redrun');
   if(P.miss>0) unlockAch('skip');
   if(ROUTE.key==='hualien' && (grade==='S'||grade==='A')) setFlag('gradeA_hualien');
   if(ROUTE.key==='enoden' && DIFF.key==='pro') setFlag('pro_enoden');
   if(DIFF.key==='pro' && grade==='S') unlockAch('proS');
+  setFlag('done_'+ROUTE.key); if(DIFF.key==='pro') setFlag('pro_'+ROUTE.key);
+  if(ENV.key==='night') unlockAch('night');
+  if(ENV.rain && 'SAB'.includes(grade)) unlockAch('rain');
+  if(ROUTE.key==='keikyu'){ const sm=stopsAll.find(r=>r.name==='鮫洲'); if(sm && sm.trank==='準點') unlockAch('overtake'); }
+  if(ROUTE_KEYS.every(k=>FLAGS['done_'+k])) unlockAch('allroutes');
+  if(ROUTE_KEYS.every(k=>FLAGS['pro_'+k])) unlockAch('proall');
+  const runsNow=load('cabRuns',0)+1; if(runsNow>=10) unlockAch('runs10'); if(runsNow>=30) unlockAch('runs30');
+  const xp0=load('cabXP',0), gain=Math.max(20,Math.round(S.score*(DIFF.key==='pro'?1.3:1))), xp1=xp0+gain; save('cabXP',xp1);
+  const r0=rankOf(xp0), r1=rankOf(xp1); for(let k=2;k<=r1+1;k++) setFlag('rank'+k);
+  if(r1>=2) unlockAch('rank3'); if(r1>=4) unlockAch('rank5');
+  if(Object.values(TRAINS).flat().every(trainUnlocked)) unlockAch('garage');
   const newTrains=Object.values(TRAINS).flat().filter(t=>t.req && trainUnlocked(t) && !load('cabTrainSeen_'+t.key,false));
   newTrains.forEach(t=>save('cabTrainSeen_'+t.key,true));
   const bk=bestKey(), best=load(bk,null), sc=Math.round(S.score);
   const isBest = !best || sc>best.score;
   if(isBest) save(bk,{score:sc, grade, at:Date.now()});
   const runs=load('cabRuns',0)+1; save('cabRuns',runs);
-  return {isBest, best:isBest?{score:sc,grade}:best, runs, newTrains};
+  return {isBest, best:isBest?{score:sc,grade}:best, runs, newTrains, xp0, xp1, gain, rankUp:r1>r0?RANKS[r1]:null};
 }
 
 /* ---------- passenger comments ---------- */
@@ -318,7 +354,7 @@ function departPicksHTML(){
 }
 function collectHTML(){
   const best=load(bestKey(),null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length, all=allStations(), ns=all.filter(x=>STAMPS[x.st.name]).length;
-  return `<div class="statgrid">
+  return `${rankHTML(load('cabXP',0))}<div class="statgrid">
       <div><small>${L('最佳紀錄','Best','ベスト')}</small><b>${best?best.score:'—'}</b><span>${best?best.grade:''}</span></div>
       <div><small>${L('開過的班次','Runs','運転回数')}</small><b>${runs}</b></div>
       <div><small>${L('成就','Achievements','実績')}</small><b>${n}<i>/${ACHS.length}</i></b></div>
@@ -351,7 +387,9 @@ function endExtrasHTML(info,grade){
   const got=lastNew.map(id=>ACHS.find(a=>a.id===id)).filter(Boolean);
   return `${passengerSays(grade)}
     <div class="recs">${info.isBest?`<span class="nb">🎉 ${L('新紀錄！','New best!','自己ベスト更新！')}</span>`:`<span>${L('最佳紀錄','Best','ベスト')} <b>${info.best.score}${L(' 分（',' pts (',' 点（')}${info.best.grade}${L('）',')','）')}</b></span>`}<span>${L('第 ','Run #','')}<b>${info.runs}</b>${L(' 班','',' 回目')}</span></div>
-    ${(info.newTrains||[]).map(t=>`<div class="unlock">🎉 ${L('解鎖新列車：','New train unlocked: ','新しい車両を解除：')}<b>${t.name}</b><small>${L('回標題畫面就能選','Pick it on the title screen','タイトル画面で選べます')}</small></div>`).join('')}
+    ${info.xp1!=null?rankHTML(info.xp1,info.gain):''}
+    ${info.rankUp?`<div class="unlock rankup">${info.rankUp.icon} ${L('升級！','Promoted! ','昇格！')}<b>${info.rankUp.name}</b><small>${L('更高的等級會解鎖更多車種','Higher ranks unlock more trains','ランクが上がると車両が増えます')}</small></div>`:''}
+    ${(info.newTrains||[]).length?`<div class="unlock">🎉 ${L('解鎖新列車','New trains unlocked','新しい車両を解除')}<b>${info.newTrains.map(t=>t.name).join('、')}</b><small>${L('回標題畫面的「出發」頁就能選（各路線分開）','Pick them under Depart on the title screen of each line','各路線のタイトル画面「出発」で選べます')}</small></div>`:''}
     ${got.length?`<div class="newach"><p class="eyebrow">${L('本班解鎖成就','Unlocked this run','今回解除した実績')}</p>${achGridHTML(lastNew).replace('class="achs"','class="achs only-new"')}</div>`:''}
     ${rideRealHTML()}
     ${promoHTML(true)}`;
@@ -386,7 +424,7 @@ function promoHTML(after){
 /* ---------- 解鎖旗標與車種 ---------- */
 let FLAGS=load('cabFlags',{});
 function setFlag(k){ if(!FLAGS[k]){ FLAGS[k]=Date.now(); save('cabFlags',FLAGS); } }
-function trainUnlocked(t){ return !t.req || !!FLAGS[t.req] || !!ACH[t.req]; }
+function trainUnlocked(t){ return !t.req || !!FLAGS[t.req] || !!ACH[t.req] || (/^rank\d$/.test(t.req) && rankOf(load('cabXP',0))+1>=+t.req.slice(4)); }
 function pickTrain(t){ TRAIN=t; const hs=document.getElementById('hSub'); if(hs) hs.textContent=t.name+' · '+stName(STATIONS[0])+' → '+stName(STATIONS[STATIONS.length-1])+' · '+ROUTE.desc; Object.assign(ROUTE,{power:t.power, brakeStep:t.brakeStep, ebDecel:t.ebDecel}); save('cabTrain_'+ROUTE.key,t.key); if(typeof drawFrame==='function') drawFrame(); if(typeof auRetune==='function') auRetune(); }
 function diffPickHTML(){
   return `<div class="pickrow"><span class="lab">${L('難度','Difficulty','難易度')}</span><div class="diffpick" role="radiogroup">${Object.values(DIFFS).map(d=>`<button type="button" role="radio" aria-checked="${d===DIFF}" class="diffbtn${d===DIFF?' on':''}" data-diff="${d.key}"><b>${d.icon} ${d.name}</b><small>${d.desc}</small></button>`).join('')}</div></div>`;

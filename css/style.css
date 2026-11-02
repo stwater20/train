@@ -536,3 +536,19 @@ body .toast{top:34px}
 body .fact{top:72px}
 @media (max-width:640px){ body.playing .ann{position:absolute;left:0;right:0;top:0;bottom:auto;border-radius:0;font-size:12px} body.playing .ann .at{font-size:12px} body.playing .toast{top:30px} }
 @media (max-height:500px) and (orientation:landscape){ body.playing .ann{left:0;right:0;top:0;bottom:auto;max-width:none} body.playing .toast{top:30px} }
+
+/* ---------- 司機員等級、成就進度 ---------- */
+.rank{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:10px 0;border-radius:12px;background:linear-gradient(135deg,rgba(255,178,62,.14),rgba(255,178,62,.03));border:1px solid rgba(255,178,62,.35)}
+.rank .ri{font-size:30px;line-height:1}
+.rank .rb{flex:1;min-width:0;display:grid;gap:7px}
+.rank .rt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.rank .rt b{font-size:16px}
+.rank .rt small{font-size:12px;color:var(--muted)}
+.rank .rt em{font-style:normal;color:var(--amber);font-weight:700}
+.rank .rt .rn{margin-left:auto}
+.rbar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.rbar i,.ach .ap .trk i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffb23e,#ffd27a);transition:width .8s ease}
+.ach .ap{grid-column:2;margin-top:5px;height:auto;background:none;display:flex;align-items:center;gap:6px;overflow:visible}
+.ach .ap .trk{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.ach .ap small{font-size:10.5px;color:var(--muted)}
+.unlock.rankup{border-color:var(--amber)}
