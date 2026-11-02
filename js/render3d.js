@@ -99,20 +99,20 @@ function init3D(){
     const t=new T.CanvasTexture(c); t.encoding=T.sRGBEncoding; t.anisotropy=ANISO; if(BLOCK&&rep===true){ t.magFilter=T.NearestFilter; t.minFilter=T.NearestMipmapNearestFilter; } if(rep){ t.wrapS=t.wrapT=T.RepeatWrapping; } return t; };
   const speck=(x,w,h,n,cols,smin,smax)=>{ for(let i=0;i<n;i++){ x.fillStyle=cols[(Math.random()*cols.length)|0]; const s=smin+Math.random()*(smax-smin); x.fillRect(Math.random()*w,Math.random()*h,s,s); } };
   const groundTex=tex(1024,1024,(x,w,h)=>{
-    const n=8, cs=w/n, pal=['#86b154','#9cc05e','#76a54b','#a9c46a','#6c9b45','#91b65b','#7fa391','#b2c579'];
+    const n=8, cs=w/n, pal=['#7fab4f','#8bb657','#76a34b','#94b95e','#6f9c47','#86b052','#86aba0','#9dbd62'];
     for(let i=0;i<n;i++) for(let j=0;j<n;j++){
       const c=pal[(Math.random()*pal.length)|0]; x.fillStyle=c; x.fillRect(i*cs,j*cs,cs,cs);
       x.strokeStyle='rgba(30,60,25,0.16)'; x.lineWidth=BLOCK?0.4:1.2; const hor=Math.random()<0.5;
       for(let k=BLOCK?1:5;k<cs;k+=BLOCK?2:6){ x.beginPath(); if(hor){ x.moveTo(i*cs+3,j*cs+k); x.lineTo(i*cs+cs-3,j*cs+k);} else { x.moveTo(i*cs+k,j*cs+3); x.lineTo(i*cs+k,j*cs+cs-3);} x.stroke(); }
-      if(c==='#7fa391'){ x.fillStyle='rgba(225,240,245,0.25)'; x.fillRect(i*cs+4,j*cs+4,cs-8,cs*0.35); }
+      if(c==='#86aba0'){ const gg=x.createLinearGradient(0,j*cs,0,j*cs+cs); gg.addColorStop(0,'rgba(220,236,245,0.35)'); gg.addColorStop(1,'rgba(220,236,245,0.05)'); x.fillStyle=gg; x.fillRect(i*cs+2,j*cs+2,cs-4,cs-4); }
     }
-    speck(x,w,h,BLOCK?120:9000,['rgba(40,70,25,.18)','rgba(255,255,210,.12)'],1,BLOCK?1:3);
-    x.strokeStyle='#b6a679'; x.lineWidth=BLOCK?0.6:5;
+    speck(x,w,h,BLOCK?50:7000,['rgba(40,70,25,.12)','rgba(255,255,210,.08)'],1,BLOCK?1:3);
+    x.strokeStyle='#a99d72'; x.lineWidth=BLOCK?0.5:4;
     for(let i=0;i<=n;i++){ x.beginPath(); x.moveTo(i*cs,0); x.lineTo(i*cs,h); x.stroke(); x.beginPath(); x.moveTo(0,i*cs); x.lineTo(w,i*cs); x.stroke(); }
   },true);
   const GS=18000; groundTex.repeat.set(GS/160,GS/160);
   const ballastTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#857e72'; x.fillRect(0,0,w,h); speck(x,w,h,2600,['#6c665c','#9c958a','#5a554d','#aaa397','#776f62'],2,5); },true);
-  const grassTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#6d9846'; x.fillRect(0,0,w,h); speck(x,w,h,4000,['#5c8a3a','#80a957','#4f7a33','#93b862'],1,3); },true);
+  const grassTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#6d9846'; x.fillRect(0,0,w,h); if(BLOCK) speck(x,w,h,70,['#659040','#77a24e','#689342'],1,2); else speck(x,w,h,3200,['#62903e','#79a451','#5a8838','#86ad5a'],1,3); },true);
   const tileTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#c9c4b8'; x.fillRect(0,0,w,h); speck(x,w,h,1500,['#bdb7aa','#d4cfc4'],1,2); x.strokeStyle='#a9a396'; x.lineWidth=2; for(let i=0;i<=4;i++){ x.beginPath(); x.moveTo(i*64,0); x.lineTo(i*64,h); x.stroke(); x.beginPath(); x.moveTo(0,i*64); x.lineTo(w,i*64); x.stroke(); } },2);
   const tactTex=tex(64,64,(x,w,h)=>{ x.fillStyle='#e2b92c'; x.fillRect(0,0,w,h); x.fillStyle='#c79d1c'; for(let i=0;i<4;i++) for(let j=0;j<4;j++){ x.beginPath(); x.arc(8+i*16,8+j*16,4,0,7); x.fill(); } },2);
   const roadTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#55595c'; x.fillRect(0,0,w,h); speck(x,w,h,3000,['#4a4e51','#63676a','#5c6063'],1,3);
@@ -486,20 +486,24 @@ function init3D(){
       let h=w*(700+1100*n) + e*(260+520*ridgeN(aq*1.7+3)) + (1-Math.min(1,w+e))*(140+200*n); if(BLOCK) h=Math.round(h/90)*90;
       const x=mid.x+dx*r, z=mid.z+dz*r;
       pos.push(x,BY-60,z, x,BY+h*0.45*HS,z, x,BY+h*HS,z);
-      const base=BLOCK?(w>e?0x4f7f62:0x5f8f66):(w>e?0x8aa3b6:0x8ea79a); c.setHex(base).lerp(hz,BLOCK?0.12+0.12*(r-3200)/4000:0.35+0.25*(r-3200)/4000);
-      const top=c.clone(); const midc=c.clone().lerp(hz,BLOCK?0.25:0.45);
+      const base=BLOCK?(w>e?0x3c6a5a:0x4c7d5a):(w>e?0x6f8ea6:0x7b9a88); c.setHex(base).lerp(hz,BLOCK?0.03+0.08*(r-3200)/4000:0.2+0.18*(r-3200)/4000);
+      const top=c.clone(); const midc=c.clone().lerp(hz,BLOCK?0.2:0.4);
       col.push(hz.r,hz.g,hz.b, midc.r,midc.g,midc.b, top.r,top.g,top.b);
       if(i<segs){ const k=i*3; idx.push(k,k+3,k+1, k+1,k+3,k+4, k+1,k+4,k+2, k+2,k+4,k+5); }
     }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.Float32BufferAttribute(pos,3)); g.setAttribute('color',new T.Float32BufferAttribute(col,3)); g.setIndex(idx);
     const mm=new T.MeshBasicMaterial({vertexColors:true,fog:false,side:T.DoubleSide}); mountMats.push(mm); scene.add(new T.Mesh(g,mm));
     // nearer foothills, partly fogged
-    const p2=[], c2=[], i2=[]; const fh=new T.Color(0x5f8a55);
+    const p2=[], c2=[], i2=[]; const fh=new T.Color(0x4f7d48);
     for(let i=0;i<=segs;i++){ const a=i/segs*Math.PI*2, dx=Math.cos(a), dz=Math.sin(a), r=1900+500*Math.sin(a*5+1), h=60+170*ridgeN(a*2.3+5)*(0.6+0.4*smooth(-0.3,0.5,dx));
-      const x=mid.x+dx*r, z=mid.z+dz*r; p2.push(x,BY-20,z, x,BY+h*(AL?2.2:1),z); const t=fh.clone().lerp(hz,0.55); c2.push(hz.r,hz.g,hz.b, t.r,t.g,t.b);
+      const x=mid.x+dx*r, z=mid.z+dz*r; p2.push(x,BY-20,z, x,BY+h*(AL?2.2:1),z); const t=fh.clone().lerp(hz,0.4); c2.push(hz.r,hz.g,hz.b, t.r,t.g,t.b);
       if(i<segs){ const k=i*2; i2.push(k,k+2,k+1,k+1,k+2,k+3); } }
     const g2=new T.BufferGeometry(); g2.setAttribute('position',new T.Float32BufferAttribute(p2,3)); g2.setAttribute('color',new T.Float32BufferAttribute(c2,3)); g2.setIndex(i2);
     const mm2=new T.MeshBasicMaterial({vertexColors:true,fog:false,side:T.DoubleSide}); mountMats.push(mm2); scene.add(new T.Mesh(g2,mm2));
+    if(!AL){ /* 花東縱谷招牌景色：中央山脈山腰掛著一條雲帶 */
+      for(let i=0;i<12;i++){ const sp=cloudObj(); const a=(i/12-0.5)*1.5+(rnd(1500+i)-0.5)*0.12, r=5600+rnd(1510+i)*900;
+        sp.position.set(mid.x+Math.cos(a)*r, 330+rnd(1520+i)*160, mid.z+Math.sin(a)*r); const sc=900+rnd(1530+i)*900;
+        if(BLOCK) sp.scale.set(sc*1.8,sc*0.55,sc*0.9); else sp.scale.set(sc*1.8,sc*0.35,1); sp.material.opacity=0.75; scene.add(sp); clouds.push(sp); } }
     if(AL){
       /* 玉山：東邊遠方最高的山峰 */
       const pk=new T.ConeGeometry(3200,2300,10,4); const pc=[], hz2=new T.Color(HAZE), top=new T.Color(0x6f86a0), snow=new T.Color(0xe8eef4);
@@ -526,7 +530,7 @@ function init3D(){
   ribbon(S0,S1,2,[[9.4,0.25],[9.6,0.03]],M.concrete,{}); ribbon(S0,S1,2,[[10.8,0.03],[11.0,0.25]],M.concrete,{});
   } else {
     /* 山坡地形網格：沿著軌道，每個橫向取樣點的高度由 terrainH 決定 */
-    const forestTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#4d6b3a'; x.fillRect(0,0,w,h); speck(x,w,h,5000,['#3f5b30','#5a7a44','#6b5a3e','#36502a','#7a8a50'],1,4); },true);
+    const forestTex=tex(256,256,(x,w,h)=>{ x.fillStyle='#4d6b3a'; x.fillRect(0,0,w,h); if(BLOCK) speck(x,w,h,90,['#45623a','#577544','#5e5a3e'],1,2); else speck(x,w,h,4000,['#435f33','#577643','#62573d','#3a552d','#6e8250'],1,4); },true);
     const forestM=std({map:forestTex}); forestM.side=T.DoubleSide;
     const terr=(lats)=>{ const step=4, ns=Math.ceil((S1-S0)/step)+1, nl=lats.length, pos=[], uv=[], idx=[];
       for(let i=0;i<ns;i++){ const sv=S0+i*step; let km=0; for(let q=-200;q<=200;q+=10) km=Math.max(km,Math.abs(kAt(sv+q)));
