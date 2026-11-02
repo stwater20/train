@@ -524,3 +524,15 @@ body.menu .top,body.menu .route,body.menu .console,body.menu .keys,body.menu .fo
 @media (max-height:500px) and (orientation:landscape){ body.playing .ann{left:8px;right:auto;transform:none;max-width:60%;bottom:62px} }
 .ann{animation:annIn .25s ease-out}
 @keyframes annIn{from{opacity:0}}
+
+/* ======================================================================
+   字幕改成畫面最上緣的一條細長跑馬燈（像車廂裡的 LED 顯示器），不擋畫面中間與按鈕
+   ====================================================================== */
+body .ann{position:absolute;left:0;right:0;top:0;bottom:auto;transform:none;width:auto;max-width:none;display:flex;align-items:center;gap:8px;
+  border:0;border-bottom:1px solid rgba(255,178,62,.55);border-radius:0;padding:4px 14px;background:rgba(6,8,10,.72);box-shadow:none;z-index:5;animation:annIn .2s ease-out}
+body .ann .ai{font-size:13px;line-height:1}
+body .ann .at{display:block;font-size:13px;line-height:1.5;color:#ffd38a;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+body .toast{top:34px}
+body .fact{top:72px}
+@media (max-width:640px){ body.playing .ann{position:absolute;left:0;right:0;top:0;bottom:auto;border-radius:0;font-size:12px} body.playing .ann .at{font-size:12px} body.playing .toast{top:30px} }
+@media (max-height:500px) and (orientation:landscape){ body.playing .ann{left:0;right:0;top:0;bottom:auto;max-width:none} body.playing .toast{top:30px} }

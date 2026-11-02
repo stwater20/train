@@ -169,6 +169,7 @@ function startGame(tut){
   tutStop();
   if(tut!==true && DIFF.guide && !tutSeen()) tut=true; // 新手模式：這條路線第一次開會自動帶教學
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever(); setPlaying(true);
+  if(typeof unlockSpeech==='function') unlockSpeech();
   extrasStart();
   if(S.tut) tutStart();
   else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));

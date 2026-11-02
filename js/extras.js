@@ -51,21 +51,39 @@ let annTimer=0;
 let subsOn=load('cabSubs',true);
 function setSubs(on){ subsOn=on; save('cabSubs',on); if(!on) annEl.hidden=true; }
 /* 字幕：第一行是實際播出的語言（日本路線日語、台灣路線國語），第二行是翻譯（介面語言；介面同語言時給英文） */
-function caption(icon,main,sub,tag){
+/* 字幕只用一條細長的跑馬燈：介面語言、只取第一句，不擋畫面 */
+const firstSentence=t=>{ const m=String(t).match(/^.*?[。．！？!?]|^.*?\.(\s|$)/); return (m?m[0]:t).trim(); };
+function caption(icon,text){
   if(!subsOn) return;
-  annEl.innerHTML=`<span class="ai">${icon}</span><span class="at">${tag?`<small class="tag">${tag}</small>`:''}<b class="main">${main}</b>${sub&&sub!==main?`<span class="sub">${sub}</span>`:''}</span>`; annEl.hidden=false;
-  const len=main.length*(NATIVE==='zh'||NATIVE==='ja'?1:0.45)+(sub?sub.length*0.35:0);
-  clearTimeout(annTimer); annTimer=setTimeout(()=>annEl.hidden=true, 3200+len*110);
+  const t=firstSentence(text);
+  annEl.innerHTML=`<span class="ai">${icon}</span><span class="at">${t}</span>`; annEl.hidden=false;
+  clearTimeout(annTimer); annTimer=setTimeout(()=>annEl.hidden=true, 2600+t.length*(LANG==='en'?45:110));
 }
 /* m = {zh, en, ja}；radio=true 表示行車調度無線電，只出字幕不播語音 */
-function annSay(m, radio){
-  const main = radio ? (LANG==='en'?m.en : LANG==='ja'?(m.ja||m.en) : m.zh) : (m[NATIVE]||m.en);
-  const subLang = radio ? null : (LANG!==NATIVE ? LANG : 'en');
-  caption(radio?'📻':'📢', main, subLang ? (m[subLang]||m.en) : null, radio?L('行車無線電','Radio','無線'):L('車內廣播','Announcement','車内放送'));
+/* cap=false：只播語音、不上字幕（歡迎詞、禮儀這類比較長的廣播） */
+function annSay(m, radio, cap){
+  if(cap!==false) caption(radio?'📻':'📢', (LANG==='en'?m.en : LANG==='ja'?(m.ja||m.en) : m.zh).replace(/^【[^】]*】/,''));
   if(radio || !voiceOn || !('speechSynthesis' in window)) return;
-  const say=(txt,lang)=>{ const u=new SpeechSynthesisUtterance(txt); u.lang=lang; u.rate=0.95; speechSynthesis.speak(u); };
-  try{ speechSynthesis.cancel(); if(NATIVE==='ja') say(m.ja,'ja-JP'); else say(m.zh,'zh-TW'); if(m.en) say(m.en,'en-US'); }catch(e){}
+  // 台灣路線：國語＋英語；日本路線：只播日語
+  try{ speechSynthesis.cancel(); if(NATIVE==='ja') speak(m.ja,'ja-JP'); else { speak(m.zh,'zh-TW'); if(m.en) speak(m.en,'en-US'); } }catch(e){}
 }
+/* 語音：挑對的聲音（中文優先台灣國語），手機第一次要在點擊時先「暖機」才會出聲 */
+let VOICES=[];
+function loadVoices(){ try{ VOICES=speechSynthesis.getVoices()||[]; }catch(e){} }
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+/* 避開 macOS 的趣味聲音（Eddy、Flo、Grandma…），優先用標準的女聲／男聲 */
+const NOVELTY=/^(Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox)/i;
+const PREF={'ja-jp':/Kyoko|O-?ren|Otoya|Hattori|Google 日本語/i, 'zh-tw':/美佳|Mei-?Jia|Meijia|Google 國語/i, 'en-us':/Samantha|Alex|Google US English/i};
+function pickVoice(lang){
+  const L2=lang.toLowerCase(), base=L2.split('-')[0];
+  const ok=VOICES.filter(v=>!NOVELTY.test(v.name));
+  const same=ok.filter(v=>v.lang.toLowerCase().replace('_','-')===L2);
+  const fam= base==='zh' ? ok.filter(v=>/zh[-_](tw|hk|hant)/i.test(v.lang)) : ok.filter(v=>v.lang.toLowerCase().startsWith(base));
+  const pool=same.length?same:fam;
+  return pool.find(v=>PREF[L2]&&PREF[L2].test(v.name)) || pool.find(v=>v.localService) || pool[0] || null;
+}
+function speak(txt,lang){ if(!txt) return; const u=new SpeechSynthesisUtterance(txt); u.lang=lang; const v=pickVoice(lang); if(v) u.voice=v; u.rate=lang.startsWith('ja')?1.0:0.95; speechSynthesis.speak(u); }
+function unlockSpeech(){ if(!voiceOn || !('speechSynthesis' in window)) return; try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){} }
 const nm = st => ({zh:st.name, en:st.en, ja:st.ja||st.name});
 const ANN = {
   welcome(){ const n=nm(STATIONS[1]), t=nm(STATIONS[STATIONS.length-1]);
@@ -117,7 +135,7 @@ function extrasTick(dt){
   if(S.phase!=='run' || S.paused || S.coachHold) return;
   const A=S.ann||(S.ann={t:0, welcomed:false, appr:{}, alt:{}, lateSaid:-999, sig:0, street:false});
   A.t+=dt;
-  if(!A.welcomed && A.t>4){ A.welcomed=true; annSay(ANN.welcome()); }
+  if(!A.welcomed && A.t>4){ A.welcomed=true; annSay(ANN.welcome(),false,false); }
   const st=STATIONS[S.next];
   if(st && !S.doors && !A.appr[S.next]){ const d=st.pos-S.pos; if(S.v>1 && d>0 && d<Math.max(150,S.v*22)){ A.appr[S.next]=true; annSay(ANN.approach(st, S.next===STATIONS.length-1)); } }
   if(ROUTE.key==='alishan') [2300,2400].forEach(m=>{ if(!A.alt[m] && altitude(S.pos)>=m){ A.alt[m]=true; annSay(ANN.altitude(m)); } });
@@ -125,7 +143,7 @@ function extrasTick(dt){
   // 關門前 3 秒：關門廣播
   if(S.doors && S.dwell<3.4 && A.doorAt!==S.next && S.next<STATIONS.length-1){ A.doorAt=S.next; annSay(ANN.doors()); }
   // 發車後一陣子：車內禮儀／安全廣播（每班兩次）
-  if(!S.doors && S.v>4){ A.runT=(A.runT||0)+dt; if(A.runT>22 && (A.manners||0)<2 && A.lastMan!==S.next){ A.lastMan=S.next; A.manners=(A.manners||0)+1; A.runT=0; annSay(ANN.manners()); } } else A.runT=0;
+  if(!S.doors && S.v>4){ A.runT=(A.runT||0)+dt; if(A.runT>22 && (A.manners||0)<2 && A.lastMan!==S.next){ A.lastMan=S.next; A.manners=(A.manners||0)+1; A.runT=0; annSay(ANN.manners(),false,false); } } else A.runT=0;
   // 轉乘資訊（接近時）
   if(st && !S.doors && A.appr[S.next] && !A.xfer?.[S.next]){ const t=ANN.transfer(st); A.xfer=A.xfer||{}; if(t){ const d=st.pos-S.pos; if(d<Math.max(60,S.v*8)){ A.xfer[S.next]=true; annSay(t); } } }
   // 換手前的無線電（列車還要繼續開的路線）

@@ -673,7 +673,8 @@ function init3D(){
   LIMITS.forEach(Lm=>{ if(Lm.s>0) signAt(Lm.s,-2.5,2.4,0.8,0.62,numTex(String(Lm.v),'#fbfbf6','#151515','#151515'));
     signAt(Lm.e,-2.5,2.4,0.62,0.62,signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=18; x.beginPath(); x.moveTo(0,h); x.lineTo(w,0); x.stroke(); x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); })); });
   const whistle=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.fillRect(0,0,w,h); x.strokeStyle='#151515'; x.lineWidth=8; x.strokeRect(4,4,w-8,h-8); x.fillStyle='#151515'; x.font='700 88px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((JP||ROUTE.jpSign)?'笛':'鳴',w/2,h/2+6); });
-  CROSSINGS.forEach(c=>signAt(c-300,-2.5,2.1,0.6,0.6,whistle));
+  // 鳴笛標放在平交道前 300 m；如果剛好落在月台上，就往前移到月台開始之前
+  CROSSINGS.forEach(c=>{ let ws=c-300; const st=STATIONS.find(x=>ws>x.pos-PL-10 && ws<x.pos+35); if(st) ws=st.pos-PL-12; signAt(ws,-2.5,2.1,0.6,0.6,whistle); });
   for(let s=100; s<END+700; s+=100){ const t=signTex(128,88,(x,w,h)=>{ x.fillStyle='#f6f6f0'; x.fillRect(0,0,w,h); x.fillStyle='#151515'; x.font='700 60px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText((s/1000).toFixed(1),w/2,h/2+4); });
     signAt(s,2.3,0.55,0.42,0.29,t); }
   /* 坡度標：坡度改變處，右側，寫千分比與坡向 */
@@ -1139,8 +1140,10 @@ function render(dt){
       if(OT.front-R3.LIVERY.len*R3.LIVERY.cars>S.pos+1600) { OT.state='done'; OT.cars.forEach(g=>g.visible=false); } } }
   R3.streams.forEach((t,i)=>{
     if(OT && OT.state==='go'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=20; return; }
-    if(S.phase!=='run'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=i*45+10; return; }
-    if(t.front>S.pos+5000 || t.front<S.pos-700){ t.wait-=dt; if(t.wait<=0){ t.front=S.pos+1500+Math.random()*400; t.v=17; t.passed=false; } else { t.cars.forEach(g=>g.visible=false); return; } }
+    if(S.phase!=='run'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=i*70+12; R3.lastSpawn=-999; return; }
+    // 對向車一次只來一班，而且兩班之間至少隔 60 秒
+    if(t.front>S.pos+5000 || t.front<S.pos-700){ t.wait-=dt; const other=R3.streams.some(o=>o!==t && o.front<S.pos+2200 && o.front>S.pos-700); const gapOK=S.t-(R3.lastSpawn??-999)>60;
+      if(t.wait<=0 && !other && gapOK){ t.front=S.pos+1500+Math.random()*400; t.v=17; t.passed=false; R3.lastSpawn=S.t; } else { t.cars.forEach(g=>g.visible=false); return; } }
     // 接近對面月台時減速（看起來像要進站）
     let target=19; for(const st of STATIONS){ const d=t.front-(st.pos-PL+20); if(d>-40 && d<220) target=Math.min(target,Math.max(8,d*0.08+8)); }
     t.v+=(target-t.v)*Math.min(1,dt*0.6); const prev=t.front; t.front-=t.v*dt;
