@@ -957,7 +957,7 @@ function init3D(){
     petals=new T.Points(pg,new T.PointsMaterial({color:0xf7c6d3,size:0.12,transparent:true,opacity:0.9,depthWrite:false})); petals.frustumCulled=false; cam.add(petals); }
 
   /* 頭燈（夜間） */
-  const head=new T.SpotLight(0xfff4e0,0,260,0.3,0.55,1.2); scene.add(head); scene.add(head.target);
+  const head=new T.SpotLight(0xfff4e0,0,260,0.2,0.6,1.2); scene.add(head); scene.add(head.target);
   /* 星空 */
   const starG=new T.BufferGeometry(), sp=[]; for(let i=0;i<900;i++){ const a=rnd(9000+i)*Math.PI*2, e=Math.asin(0.08+rnd(9100+i)*0.92); sp.push(Math.cos(a)*Math.cos(e)*9000, Math.sin(e)*9000, Math.sin(a)*Math.cos(e)*9000); }
   starG.setAttribute('position',new T.Float32BufferAttribute(sp,3));
@@ -1148,7 +1148,7 @@ function render(dt){
   cam.rotateZ((Math.sin(S.t*1.7)*0.002+Math.sin(S.t*0.6)*0.0015)*vibA - kAt(S.pos)*S.v*S.v*0.002);
   sky.position.copy(cam.position); R3.stars.position.copy(cam.position);
   if(ENV.key==='dawn'){ R3.envT=(R3.envT||0)+dt; if(R3.envT>0.3){ R3.envT=0; applyEnv(); } }
-  if(R3.head.intensity>0){ R3.head.position.set(f.x+dx*1.2,RT+1.4+f.y,f.z+dz*1.2); const g=fr(S.pos+90); R3.head.target.position.set(g.x,0.3+g.y,g.z); R3.head.target.updateMatrixWorld(); }
+  if(R3.head.intensity>0){ R3.head.position.set(f.x+dx*1.2,RT+1.4+f.y,f.z+dz*1.2); const g=fr(S.pos+120); R3.head.target.position.set(g.x,g.y-0.4,g.z); R3.head.target.updateMatrixWorld(); }
   // 對向列車
   const placeTrain=(cars,front)=>{ cars.forEach((g,k)=>{ const sc=front+k*R3.LIVERY.len+R3.LIVERY.len/2; g.visible=sc>S.pos-600 && sc<S.pos+1600; if(g.visible) place(g,sc,loopLat(sc),0,Math.PI); }); };
   R3.meets.forEach(m=>{
@@ -1184,7 +1184,7 @@ function render(dt){
     placeTrain(t.cars,t.front);
   });
   // 駕駛台（手機直式時藏起來，避免和下方儀表重複）
-  R3.cabUI.group.visible = !(innerWidth<=640 && innerHeight>innerWidth && document.body.classList.contains('playing'));
+  R3.cabUI.group.visible = !((typeof OG_MODE!=='undefined' && OG_MODE) || window.__snap || (innerWidth<=640 && innerHeight>innerWidth && document.body.classList.contains('playing')));
   { const C=R3.cabUI, n=S.phase==='run'?S.notch:-8; const target= n>0 ? -0.12*n : n===0 ? 0 : n===-9 ? 0.85 : 0.07*(-n);
     C.mcPivot.rotation.x += ((0.32+target)-C.mcPivot.rotation.x)*Math.min(1,dt*12);
     const A0=Math.PI*0.75, A1=Math.PI*2.25, a=A0+(A1-A0)*clamp(S.v*3.6/C.gaugeMax,0,1); C.needle.rotation.z=-(a+Math.PI/2);

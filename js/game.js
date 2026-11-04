@@ -340,7 +340,7 @@ function showOverlay(kind){
           `${ENV.word} ${hhmm} ${first}発 玉里行きの区間車の運転士です。${mids}に停車し、${last}で乗務員交代。ホームの青い「${CARS()}」停止位置目標に先頭を合わせて止めるほど高得点。時刻表も守りましょう。`);
     const tab=window.titleTab||'go';
     ovCard.className='card menu';
-    ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p></header>
+    ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p><button class="btn sharesite" id="ovShareSite" type="button">📣 ${L('推薦給朋友','Invite a friend','友だちに教える')}</button></header>${typeof challengeHTML==='function'?challengeHTML():''}
       <nav class="menu-tabs" role="tablist">${[['go','🚆',L('出發','Depart','出発')],['collect','🏅',L('收藏','Collection','コレクション')],['settings','⚙️',L('設定','Settings','設定')]].map(([k,ic,n])=>`<button type="button" role="tab" class="menutab${tab===k?' on':''}" aria-selected="${tab===k}" data-tab="${k}"><span>${ic}</span>${n}</button>`).join('')}</nav>
       <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
       <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
@@ -369,7 +369,7 @@ function showOverlay(kind){
     document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
     document.querySelectorAll('.langbtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.lang!==LANG) setLang(b.dataset.lang); }));
     document.getElementById('ovHelp').addEventListener('click',openHelp);
-    bindTitleExtras();
+    bindTitleExtras(); if(typeof bindShareTitle==='function') bindShareTitle();
   } else if(kind==='pause'){
     ovCard.className='card';
     ovCard.innerHTML=`<p class="eyebrow">${L('暫停中','Paused','一時停止中')}</p><h2>${L('列車暫停','Train paused','列車停止中')}</h2><p>${L('時刻表也一起停住了。','The timetable is paused too.','時刻表も止まっています。')}</p><div class="btnrow"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn door big" id="ovGo" type="button">${L('繼續駕駛','Resume','運転再開')}</button></div>`;
@@ -384,12 +384,13 @@ function showOverlay(kind){
       : `<tr><td>${nameOf(r.name)}</td><td class="num">${fmtErr(r.err)}</td><td>${trWord(r.rank)}</td><td>${trWord(r.trank)} ${r.late>0?'+':'−'}${fmtDur(r.late)}</td><td class="num">+${r.total}</td></tr>`).join('');
     const P=S.pens, info=S.endInfo||(S.endInfo=extrasEnd(g));
     ovCard.innerHTML=`<p class="eyebrow">${L('本班次結束 · 抵達','Run complete · arrived at ','運行終了 · 到着 ')}${stName(STATIONS[STATIONS.length-1])} ${fmtClock(BASE_CLOCK+S.t)}</p>
-      <div class="grade"><b>${g}</b><span>${Math.round(sc)} ${L('分','pts','点')}</span></div>
+      <div class="grade"><b>${g}</b><span>${Math.round(sc)} ${L('分','pts','点')}</span></div>${typeof challengeResultHTML==='function'?challengeResultHTML(sc):''}
       <div class="tbl"><table><thead><tr><th>${L('站名','Station','駅')}</th><th class="num">${L('停車誤差','Stop error','停止誤差')}</th><th>${L('停車評價','Stop','停止評価')}</th><th>${L('時刻','Time','時刻')}</th><th class="num">${L('得分','Points','得点')}</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="pen"><span>${L('超速','Overspeed','速度超過')} <b>−${P.over}</b></span><span>${L('ATP 介入','ATP','ATP作動')} <b>−${P.atp}</b></span><span>${L('冒進號誌','Red signal','信号冒進')} <b>−${P.spad}</b></span><span>${L('緊急煞車','Emergency brake','非常ブレーキ')} <b>−${P.eb}</b></span><span>${L('平交道鳴笛','Crossing horn','踏切警笛')} <b>+${S.bonus}</b></span></div>
       <p>${L(`滿分約 ${max} 分（每站停車 100 + 準點 40），另有平交道鳴笛加分。`,`A perfect run is about ${max} points (100 for the stop + 40 for timing at each station), plus horn bonuses.`,`満点は約 ${max} 点（各駅 停止 100 ＋ 定時 40）、ほかに踏切警笛のボーナス。`)}</p>
       ${endExtrasHTML(info,g)}
-      <div class="btnrow"><button class="btn big" id="ovShare" type="button">${L('分享成績','Share result','結果をシェア')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
+      <div class="btnrow"><button class="btn big sharebig" id="ovShare" type="button">📣 ${L('分享・挑戰朋友','Share & challenge','シェアして挑戦')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
+      ${typeof sharePanelHTML==='function'?sharePanelHTML():''}
       <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); setPlaying(false); showOverlay('title'); });

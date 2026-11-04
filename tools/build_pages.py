@@ -113,10 +113,12 @@ def seo_block(lang, route=None):
     t = dict(TEXT[lang])
     if route: t['title'], t['desc'], t['name'] = ROUTE_TEXT[lang][route][0], ROUTE_TEXT[lang][route][1], ROUTE_TEXT[lang][route][0].split('｜')[0].split(' | ')[0]
     url = SITE + page_path(lang, route)
+    og_file = f'og/{lang}-{route or "home"}.jpg'
+    og = SITE + '/' + og_file if os.path.exists(os.path.join(ROOT, og_file)) else OG_IMAGE
     alts = '\n'.join(f'<link rel="alternate" hreflang="{HTML_LANG[l]}" href="{SITE+page_path(l, route)}">' for l in PATHS)
     ld = {
         '@context': 'https://schema.org', '@type': 'VideoGame', 'name': t['name'], 'url': url,
-        'description': t['desc'], 'inLanguage': HTML_LANG[lang], 'image': OG_IMAGE,
+        'description': t['desc'], 'inLanguage': HTML_LANG[lang], 'image': og,
         'genre': 'Simulation', 'gamePlatform': 'Web browser', 'applicationCategory': 'Game', 'operatingSystem': 'Any',
         'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'USD'},
         'publisher': {'@type': 'Organization', 'name': 'SecTools.tw', 'url': 'https://sectools.tw/'},
@@ -132,12 +134,15 @@ def seo_block(lang, route=None):
 <meta property="og:title" content="{t['title']}">
 <meta property="og:description" content="{t['desc']}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{OG_IMAGE}">
+<meta property="og:image" content="{og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{t['title']}">
 <meta property="og:locale" content="{OG_LOCALE[lang]}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{t['title']}">
 <meta name="twitter:description" content="{t['desc']}">
-<meta name="twitter:image" content="{OG_IMAGE}">
+<meta name="twitter:image" content="{og}">
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 <!--/SEO-->'''
 

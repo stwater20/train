@@ -401,6 +401,7 @@ function shareText(grade){
 function bindEndExtras(grade){
   const b=document.getElementById('ovShare'); if(!b) return;
   b.addEventListener('click',async()=>{
+    if(typeof openShare==='function'){ openShare(grade,S.score); return; }
     const txt=shareText(grade);
     try{
       if(navigator.share){ await navigator.share({text:txt}); return; }

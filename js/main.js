@@ -8,6 +8,7 @@ function frame(now){
   if(S.phase==='title' && R3){ S.pos+=dt*11; S.v=11; S.t+=dt; if(S.pos>END-60) S.pos=-40; }
   if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt; while(accum>=1/60){ step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
   else accum=0;
+  if(typeof ogTick==='function') ogTick();
   tutTick(); extrasTick(dt); audioTick(dt); render(dt); hud(now);
   requestAnimationFrame(frame);
 }
