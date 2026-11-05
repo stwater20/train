@@ -41,7 +41,7 @@ function hud(now){
   const st=STATIONS[S.next];
   const dist=st ? st.pos-S.pos : 0;
   if(S.doors){ el.nextLab.textContent=L('停車中','Stopped at','停車中'); el.next.textContent=stName(st); el.nextEn.textContent=L('旅客上下車 · '+Math.ceil(S.dwell)+' 秒後關門','Boarding · doors close in '+Math.ceil(S.dwell)+' s','乗降中 · '+Math.ceil(S.dwell)+' 秒後にドア閉'); }
-  else if(st){ el.nextLab.textContent=S.next===STATIONS.length-1?L('下一站（終點）','Next stop (terminus)','次は終点'):L('下一站','Next stop','次の駅'); el.next.textContent=stName(st); el.nextEn.textContent=LANG==='en'?st.name:st.en; }
+  else if(st){ el.nextLab.textContent=S.next===STATIONS.length-1?(ROUTE.continues?L('下一站（換手）','Next stop (crew change)','次は交代駅'):L('下一站（終點）','Next stop (terminus)','次は終点')):L('下一站','Next stop','次の駅'); el.next.textContent=stName(st); el.nextEn.textContent=LANG==='en'?st.name:st.en; }
   if(st){
     const txt = dist>=100 ? Math.round(dist)+' m' : dist>=-15 ? (dist>=0?'':'+')+Math.abs(dist).toFixed(1)+' m' : '—';
     el.dist.textContent=txt; el.dist.classList.toggle('warn',dist<0);

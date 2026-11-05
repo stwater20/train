@@ -78,7 +78,7 @@ const ROUTES = {
     grades:[ {s:-800,e:250,g:0}, {s:250,e:850,g:-6}, {s:850,e:1250,g:0}, {s:1250,e:1800,g:5}, {s:1800,e:2200,g:0}, {s:2200,e:2800,g:-4}, {s:2800,e:99999,g:0} ],
   },
   tamsui:{
-    key:'tamsui', cars:6, name:L('捷運淡水信義線','Taipei Metro Tamsui Line','台北MRT淡水信義線'), title:L('台北捷運駕駛室','Taipei Metro Cab','台北MRT運転台'), train:L('捷運 6 節編成','6-car metro train','MRT 6両編成'), desc:L('雙線・第三軌供電','double track, third rail','複線・第三軌条'),
+    key:'tamsui', cars:6, mrt:true, name:L('捷運淡水信義線','Taipei Metro Tamsui Line','台北MRT淡水信義線'), title:L('台北捷運駕駛室','Taipei Metro Cab','台北MRT運転台'), train:L('捷運 6 節編成','6-car metro train','MRT 6両編成'), desc:L('雙線・第三軌供電','double track, third rail','複線・第三軌条'),
     trainLen:141, lineMax:80, gauge:1.435, electric:true, thirdRail:true, double:true, elev0:10, elevScale:1, railLen:120,
     power:1.1, ebDecel:1.4, brakeStep:0.14, platLen:170, sunFlip:true,
     envs:['morning','dusk','night','rain'],
@@ -96,6 +96,25 @@ const ROUTES = {
     crossings:[],
     signal:null,
     grades:[ {s:-800,e:950,g:0}, {s:950,e:1450,g:10}, {s:1450,e:1750,g:0}, {s:1750,e:2250,g:-12}, {s:2250,e:2550,g:0}, {s:2550,e:3250,g:6}, {s:3250,e:3550,g:0}, {s:3550,e:4150,g:-5}, {s:4150,e:4450,g:0}, {s:4450,e:5150,g:4}, {s:5150,e:99999,g:0} ],
+  },
+  airport:{
+    key:'airport', cars:4, mrt:true, name:L('桃園機場捷運','Taoyuan Airport MRT','桃園空港MRT'), title:L('機場捷運駕駛室','Airport MRT Cab','空港MRT運転台'), train:L('機場捷運普通車 4 節','4-car Airport MRT commuter','空港MRT 普通車 4両'), desc:L('林口台地下坡・高架雙線・第三軌','down the Linkou plateau, elevated double track, third rail','林口台地の下り勾配・高架複線・第三軌条'),
+    trainLen:86, lineMax:100, gauge:1.435, electric:true, thirdRail:true, double:true, elevated:true, visElevate:true, elev0:240, elevScale:2.8, railLen:120, platLen:110,
+    continues:true, dest:{ja:'老街渓',name:'老街溪',en:'Laojie River'}, oppDest:'台北車站', sunFlip:true,
+    power:1.12, ebDecel:1.45, brakeStep:0.14,
+    envs:['morning','dusk','night','rain'],
+    stations:[
+      {name:'長庚醫院',     en:'Chang Gung Memorial Hospital', ja:'長庚医院', no:'A8',  pos:0},
+      {name:'林口',         en:'Linkou',      ja:'林口',   no:'A9',  pos:1500, leg:110},
+      {name:'山鼻',         en:'Shanbi',      ja:'山鼻',   no:'A10', pos:2900, leg:96},
+      {name:'坑口',         en:'Kengkou',     ja:'坑口',   no:'A11', pos:4200, leg:82},
+      {name:'機場第一航廈', en:'Airport Terminal 1', ja:'空港第一ターミナル', no:'A12', pos:5600, leg:96},
+    ],
+    limits:[ {s:0,e:220,v:45}, {s:1950,e:2450,v:70}, {s:5050,e:5650,v:60} ],
+    curves:[ {s:1950,e:2450,k:0.0024}, {s:3300,e:3620,k:-0.0018}, {s:4700,e:5000,k:0.0016} ],
+    crossings:[],
+    signal:null,
+    grades:[ {s:-800,e:1800,g:0}, {s:1800,e:2700,g:-40}, {s:2700,e:3000,g:0}, {s:3000,e:3900,g:-28}, {s:3900,e:4700,g:0}, {s:4700,e:5250,g:-30}, {s:5250,e:99999,g:0} ],
   },
   keiyo:{
     key:'keiyo', cars:10, name:L('JR 京葉線','JR Keiyō Line','JR京葉線'), title:L('京葉線駕駛室','Keiyō Line Cab','京葉線運転台'), train:L('E233 系 10 輛','10-car E233','E233系 10両'), desc:L('高架雙線・沿東京灣','elevated double track along Tokyo Bay','高架複線・東京湾沿い'),
@@ -219,6 +238,11 @@ const TRAINS = {
     {key:'c371', name:L('C371 型電聯車','Type C371 train','C371形 電車'), power:1.02, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:1.0, frame:'#10161b',
      req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
+  airport:[
+    {key:'ap1000', name:L('機場捷運 1000 型（普通車）','Airport MRT 1000 series (commuter)','空港MRT 1000形（普通車）'), power:1.12, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.15, frame:'#0d1215'},
+    {key:'ap2000', name:L('機場捷運 2000 型（直達車車型）','Airport MRT 2000 series (express stock)','空港MRT 2000形（直達車の車両）'), power:1.2, brakeStep:0.145, ebDecel:1.5, sound:'vvvf', pitch:1.32, frame:'#140f1c',
+     req:'gradeA_airport', reqText:L('機場捷運拿到 A 以上評價','Get an A or better on the Airport MRT','空港MRTで A 以上の評価')},
+  ],
   keiyo:[
     {key:'e233', name:L('E233 系 5000 番台','E233-5000 series','E233系5000番台'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.1, frame:'#0d1215'},
     {key:'k209', name:L('209 系 500 番台','209-500 series','209系500番台'), power:0.95, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.92, frame:'#11161a',
@@ -246,6 +270,7 @@ try{ const k=JSON.parse(localStorage.getItem('cabTrain_'+ROUTE.key)); const t=TR
 Object.assign(ROUTE,{power:TRAIN.power, brakeStep:TRAIN.brakeStep, ebDecel:TRAIN.ebDecel});
 /* 車站附近的觀光景點指示牌 */
 const SIGHTS = {
+  '林口':['三井 OUTLET →'], '長庚醫院':['長庚醫院 →'], '機場第一航廈':['出境大廳 →'],
   '吉安':['慶修院 →'], '志學':['東華大學 →'], '壽豐':['鯉魚潭 →','雲山水 →'],
   '阿里山':['神木群 →'], '祝山':['觀日平台 →'],
   '北投':['北投溫泉 →'], '關渡':['關渡宮 →','關渡自然公園 →'], '紅樹林':['紅樹林保護區 →'], '淡水':['淡水老街 →','漁人碼頭 →'],

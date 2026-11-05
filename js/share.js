@@ -3,9 +3,9 @@
 
 const SITE_URL='https://train.sectools.tw';
 const SHARE_FONT='"Noto Sans TC","PingFang TC","Hiragino Sans","Microsoft JhengHei",sans-serif';
-const LINE_COLOR={hualien:'#2f6fb6',alishan:'#b3262b',tamsui:'#d9282f',keiyo:'#c9252f',keikyu:'#c8222c',enoden:'#2f7d4f'};
+const LINE_COLOR={airport:'#8246af',hualien:'#2f6fb6',alishan:'#b3262b',tamsui:'#d9282f',keiyo:'#c9252f',keikyu:'#c8222c',enoden:'#2f7d4f'};
 const RNAME=()=>ROUTE.name||ROUTE.title;
-const ROUTE_ICON={hualien:'🚃',alishan:'🌲',tamsui:'🚇',keiyo:'🎡',keikyu:'🔴',enoden:'🌊'};
+const ROUTE_ICON={airport:'✈️',hualien:'🚃',alishan:'🌲',tamsui:'🚇',keiyo:'🎡',keikyu:'🔴',enoden:'🌊'};
 
 /* ---------- 連結 ---------- */
 function shareUrl(params){
@@ -123,7 +123,7 @@ function bindShareTitle(){
 
 /* ---------- 社群預覽圖（OG）截圖模式：?og=1 ---------- */
 const OG_MODE=(()=>{ try{ return new URLSearchParams(location.search).get('og')==='1'; }catch(e){ return false; } })();
-const OG_POS={hualien:1500,alishan:900,enoden:2500,tamsui:2600,keiyo:1300,keikyu:560};
+const OG_POS={airport:2250,hualien:1500,alishan:900,enoden:2500,tamsui:2600,keiyo:1300,keikyu:560};
 if(OG_MODE){
   document.documentElement.classList.add('og');
   const home=!window.FORCE_ROUTE;
@@ -131,7 +131,7 @@ if(OG_MODE){
     const t=document.title.split(/｜| \| /), d=document.createElement('div'); d.className='ogcard';
     d.innerHTML=`<i class="ogbar" style="background:${LINE_COLOR[ROUTE.key]}"></i><p class="ogeye">${L('免安裝・瀏覽器直接玩','FREE · PLAY IN YOUR BROWSER','インストール不要・ブラウザで遊べる')}</p>
       <h1>${home?L('火車駕駛模擬','Train Driving Simulator','電車運転シミュレーター'):(t[0]||ROUTE.title)}</h1>
-      <p class="ogsub">${home?L('花東線・阿里山・淡水線・江之電・京葉線・京急','Taiwan & Japan: 6 real lines','台湾と日本の 6 路線'):(t[1]||'')}</p>
+      <p class="ogsub">${home?L('花東線・阿里山・淡水線・機場捷運・江之電・京葉線・京急','Taiwan & Japan: 7 real lines','台湾と日本の 7 路線'):(t[1]||'')}</p>
       <p class="ogurl">train.sectools.tw</p>`;
     document.body.appendChild(d);
     // 標題太長就縮小字，中日文維持一行、英文最多兩行

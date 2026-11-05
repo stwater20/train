@@ -317,8 +317,12 @@ function showOverlay(kind){
   } else if(kind==='title'){
     ovCard.className='card';
     const AL=ROUTE.key==='alishan', first=stName(STATIONS[0]), last=stName(STATIONS[STATIONS.length-1]), mids=STATIONS.slice(1,-1).map(stName).join(L('、',', ','、')), hhmm=fmtClock(BASE_CLOCK).slice(0,5);
-    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo', KK=ROUTE.key==='keikyu';
-    const story = KK
+    const JP=!!ROUTE.japan, TS=ROUTE.key==='tamsui', KY=ROUTE.key==='keiyo', KK=ROUTE.key==='keikyu', AP=ROUTE.key==='airport';
+    const story = AP
+      ? L(`你是${ENV.word} ${hhmm} 從長庚醫院出發、開往老街溪的機場捷運普通車司機，你的班開到${last}換手。先在林口台地的高樓之間奔馳，接著一路下坡（最陡 40‰）往山鼻、坑口，左手邊是桃園平原的埤塘和機場跑道；最後鑽進地底，停進有月台門的第一航廈站。`,
+          `You're driving the ${hhmm} Airport MRT commuter train from Chang Gung Memorial Hospital bound for Laojie River ${ENV.word}; your shift hands over at ${last}. You race between the towers of the Linkou plateau, then run downhill at up to 40‰ via Shanbi and Kengkou with the ponds of the Taoyuan plain and the airport runways on your left, before diving underground into Terminal 1, a station with platform screen doors.`,
+          `${ENV.word} ${hhmm} 長庚医院発 老街渓行きの空港MRT普通車を担当し、${last}で乗務員交代です。林口台地の高層住宅の間を走り抜け、最急 40‰ の下り勾配で山鼻・坑口へ。左手には桃園平野のため池と空港の滑走路。最後は地下に潜り、ホームドアのある第一ターミナル駅に停車します。`)
+      : KK
       ? L(`你是${ENV.word} ${hhmm} 從品川出發、開往浦賀的京急普通車司機，你的班開到${last}換手。從高架的品川出發後，下到地面經過北品川的平交道，再爬上高架；在鮫洲要停下來等快特通過。`,
           `You're driving the ${hhmm} Keikyū local from Shinagawa bound for Uraga ${ENV.word}; your shift hands over at ${last}. From elevated Shinagawa you drop to street level past the Kita-shinagawa crossings, climb back onto the viaduct, and wait at Samezu for a limited express to overtake.`,
           `${ENV.word} ${hhmm} 品川発 浦賀行きの京急普通列車を担当し、${last}で乗務員交代です。高架の品川を出て地上に下り、北品川の踏切を抜けて再び高架へ。鮫洲では快特の通過待ちをします。`)
@@ -348,13 +352,14 @@ function showOverlay(kind){
       <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
       <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
       <section class="tabpane" data-pane="go"${tab==='go'?'':' hidden'}>
-      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='keiyo'?'🎡':r.key==='keikyu'?'🔴':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
+      <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='airport'?'✈️':r.key==='keiyo'?'🎡':r.key==='keikyu'?'🔴':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
       <p class="story">${story}</p>
       ${departPicksHTML()}
       <details class="howto-box"><summary>${L('駕駛重點','Driving tips','運転のポイント')}</summary><ul class="howto">
         <li>${L('<kbd>W</kbd> <kbd>↑</kbd> 推向動力檔 P1–P5，<kbd>S</kbd> <kbd>↓</kbd> 拉向煞車檔 B1–B8','<kbd>W</kbd> <kbd>↑</kbd> toward power P1–P5, <kbd>S</kbd> <kbd>↓</kbd> toward brake B1–B8','<kbd>W</kbd> <kbd>↑</kbd> で力行 P1–P5、<kbd>S</kbd> <kbd>↓</kbd> でブレーキ B1–B8')}</li>
         <li>${L(`速限要等整列車尾端通過限速區才解除（列車長 ${TRAIN_LEN} m）`,`A limit ends only when the rear of the train (${TRAIN_LEN} m) has passed`,`制限は最後尾（列車長 ${TRAIN_LEN} m）が抜けるまで続きます`)}</li>
         <li>${KK ? L('品川出站急彎限速 45 km/h，北品川一帶是地面區間有平交道；鮫洲停車時會有快特從右邊超車','45 km/h on the sharp curve out of Shinagawa, level crossings at street level around Kita-shinagawa, and an express overtakes you at Samezu','品川を出てすぐの急カーブは 45 km/h、北品川付近は地上区間で踏切あり。鮫洲では快特が右側を追い抜きます')
+             : AP ? L('最高 100 km/h；林口台地下坡最陡 40‰，放 N 也會一直加速，要用煞車控速；終點前進入隧道，限速 60 km/h','Top speed 100 km/h; the descent off the Linkou plateau is up to 40‰, so you speed up even in N — hold your speed with the brake; 60 km/h into the tunnel before the end','最高 100 km/h。林口台地の下りは最急 40‰ で、N でも加速するのでブレーキで抑速を。終点手前のトンネルは 60 km/h')
              : KY ? L('最高 100 km/h，高架雙線沒有平交道；10 輛編成長 200 m，月台很長','Top speed 100 km/h on elevated double track with no level crossings; 10 cars, 200 m long','最高 100 km/h、踏切のない高架複線。10両・全長 200 m')
              : TS ? L('最高 80 km/h，雙線區間沒有平交道；淡水站前限速 35 km/h','Top speed 80 km/h, double track with no level crossings; 35 km/h into Tamsui','最高 80 km/h、複線で踏切なし。淡水駅手前は 35 km/h')
              : JP ? L('最高 45 km/h，路面區間 25 km/h；鎌倉高校前站旁就是知名的平交道，記得鳴笛','Top speed 45 km/h, 25 km/h on the street section; the famous level crossing is right by Kamakura-Kōkōmae — sound the horn','最高 45 km/h、併用軌道は 25 km/h。鎌倉高校前駅のすぐ横に有名な踏切があるので警笛を')

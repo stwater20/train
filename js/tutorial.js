@@ -64,6 +64,9 @@ function buildTut(){
    text: ROUTE.key==='keikyu' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。北品川一帶是地面區間、平交道很多；鮫洲停車時會等快特從右邊超車。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>, where your shift hands over. Around Kita-shinagawa you run at street level over many level crossings, and at Samezu you wait while an express overtakes on the right. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま<b>${sEnd}</b>まで運転して交代です。北品川付近は地上区間で踏切が多く、鮫洲では快特の通過待ちをします。<kbd>?</kbd> でいつでも操作説明を。`)
+        : ROUTE.key==='airport' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。林口台地往下是長下坡，放 N 也會加速，要提早拉煞車控速；最後一段進隧道限速 60。想複習隨時按 <kbd>?</kbd>。`,
+                `Drive on to <b>${sEnd}</b>, where your shift hands over. The long descent off the Linkou plateau speeds you up even in N, so brake early to hold your speed; it's 60 km/h into the final tunnel. Press <kbd>?</kbd> any time to review.`,
+                `このまま<b>${sEnd}</b>まで運転して交代です。林口台地からの長い下り坂は N でも加速するので、早めにブレーキで抑速を。最後のトンネルは 60 km/h。<kbd>?</kbd> でいつでも復習できます。`)
         : ROUTE.key==='keiyo' ? L(`接下來自己開到<b>${sEnd}</b>換手吧。高架雙線、對向列車會從右邊開過；E233 系加速快，記得提早煞車。想複習隨時按 <kbd>?</kbd>。`,
                 `Drive on to <b>${sEnd}</b>, where your shift hands over. Elevated double track with oncoming trains on your right; the E233 accelerates hard, so brake early. Press <kbd>?</kbd> any time for the handbook.`,
                 `このまま<b>${sEnd}</b>まで運転して交代です。高架複線で対向列車が右側を通過します。E233系は加速が良いので早めのブレーキを。<kbd>?</kbd> でいつでも操作説明を。`)

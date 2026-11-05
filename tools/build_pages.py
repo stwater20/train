@@ -17,7 +17,7 @@ OG_IMAGE = SITE + '/og.jpg'
 
 TEXT = {
   'zh': {
-    'title': '火車駕駛模擬｜花東線・阿里山小火車・台北捷運・江之電・京急・京葉線 3D 駕駛遊戲',
+    'title': '火車駕駛模擬｜花東線・阿里山小火車・台北捷運・機場捷運・江之電・京急・京葉線 3D 駕駛遊戲',
     'desc': '免安裝、瀏覽器直接玩的 3D 火車駕駛遊戲。開花東線區間車、阿里山小火車爬上祝山看日出，或開日本江之電沿著海岸到江之島。附新手教學，中英日三語。',
     'name': '火車駕駛模擬',
     'about': '''<section class="about">
@@ -35,7 +35,7 @@ TEXT = {
   </section>''',
   },
   'en': {
-    'title': 'Train Driving Simulator | Drive Taiwan’s Hualien Line, Alishan Forest Railway, Taipei Metro and Japan’s Enoden',
+    'title': 'Train Driving Simulator | Drive Taiwan’s Hualien Line, Alishan Forest Railway, Taipei Metro, Airport MRT and Japan’s Enoden',
     'desc': 'Free 3D cab-view train driving game in your browser. Drive a Hualien local train, climb to Zhushan on the Alishan Forest Railway at sunrise, or run the Enoden along the coast to Enoshima. Tutorial included.',
     'name': 'Train Driving Simulator',
     'about': '''<section class="about">
@@ -72,12 +72,13 @@ TEXT = {
   },
 }
 
-ROUTE_KEYS = ['hualien', 'alishan', 'enoden', 'tamsui', 'keiyo', 'keikyu']
+ROUTE_KEYS = ['hualien', 'alishan', 'enoden', 'tamsui', 'airport', 'keiyo', 'keikyu']
 ROUTE_TEXT = {
   'zh': {
     'hualien': ('花東線區間車駕駛模擬｜花蓮到壽豐 3D 火車駕駛遊戲', '開臺鐵區間車從花蓮到壽豐，停吉安、志學、平和，學會看限速、號誌與進站停車。附新手教學，免安裝、瀏覽器直接玩。', '花東線'),
     'alishan': ('阿里山小火車駕駛模擬｜祝山線日出列車 3D 遊戲', '駕駛阿里山林業鐵路祝山線，從阿里山爬到海拔 2,451 公尺的祝山，搭日出列車看雲海與玉山日出，還能解鎖蒸汽機車 SL-31。', '阿里山小火車'),
     'tamsui':  ('台北捷運淡水信義線駕駛模擬｜北投到淡水 3D 捷運遊戲', '用手動駕駛模式開台北捷運，從北投到淡水，沿途看關渡平原、紅色的關渡大橋、淡水河紅樹林與觀音山，雙線區間對向列車呼嘯而過。', '捷運淡水線'),
+    'airport': ('桃園機場捷運駕駛模擬｜林口台地下坡到機場第一航廈 3D 捷運遊戲', '開桃園機場捷運普通車從長庚醫院出發，經過林口、山鼻、坑口，沿著林口台地一路下坡，看桃園平原的埤塘與機場跑道，最後進隧道停進第一航廈地下站。', '機場捷運'),
     'keikyu':  ('京急線駕駛模擬｜品川到立會川・紅色電車 3D 遊戲', '開京急本線的紅色電車從品川出發，經過八ツ山橋、北品川的平交道與品川宿，在鮫洲等快特超車，到立會川換手。還能解鎖會唱歌的 2100 形。', '京急線'),
     'keiyo':   ('JR 京葉線駕駛模擬｜新木場到舞濱・東京灣高架 3D 電車遊戲', '開 JR 京葉線 E233 系從新木場出發，沿著東京灣的高架雙線，經過葛西臨海公園的摩天輪、舞濱與新浦安，到市川鹽濱換手。', 'JR 京葉線'),
     'enoden':  ('江之電駕駛模擬｜鎌倉高校前・江之島 3D 電車遊戲', '開日本江之電從稻村崎到江之島，沿著相模灣海岸，經過《灌籃高手》的鎌倉高校前平交道與路面電車區間，遠方就是富士山。', '江之電'),
@@ -86,6 +87,7 @@ ROUTE_TEXT = {
     'hualien': ('Hualien Line Train Simulator | Drive a Taiwan Railway local train', 'Drive a Taiwan Railway local train from Hualien to Shoufeng, calling at Ji’an, Zhixue and Pinghe. Learn speed limits, signals and precise station stops. Free in your browser, tutorial included.', 'Hualien Line'),
     'alishan': ('Alishan Forest Railway Simulator | Sunrise train to Zhushan', 'Drive the Alishan Forest Railway Zhushan Line up to Zhushan at 2,451 m, the highest station in Taiwan, and watch the sunrise over a sea of clouds. Unlock the SL-31 steam locomotive.', 'Alishan Forest Railway'),
     'tamsui':  ('Taipei Metro Simulator | Drive the Tamsui Line from Beitou to Tamsui', 'Drive a Taipei Metro train in manual mode from Beitou to Tamsui, past the Guandu plain, the red Guandu Bridge, the mangroves of the Tamsui River and Guanyin Mountain.', 'Taipei Metro Tamsui Line'),
+    'airport': ('Taoyuan Airport MRT Simulator | Drive down the Linkou plateau to Terminal 1', 'Drive a Taoyuan Airport MRT commuter train from Chang Gung Memorial Hospital via Linkou, Shanbi and Kengkou, down the Linkou plateau past the ponds of the Taoyuan plain and the runways, into the underground Terminal 1 station.', 'Airport MRT'),
     'keikyu':  ('Keikyū Line Simulator | Drive the red train from Shinagawa', 'Drive a red Keikyū train from Shinagawa over the Yatsuyama bridge, through the Kita-shinagawa crossings and old Shinagawa-juku, wait at Samezu for an express to overtake, and hand over at Tachiaigawa. Unlock the singing 2100 series.', 'Keikyū Line'),
     'keiyo':   ('JR Keiyō Line Simulator | Drive along Tokyo Bay from Shin-Kiba to Maihama', 'Drive a JR Keiyō Line E233 on elevated double track along Tokyo Bay, past the Kasai Rinkai Park Ferris wheel, Maihama and Shin-Urayasu to Ichikawashiohama.', 'JR Keiyō Line'),
     'enoden':  ('Enoden Train Simulator | Drive along the Kamakura coast to Enoshima', 'Drive Japan’s Enoden from Inamuragasaki to Enoshima along Sagami Bay, past the famous Kamakura-Kōkōmae crossing and through the street-running section, with Mt Fuji ahead.', 'Enoden'),
@@ -94,6 +96,7 @@ ROUTE_TEXT = {
     'hualien': ('台湾・花東線 運転シミュレーター｜台湾鉄道の区間車を運転', '台湾鉄道の区間車で花蓮から寿豊まで。吉安・志学・平和に停車しながら、速度制限・信号・停止位置ピタ止めを学べます。インストール不要の無料ブラウザゲーム。', '台湾・花東線'),
     'alishan': ('阿里山森林鉄道 運転シミュレーター｜祝山線ご来光列車', '阿里山森林鉄道 祝山線を運転して、台湾最高所の祝山駅（標高 2,451 m）へ。ご来光列車で雲海と玉山の日の出を。蒸気機関車 SL-31 も解除できます。', '阿里山森林鉄道'),
     'tamsui':  ('台北MRT 淡水線 運転シミュレーター｜北投から淡水へ', '台北MRT淡水信義線を手動運転で北投から淡水へ。関渡平原、赤い関渡大橋、淡水河のマングローブ、観音山の眺め。インストール不要の無料ブラウザゲーム。', '台北MRT淡水線'),
+    'airport': ('桃園空港MRT 運転シミュレーター｜林口台地を下って空港第一ターミナルへ', '桃園空港MRTの普通車で長庚医院から林口・山鼻・坑口を経て、林口台地の下り勾配を走り、桃園平野のため池と空港の滑走路を眺めながら地下の第一ターミナル駅へ。', '桃園空港MRT'),
     'keikyu':  ('京急線 運転シミュレーター｜品川から赤い電車をブラウザで運転', '京急本線の赤い電車で品川を出発し、八ツ山橋、北品川の踏切と品川宿を抜け、鮫洲で快特の通過待ち、立会川で乗務員交代。歌う電車2100形も解除できます。無料ブラウザゲーム。', '京急線'),
     'keiyo':   ('京葉線 運転シミュレーター｜新木場から舞浜・東京湾沿いの高架をブラウザで運転', 'JR京葉線のE233系で新木場から東京湾沿いの高架複線を走り、葛西臨海公園の観覧車、舞浜、新浦安を経て市川塩浜まで。インストール不要の無料ブラウザゲーム。', 'JR京葉線'),
     'enoden':  ('江ノ電 運転シミュレーター｜鎌倉高校前・江ノ島までブラウザで運転', '江ノ電を稲村ヶ崎から江ノ島まで運転。相模湾の海沿い、鎌倉高校前の踏切、腰越〜江ノ島の併用軌道、富士山と江の島の眺め。インストール不要の無料ブラウザゲーム。', '江ノ電'),
