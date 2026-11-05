@@ -1231,6 +1231,7 @@ function render(dt){
 
   cars.forEach(c=>{ c.s+=c.v*dt; if(c.s>END+800) c.s=-400; if(c.s<-400) c.s=END+800; const st=ROUTE.street; c.g.visible=!(ROUTE.japan && st && c.s>st.s-40 && c.s<st.e+40); place(c.g,c.s,c.lat,0,c.v>0?0:Math.PI); });
 
+  if(typeof driveRender==='function') driveRender(dt);
   if(MODE==='hq'){ renderer.setRenderTarget(null); renderer.render(scene,cam); }
   else { R3.blitMat.uniforms.levels.value = MODE==='chunky'?5:7; renderer.setRenderTarget(R3.rt); renderer.render(scene,cam); renderer.setRenderTarget(null); renderer.render(R3.blitScene,R3.blitCam); }
 }

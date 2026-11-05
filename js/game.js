@@ -82,6 +82,7 @@ function step(dt){
     }
   });
 
+  if(typeof driveStep==='function'){ driveStep(dt,prev); if(S.phase!=='run') return; }
   // 新手模式：前方有較低速限、該開始減速時提醒一次
   if(DIFF.guide && S.phase==='run'){ const lim=currentLimit(); const Lm=LIMITS.find(x=>x.s>S.pos && x.v<lim && x.s-S.pos<1200); S.limCue=S.limCue||{};
     if(Lm && !S.limCue[Lm.s]){ const vL=Lm.v/3.6, d=Lm.s-S.pos; if(S.v>vL+0.6 && d < (S.v*S.v-vL*vL)/(2*0.5)+40){ S.limCue[Lm.s]=true; toast(L('🔰 前方限速 '+Lm.v+'，現在開始減速','🔰 Limit '+Lm.v+' ahead — start slowing down','🔰 この先 制限 '+Lm.v+'、減速を開始'),'good'); } } }
@@ -93,7 +94,7 @@ function step(dt){
     if(S.dwell<=0){
       S.doors=false; doorSound(false);
       if(S.next>=STATIONS.length-1){ endGame(); return; }
-      S.next++; toast(L('車門關閉，可以發車','Doors closed, ready to depart','ドア閉、発車できます'),'good'); extrasDepart();
+      S.next++; if(typeof driveDoorsClosed==='function'){ driveDoorsClosed(); toast(L('車門關閉，等待車掌發車信號','Doors closed — wait for the conductor’s signal','ドア閉、車掌の発車合図を待つ')); } else toast(L('車門關閉，可以發車','Doors closed, ready to depart','ドア閉、発車できます'),'good'); extrasDepart();
     }
   } else {
     const st=STATIONS[S.next];
@@ -112,6 +113,7 @@ function setNotch(n){
   if(S.phase!=='run' || S.paused) return;
   n=clamp(n,-9,5);
   if(n>0 && S.doors){ toast(L('車門開啟中，無法加速','Doors are open, cannot power','ドア開扉中は力行できません')); return; }
+  if(n>0 && S.notch<=0 && typeof driveCanPower==='function' && !driveCanPower()) return;
   if(n===-9 && S.notch!==-9 && S.v>2){ penal(10,'eb',L('使用緊急煞車','Emergency brake used','非常ブレーキ使用')); const sg=document.querySelector('.stage'); sg.classList.remove('shake'); void sg.offsetWidth; sg.classList.add('shake'); }
   S.notch=n; renderLever();
 }
@@ -129,7 +131,8 @@ function action(){
   if(late<-20 && !DIFF.guide){tp=20;trank='早到';} /* 新手模式早到也算準點 */ else if(late<=5){tp=40;trank='準點';} else {tp=Math.max(0,Math.round(40-(late-5)*1.5));trank='延誤';}
   S.score+=pp+tp;
   S.log.push({name:st.name, err, rank, pp, late, trank, tp, total:pp+tp});
-  S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : st.overtake ? 18 : 10; S.boarded[S.next]=S.t;
+  if(typeof driveDoorsOpen==='function') driveDoorsOpen();
+  S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : st.overtake ? 16 : 7.5; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
   if(typeof stopFX==='function') stopFX(rank,pp,trank,tp,err);
@@ -170,14 +173,14 @@ function startGame(tut){
   if(tut!==true && DIFF.guide && !tutSeen()) tut=true; // 新手模式：這條路線第一次開會自動帶教學
   S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever(); setPlaying(true);
   if(typeof unlockSpeech==='function') unlockSpeech();
-  extrasStart();
+  extrasStart(); if(typeof driveStart==='function') driveStart();
   if(S.tut) tutStart();
   else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));
 }
 const startTutorial=()=>startGame(true);
 /* 駕駛中：手機版鎖成一個畫面，不用上下捲動 */
 function setPlaying(on){ document.body.classList.toggle('playing',on); if(on) window.scrollTo(0,0); }
-function endGame(){ tutStop(); setPlaying(false); S.phase='end'; S.doors=false; showOverlay('end'); }
+function endGame(){ tutStop(); setPlaying(false); S.phase='end'; S.doors=false; if(typeof driveEnd==='function') driveEnd(); showOverlay('end'); }
 
 /* ---------- overlay ---------- */
 const ov=document.getElementById('ov'), ovCard=document.getElementById('ovCard');
@@ -386,7 +389,7 @@ function showOverlay(kind){
     ovCard.innerHTML=`<p class="eyebrow">${L('本班次結束 · 抵達','Run complete · arrived at ','運行終了 · 到着 ')}${stName(STATIONS[STATIONS.length-1])} ${fmtClock(BASE_CLOCK+S.t)}</p>
       <div class="grade"><b>${g}</b><span>${Math.round(sc)} ${L('分','pts','点')}</span></div>${typeof challengeResultHTML==='function'?challengeResultHTML(sc):''}
       <div class="tbl"><table><thead><tr><th>${L('站名','Station','駅')}</th><th class="num">${L('停車誤差','Stop error','停止誤差')}</th><th>${L('停車評價','Stop','停止評価')}</th><th>${L('時刻','Time','時刻')}</th><th class="num">${L('得分','Points','得点')}</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="pen"><span>${L('超速','Overspeed','速度超過')} <b>−${P.over}</b></span><span>${L('ATP 介入','ATP','ATP作動')} <b>−${P.atp}</b></span><span>${L('冒進號誌','Red signal','信号冒進')} <b>−${P.spad}</b></span><span>${L('緊急煞車','Emergency brake','非常ブレーキ')} <b>−${P.eb}</b></span><span>${L('平交道鳴笛','Crossing horn','踏切警笛')} <b>+${S.bonus}</b></span></div>
+      <div class="pen"><span>${L('超速','Overspeed','速度超過')} <b>−${P.over}</b></span><span>${L('ATP 介入','ATP','ATP作動')} <b>−${P.atp}</b></span><span>${L('冒進號誌','Red signal','信号冒進')} <b>−${P.spad}</b></span><span>${L('緊急煞車','Emergency brake','非常ブレーキ')} <b>−${P.eb}</b></span><span>${L('加分（鳴笛・喚呼・舒適度）','Bonuses (horn, calls, comfort)','加点（警笛・喚呼・乗り心地）')} <b>+${S.bonus}</b></span>${S.pens.dep?`<span>${L('未等發車信號','Early departure','合図前の発車')} <b>−${S.pens.dep}</b></span>`:''}${S.pens.obs?`<span>${L('平交道事故','Crossing accident','踏切事故')} <b>−${S.pens.obs}</b></span>`:''}</div>${typeof driveEndHTML==='function'?driveEndHTML():''}
       <p>${L(`滿分約 ${max} 分（每站停車 100 + 準點 40），另有平交道鳴笛加分。`,`A perfect run is about ${max} points (100 for the stop + 40 for timing at each station), plus horn bonuses.`,`満点は約 ${max} 点（各駅 停止 100 ＋ 定時 40）、ほかに踏切警笛のボーナス。`)}</p>
       ${endExtrasHTML(info,g)}
       <div class="btnrow"><button class="btn big sharebig" id="ovShare" type="button">📣 ${L('分享・挑戰朋友','Share & challenge','シェアして挑戦')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
@@ -419,6 +422,7 @@ document.getElementById('bDown').addEventListener('click',notchDown);
 document.getElementById('bDoor').addEventListener('click',action);
 document.getElementById('bEB').addEventListener('click',()=>setNotch(-9));
 document.getElementById('bHorn').addEventListener('click',horn);
+{ const bc=document.getElementById('bCall'); if(bc) bc.addEventListener('click',()=>{ if(typeof driveCall==='function') driveCall(); }); }
 document.getElementById('bPause').addEventListener('click',togglePause);
 document.getElementById('bPause2').addEventListener('click',togglePause);
 document.getElementById('bN').addEventListener('click',()=>setNotch(0));
@@ -438,6 +442,7 @@ window.addEventListener('keydown',e=>{
   else if(k==='n'){ e.preventDefault(); setNotch(0); }
   else if(k===' '||k==='enter'){ e.preventDefault(); if(!e.repeat) action(); }
   else if(k==='h'){ e.preventDefault(); if(!e.repeat) horn(); }
+  else if(k==='c'){ e.preventDefault(); if(!e.repeat && typeof driveCall==='function') driveCall(); }
 });
 
 /* ---------- route strip ---------- */

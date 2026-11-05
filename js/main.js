@@ -24,9 +24,9 @@ const STATIC_TEXT=[
   ['#lever','aria-label','Master controller','マスコン'],
   ['#bUp','html','▲ Power<kbd>W / ↑</kbd>','▲ 力行<kbd>W / ↑</kbd>'], ['#bDown','html','▼ Brake<kbd>S / ↓</kbd>','▼ ブレーキ<kbd>S / ↓</kbd>'],
   ['#bDoor','html','Doors<kbd>Space</kbd>','ドア開<kbd>Space</kbd>'], ['#bEB','html','Emergency<kbd>E</kbd>','非常ブレーキ<kbd>E</kbd>'],
-  ['#bHorn','html','Horn<kbd>H</kbd>','警笛<kbd>H</kbd>'], ['#bPause','html','Pause<kbd>P</kbd>','一時停止<kbd>P</kbd>'], ['#bN','html','Neutral<kbd>N</kbd>','N に戻す<kbd>N</kbd>'],
-  ['.keys','html','Keys: <kbd>W</kbd>/<kbd>↑</kbd> power　<kbd>S</kbd>/<kbd>↓</kbd> brake　<kbd>N</kbd> neutral　<kbd>E</kbd> emergency　<kbd>Space</kbd> doors　<kbd>H</kbd> horn　<kbd>P</kbd> pause　<kbd>?</kbd> help',
-                   'キー：<kbd>W</kbd>/<kbd>↑</kbd> 力行　<kbd>S</kbd>/<kbd>↓</kbd> ブレーキ　<kbd>N</kbd> 中立　<kbd>E</kbd> 非常　<kbd>Space</kbd> ドア　<kbd>H</kbd> 警笛　<kbd>P</kbd> 一時停止　<kbd>?</kbd> 説明'],
+  ['#bHorn','html','Horn<kbd>H</kbd>','警笛<kbd>H</kbd>'], ['#bCall','html','👉 Call<kbd>C</kbd>','👉 喚呼<kbd>C</kbd>'], ['#bPause','html','Pause<kbd>P</kbd>','一時停止<kbd>P</kbd>'], ['#bN','html','Neutral<kbd>N</kbd>','N に戻す<kbd>N</kbd>'],
+  ['.keys','html','Keys: <kbd>W</kbd>/<kbd>↑</kbd> power　<kbd>S</kbd>/<kbd>↓</kbd> brake　<kbd>N</kbd> neutral　<kbd>E</kbd> emergency　<kbd>Space</kbd> doors　<kbd>H</kbd> horn　<kbd>C</kbd> point & call　<kbd>P</kbd> pause　<kbd>?</kbd> help',
+                   'キー：<kbd>W</kbd>/<kbd>↑</kbd> 力行　<kbd>S</kbd>/<kbd>↓</kbd> ブレーキ　<kbd>N</kbd> 中立　<kbd>E</kbd> 非常　<kbd>Space</kbd> ドア　<kbd>H</kbd> 警笛　<kbd>C</kbd> 指差喚呼　<kbd>P</kbd> 一時停止　<kbd>?</kbd> 説明'],
   ['.foot','html','Made and maintained by <a href="https://sectools.tw/?utm_source=train-game&amp;utm_medium=referral" target="_blank" rel="noopener">SecTools.tw</a> · distances and gradients are stylised',
                    '制作・運営：<a href="https://sectools.tw/?utm_source=train-game&amp;utm_medium=referral" target="_blank" rel="noopener">SecTools.tw</a> · 距離と勾配はゲーム用に簡略化しています'],
 ];

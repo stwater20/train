@@ -587,3 +587,23 @@ html.og #fx{display:none!important}
 .btnrow:has(.sharebig){grid-template-columns:1fr 1fr}
 @media (max-width:520px){ .btnrow:has(.sharebig){grid-template-columns:1fr} }
 html[lang="en"] .ogcard{font-family:"Helvetica Neue",Arial,"Noto Sans TC",sans-serif}
+
+/* ---------- 指差喚呼提示、駕駛評價 ---------- */
+.btns #bCall{grid-column:1/-1}
+.btn.call{border-color:rgba(127,224,160,.5);color:#bff0cf}
+.callcue{position:absolute;top:56px;right:14px;z-index:6;display:flex;align-items:center;gap:10px;padding:9px 12px 9px 10px;border-radius:12px;cursor:pointer;
+  background:rgba(8,11,13,.86);border:1.5px solid #7fe0a0;color:#fff;font:inherit;box-shadow:0 8px 22px rgba(0,0,0,.35);animation:cueIn .25s ease-out}
+.callcue .ci{font-size:22px;animation:cuePoint 1s ease-in-out infinite}
+.callcue .ct{display:grid;text-align:left;line-height:1.25}
+.callcue small{font-size:10.5px;color:#7fe0a0;letter-spacing:.1em;font-weight:700}
+.callcue b{font-size:16px}
+.callcue kbd{font-size:12px;padding:2px 7px;border-radius:6px;background:#7fe0a0;color:#08150d;font-weight:800}
+.callcue.done{border-color:#ffd27a;background:rgba(40,32,8,.9)}
+.callcue.done kbd{background:#ffd27a}
+@keyframes cueIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes cuePoint{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+.drivestats{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.drivestats span{padding:6px 11px;border-radius:99px;background:var(--panel-3);border:1px solid var(--line);font-size:13px}
+.drivestats em{font-style:normal;color:var(--amber);font-weight:700}
+@media (max-width:640px){ body.playing #bCall{display:none} body.playing .callcue{top:auto;bottom:172px;right:8px;padding:7px 10px} body.playing .callcue b{font-size:14px} }
+@media (max-height:500px) and (orientation:landscape){ body.playing #bCall{display:none} body.playing .callcue{top:8px;right:8px} }

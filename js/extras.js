@@ -266,6 +266,7 @@ function passengerSays(grade){
     D:[L('「司機是不是第一天上班？」','“Is it the driver’s first day?”','「運転士さん、今日が初日？」'),L('抱著小孩的媽媽','mum holding a toddler','子連れのお母さん')],
   }[grade];
   out.push(ok);
+  if(typeof comfortSays==='function'){ const cs=comfortSays(); if(cs) out.unshift(cs); }
   return out.slice(0,2).map(([q,who])=>`<blockquote class="say">${q}<cite>— ${who}</cite></blockquote>`).join('');
 }
 
