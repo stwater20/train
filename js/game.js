@@ -366,6 +366,7 @@ function showOverlay(kind){
              : AL ? L('全線上坡最陡 62‰，最高時速只有 30 km/h，超速 5 km/h 以上 ATP 會強制煞車','Uphill at up to 62‰ with a 30 km/h top speed; 5 km/h over and ATP brakes for you','最急 62‰ の上り勾配、最高 30 km/h。5 km/h 以上の超過で ATP が作動')
                  : L('紅燈前要停車，超速 5 km/h 以上 ATP 會強制煞車並扣分','Stop at red signals; 5 km/h over the limit and ATP brakes and deducts points','停止信号では停車。5 km/h 以上の超過で ATP が作動し減点')}</li>
         <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))((JP||ROUTE.jpSign)?'笛':'鳴')}</li>
+        <li>${L('關門後等車掌發車信號再起步；出現「👉 指差喚呼」提示時按 <kbd>C</kbd> 加分；煞車放輕、停下前放到 B3 以下，乘客比較舒服','After the doors close, wait for the conductor’s signal; press <kbd>C</kbd> when a “👉 Point & call” cue appears; brake gently and ease to B3 or less just before stopping for a smoother ride','ドア閉後は車掌の発車合図を待って起動。「👉 指差喚呼」が出たら <kbd>C</kbd> で加点。停止直前は B3 以下に緩めると乗り心地が良くなります')}</li>
       </ul></details>
       <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       </section>`;
