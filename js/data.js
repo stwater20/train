@@ -196,8 +196,11 @@ const ENVS = {
   rain:   {key:'rain',    name:L('雨天','Rain','雨'), icon:'🌧️', clock:8*3600+12*60,  word:L('下雨的早上','on a rainy morning','雨の朝'), rain:true},
   dawn:   {key:'dawn',    name:L('日出列車','Sunrise train','ご来光列車'), icon:'🌄', clock:4*3600+50*60,  word:L('清晨','before dawn','早朝'), night:true},
   clear:  {key:'clear',   name:L('晴朗','Clear','快晴'), icon:'🌲', clock:9*3600+30*60,  word:L('早上','this morning','朝')},
+  golden: {key:'golden',  name:L('黃金時刻','Golden hour','ゴールデンアワー'), icon:'🌅', clock:17*3600+5*60, word:L('夕陽斜照的傍晚','in the golden evening light','夕日の差す夕方'), req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach the Chief driver rank','ランク「主任運転士」で解除')},
+  first:  {key:'first',   name:L('首班車','First train','始発'), icon:'🌄', clock:5*3600+5*60, word:L('天剛亮的清晨','at first light','夜明けの早朝'), night:true, req:'night', reqText:L('解鎖成就「夜班司機」','Unlock “Night shift”','実績「夜勤」で解除')},
   mist:   {key:'mist',    name:L('雲霧','Mist','霧'), icon:'🌫️', clock:14*3600+10*60, word:L('起霧的午後','on a misty afternoon','霧の午後')},
 };
+Object.values(ROUTES).forEach(r=>{ r.envs.push('golden'); if(!r.envs.includes('dawn')) r.envs.push('first'); });
 let ENV = ENVS[ROUTE.envs[0]];
 
 /* ---------- 畫面風格：方塊（預設）或寫實 ---------- */
@@ -223,6 +226,8 @@ const TRAINS = {
     {key:'emu800', name:L('EMU800 型區間車','EMU800 local train','EMU800形 区間車'), power:0.95, brakeStep:0.13, ebDecel:1.45, sound:'vvvf', pitch:1.0, frame:'#0d1215'},
     {key:'emu900', name:L('EMU900 型區間車','EMU900 local train','EMU900形 区間車'), power:1.12, brakeStep:0.145, ebDecel:1.55, sound:'vvvf', pitch:1.25, frame:'#10161c',
      req:'gradeA_hualien', reqText:L('花東線拿到 A 以上評價','Get an A or better on the Hualien line','花東線で A 以上の評価')},
+    {key:'emu3000', name:L('EMU3000 型自強號','EMU3000 Tze-Chiang express','EMU3000形 自強号'), power:1.25, brakeStep:0.15, ebDecel:1.55, sound:'vvvf', pitch:1.4, frame:'#0f1418',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
     {key:'emu500', name:L('EMU500 型區間車','EMU500 local train','EMU500形 区間車'), power:0.86, brakeStep:0.125, ebDecel:1.4, sound:'vvvf', pitch:0.82, frame:'#141a1f',
      req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
@@ -230,11 +235,15 @@ const TRAINS = {
     {key:'dl', name:L('柴油機車','Diesel locomotive','ディーゼル機関車'), power:0.9, brakeStep:0.13, ebDecel:1.25, sound:'diesel', frame:'#0d1215'},
     {key:'sl31', name:L('蒸汽機車 SL-31（Shay 型）','Steam loco SL-31 (Shay)','蒸気機関車 SL-31（シェイ式）'), power:0.82, brakeStep:0.12, ebDecel:1.15, sound:'steam', frame:'#1a1410',
      req:'sunrise', reqText:L('解鎖成就「祝山看日出」','Unlock “Sunrise at Zhushan”','実績「祝山のご来光」を解除')},
+    {key:'hinoki', name:L('柴油機車＋檜木車廂（阿里山號）','Diesel with cypress coaches (Alishan)','ディーゼル＋ヒノキ客車（阿里山号）'), power:0.95, brakeStep:0.13, ebDecel:1.25, sound:'diesel', frame:'#2a1c12',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
   ],
   tamsui:[
     {key:'c381', name:L('C381 型電聯車','Type C381 train','C381形 電車'), power:1.1, brakeStep:0.14, ebDecel:1.4, sound:'vvvf', pitch:1.2, frame:'#0d1215'},
     {key:'c301', name:L('C301 型電聯車（第一代）','Type C301 train (first generation)','C301形 電車（初代）'), power:0.95, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.8, frame:'#141a20',
      req:'gradeA_tamsui', reqText:L('淡水線拿到 A 以上評價','Get an A or better on the Tamsui Line','淡水線で A 以上の評価')},
+    {key:'c321', name:L('C321 型電聯車','Type C321 train','C321形 電車'), power:1.0, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#12171c',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
     {key:'c371', name:L('C371 型電聯車','Type C371 train','C371形 電車'), power:1.02, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:1.0, frame:'#10161b',
      req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
@@ -247,6 +256,8 @@ const TRAINS = {
     {key:'e233', name:L('E233 系 5000 番台','E233-5000 series','E233系5000番台'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.1, frame:'#0d1215'},
     {key:'k209', name:L('209 系 500 番台','209-500 series','209系500番台'), power:0.95, brakeStep:0.135, ebDecel:1.4, sound:'vvvf', pitch:0.92, frame:'#11161a',
      req:'gradeA_keiyo', reqText:L('京葉線拿到 A 以上評價','Get an A or better on the Keiyō Line','京葉線で A 以上の評価')},
+    {key:'k201', name:L('201 系（京葉線舊型車）','201 series (former Keiyō stock)','201系（京葉線の旧型）'), power:0.85, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.75, frame:'#161a1c',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
     {key:'k205', name:L('205 系（京葉線舊型車）','205 series (former Keiyō stock)','205系（京葉線の旧型）'), power:0.88, brakeStep:0.13, ebDecel:1.35, sound:'resistor', pitch:0.85, frame:'#151a1d',
      req:'rank3', reqText:L('司機員等級達到「資深司機員」','Reach driver rank “Senior driver”','運転士ランク「ベテラン運転士」に到達')},
   ],
@@ -254,6 +265,8 @@ const TRAINS = {
     {key:'kk1000', name:L('京急 1000 形','Keikyū 1000 series','京急1000形'), power:1.05, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:1.05, frame:'#0d1215'},
     {key:'kk2100', name:L('京急 2100 形「唱歌的電車」','Keikyū 2100 “singing train”','京急2100形「歌う電車」'), power:1.1, brakeStep:0.14, ebDecel:1.45, sound:'doremi', pitch:1.0, frame:'#1a1012',
      req:'gradeA_keikyu', reqText:L('京急線拿到 A 以上評價','Get an A or better on the Keikyū line','京急線で A 以上の評価')},
+    {key:'kk600', name:L('京急 600 形','Keikyū 600 series','京急600形'), power:1.02, brakeStep:0.14, ebDecel:1.45, sound:'vvvf', pitch:0.95, frame:'#1c1012',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
     {key:'kk800', name:L('京急 800 形（普通車專用）','Keikyū 800 series (local service)','京急800形（普通専用）'), power:1.0, brakeStep:0.14, ebDecel:1.45, sound:'resistor', pitch:0.95, frame:'#1c1012',
      req:'rank3', reqText:L('司機員等級達到「資深司機員」','Reach driver rank “Senior driver”','運転士ランク「ベテラン運転士」に到達')},
   ],
@@ -261,6 +274,8 @@ const TRAINS = {
     {key:'e1000', name:L('江之電 1000 形','Enoden Type 1000','江ノ電 1000形'), power:0.9, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:0.9, frame:'#0d1215'},
     {key:'e300', name:L('江之電 300 形（305 編成）','Enoden Type 300 (set 305)','江ノ電 300形（305編成）'), power:0.78, brakeStep:0.12, ebDecel:1.3, sound:'resistor', pitch:0.7, frame:'#16201a',
      req:'pro_enoden', reqText:L('用專業模式把江之電開到江之島','Finish the Enoden in Pro mode','上級モードで江ノ電を完走')},
+    {key:'e10', name:L('江之電 10 形（復古電車）','Enoden Type 10 (retro car)','江ノ電 10形（レトロ車両）'), power:0.88, brakeStep:0.125, ebDecel:1.35, sound:'resistor', pitch:0.8, frame:'#1c1a12',
+     req:'rank4', reqText:L('司機員等級達到「主任司機員」','Reach driver rank “Chief driver”','運転士ランク「主任運転士」に到達')},
     {key:'e500', name:L('江之電 500 形','Enoden Type 500','江ノ電 500形'), power:0.92, brakeStep:0.13, ebDecel:1.4, sound:'vvvf', pitch:1.0, frame:'#0f1a14',
      req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],

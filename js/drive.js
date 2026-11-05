@@ -87,7 +87,7 @@ function driveStep(dt,prev){
   if(S.v>0.3){ const jerk=Math.abs(S.acc-S._pa)/dt; if(jerk>1.6) S.comfort-=(jerk-1.6)*0.9*dt; if(S.acc<-1.12 && S.notch!==-9) S.comfort-=0.9*dt; }
   if(S.notch===-9 && S.v>2 && !S.ebSeen){ S.ebSeen=true; S.comfort-=8; } else if(S.notch!==-9) S.ebSeen=false;
   if(S._pv>0.05 && S.v===0){ const a=-S._pa; if(a>0.62){ const k=Math.min(10,(a-0.62)*14); S.comfort-=k; if(S.t-S.cmfNote>6){ S.cmfNote=S.t; toast(L('停車衝擊：停下來前把煞車放鬆到 B3 以下會更平順','Jolty stop: ease the brake to B3 or less just before stopping','停止時の衝動：止まる直前にブレーキを B3 以下へ緩めると滑らか'),'bad'); } } }
-  S.comfort=Math.max(0,S.comfort); S._pa=S.acc; S._pv=S.v;
+  S.comfort=Math.max(0,S.comfort); S._pa=S.acc; S._pv=S.v; if(S.v>(S.maxV||0)) S.maxV=S.v;
   // 平交道障礙物
   const O=S.obs; if(O){
     if(O.state==='wait' && S.pos>O.c-820){ O.state='active'; toast(DJP?L('⚠️ 特殊信號發光機閃爍：平交道上有車，立刻停車！','⚠️ Obstruction warning flashing: a car is stuck on the crossing — stop now!','⚠️ 特殊信号発光機 点滅：踏切支障、直ちに停止！'):L('⚠️ 平交道障礙警示燈閃爍：有車卡在平交道上，立刻停車！','⚠️ Crossing obstruction warning: a car is stuck — stop now!','⚠️ 踏切支障の警報：直ちに停止！'),'bad');

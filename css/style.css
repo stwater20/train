@@ -637,3 +637,4 @@ body.tour .sec.controls,body.tour .lever,body.tour .callcue{display:none!importa
 body.tour .tourcap{left:auto;right:14px}
 body.tour .meter:has(#score){visibility:hidden}
 @media (max-width:640px){ body.playing.tour .tourcap{right:8px} }
+.envbtn.locked{opacity:.55} .envbtn.locked small{display:block;font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px}

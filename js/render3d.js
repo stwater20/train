@@ -1173,6 +1173,7 @@ function init3D(){
 /* ---------- 天氣與時段 ---------- */
 const LOOKS={
   morning:{top:0x4f8fcf,mid:0xa9cbe2,hor:0xd9e5e6,sunK:[1,0.93,0.78],sunDir:[-0.72,0.55,-0.25],sunC:0xfff0d8,sunI:1.35,hs:0xdce9f4,hg:0x56653a,hI:0.78,fog:[0xd9e5e6,140,2300],mt:0xffffff,mtO:1,cl:0xffffff,clO:0.85,head:0,lamps:0,stars:false,rain:false},
+  golden: {top:0x4a78b8,mid:0xf0c08a,hor:0xffd9a0,sunK:[1.45,1.0,0.6],sunDir:[0.8,0.26,-0.4],sunC:0xffcf8a,sunI:1.3,hs:0xe6d6c4,hg:0x5a5030,hI:0.72,fog:[0xe8c9a2,300,3200],mt:0xc8b098,mtO:1,cl:0xffdcb0,clO:0.85,head:0.15,lamps:0.15,stars:false,rain:false,sea:0xffe6c8,seaO:0.95},
   dusk:   {top:0x3a5a8c,mid:0xc9a27a,hor:0xf1c48e,sunK:[1.3,0.75,0.4],sunDir:[0.86,0.12,-0.35],sunC:0xffc58a,sunI:1.0,hs:0xc9cdd6,hg:0x4a4436,hI:0.62,fog:[0xc4ab95,260,2800],mt:0xa89ca8,mtO:1,cl:0xffc9a0,clO:0.8,head:0.6,lamps:0.4,stars:false,rain:false},
   night:  {top:0x040914,mid:0x0b152a,hor:0x18243a,sunK:[0.5,0.55,0.7],sunDir:[0.35,0.55,-0.5],sunC:0x7f95d8,sunI:0.14,hs:0x2c3d5c,hg:0x0c0c0c,hI:0.2,fog:[0x101928,50,850],mt:0x1a2335,mtO:1,cl:0x1d2638,clO:0.4,head:2.6,lamps:1.6,stars:true,rain:false},
   dawn0:  {top:0x0a1430,mid:0x1c2a52,hor:0x4a4a6a,sunK:[0.6,0.4,0.3],sunDir:[-0.62,-0.04,-0.78],sunC:0x8090c0,sunI:0.12,hs:0x3a4a70,hg:0x101418,hI:0.3,fog:[0x2a3350,120,1800],mt:0x3a4868,mtO:1,cl:0x404a70,clO:0.5,head:2.2,lamps:1.4,stars:true,rain:false,sea:0x6a7698,seaO:0.9},
@@ -1200,7 +1201,7 @@ function lerpLook(a,b,k){
 function dawnK(){ const T=STATIONS[STATIONS.length-1].arr; return S.phase==='title' ? 0 : S.phase==='end' ? 1 : smooth(0.05,0.95,S.t/T); }
 function applyEnv(){
   if(!R3) return;
-  const T=THREE, L= ENV.key==='dawn' ? lerpLook(LOOKS.dawn0,LOOKS.dawn1,dawnK()) : LOOKS[ENV.key], u=R3.skyMat.uniforms, v3=h=>new T.Vector3(((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255);
+  const T=THREE, L= (ENV.key==='dawn'||ENV.key==='first') ? lerpLook(LOOKS.dawn0,LOOKS.dawn1,dawnK()) : LOOKS[ENV.key], u=R3.skyMat.uniforms, v3=h=>new T.Vector3(((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255);
   u.top.value=v3(L.top); u.mid.value=v3(L.mid); u.hor.value=v3(L.hor); u.sunK.value.set(...L.sunK);
   R3.SUNDIR.set(...L.sunDir); if(ROUTE.sunMap==='east') R3.SUNDIR.set(-R3.SUNDIR.z, R3.SUNDIR.y, R3.SUNDIR.x); if(ROUTE.sunFlip) R3.SUNDIR.set(-R3.SUNDIR.x, R3.SUNDIR.y, -R3.SUNDIR.z); if(JP) R3.SUNDIR.set(R3.SUNDIR.z, R3.SUNDIR.y, -R3.SUNDIR.x); R3.SUNDIR.normalize();
   R3.sun.color.setHex(L.sunC); R3.sun.intensity=L.sunI; R3.sun.castShadow=L.sunI>0.5;
@@ -1209,7 +1210,7 @@ function applyEnv(){
   R3.mountMats.forEach(m=>{ m.color.setHex(L.mt); m.transparent=L.mtO<1; m.opacity=L.mtO; m.needsUpdate=true; });
   R3.clouds.forEach(c=>{ c.material.color.setHex(L.cl); c.material.opacity=L.clO; });
   R3.head.intensity=L.head; R3.rain.visible=L.rain;
-  if(ENV.key==='dawn'){ const k=dawnK(); R3.stars.visible=k<0.7; R3.stars.material.opacity=0.85*(1-k/0.7); } else { R3.stars.visible=L.stars; R3.stars.material.opacity=0.85; }
+  if(ENV.key==='dawn'||ENV.key==='first'){ const k=dawnK(); R3.stars.visible=k<0.7; R3.stars.material.opacity=0.85*(1-k/0.7); } else { R3.stars.visible=L.stars; R3.stars.material.opacity=0.85; }
   if(R3.sea){ R3.sea.material.color.setHex(L.sea); R3.sea.material.opacity=L.seaO; R3.sea.userData.base.material.color.setHex(L.sea).multiplyScalar(0.92); }
   R3.stLights.forEach(l=>l.intensity=L.lamps); if(R3.jpLamp) R3.jpLamp.visible=L.lamps>0.5;
   if(R3.M.apt) R3.M.apt.emissive.setHex(L.lamps>0.5?0xffffff:0);
@@ -1222,7 +1223,7 @@ function applyEnv(){
   R3.M.steel.roughness = L.rain?0.12:0.28; R3.M.ballast.color.setHex(L.rain?0x9a958c:0xffffff);
   document.body.dataset.env=ENV.key;
 }
-try{ const k=JSON.parse(localStorage.getItem('cabEnv_'+ROUTE.key)); if(ENVS[k] && ROUTE.envs.includes(k)){ ENV=ENVS[k]; BASE_CLOCK=ENV.clock; } }catch(e){}
+try{ const k=JSON.parse(localStorage.getItem('cabEnv_'+ROUTE.key)); if(ENVS[k] && ROUTE.envs.includes(k) && (typeof envUnlocked!=='function'||envUnlocked(ENVS[k]))){ ENV=ENVS[k]; BASE_CLOCK=ENV.clock; } }catch(e){}
 
 /* ---------- 擋風玻璃雨滴與雨刷 ---------- */
 const DROPS=[]; const WIPE={ph:0, a:[Math.PI,Math.PI]};
@@ -1275,7 +1276,7 @@ function render(dt){
   cam.lookAt(cx+lx*20,cy-(S.tour?0.55:1.05)+(visElev(S.pos+20)-f.y)*cyw,cz+lz*20);
   cam.rotateZ((Math.sin(S.t*1.7)*0.002+Math.sin(S.t*0.6)*0.0015)*vibA - kAt(S.pos)*S.v*S.v*0.002);
   sky.position.copy(cam.position); R3.stars.position.copy(cam.position);
-  if(ENV.key==='dawn'){ R3.envT=(R3.envT||0)+dt; if(R3.envT>0.3){ R3.envT=0; applyEnv(); } }
+  if(ENV.key==='dawn'||ENV.key==='first'){ R3.envT=(R3.envT||0)+dt; if(R3.envT>0.3){ R3.envT=0; applyEnv(); } }
   if(R3.head.intensity>0){ R3.head.position.set(f.x+dx*1.2,RT+1.4+f.y,f.z+dz*1.2); const g=fr(S.pos+120); R3.head.target.position.set(g.x,g.y-0.4,g.z); R3.head.target.updateMatrixWorld(); }
   // 對向列車
   const placeTrain=(cars,front)=>{ cars.forEach((g,k)=>{ const sc=front+k*R3.LIVERY.len+R3.LIVERY.len/2; g.visible=sc>S.pos-600 && sc<S.pos+1600; if(g.visible) place(g,sc,loopLat(sc),0,Math.PI); }); };

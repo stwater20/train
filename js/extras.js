@@ -246,6 +246,7 @@ function extrasEnd(grade){
   const r0=rankOf(xp0), r1=rankOf(xp1); for(let k=2;k<=r1+1;k++) setFlag('rank'+k);
   if(r1>=2) unlockAch('rank3'); if(r1>=4) unlockAch('rank5');
   if(Object.values(TRAINS).flat().every(trainUnlocked)) unlockAch('garage');
+  if(typeof moreEnd==='function') moreEnd(grade, stopsAll);
   const newTrains=Object.values(TRAINS).flat().filter(t=>t.req && trainUnlocked(t) && !load('cabTrainSeen_'+t.key,false));
   newTrains.forEach(t=>save('cabTrainSeen_'+t.key,true));
   const bk=bestKey(), best=load(bk,null), sc=Math.round(S.score);
@@ -362,7 +363,7 @@ function rideRealHTML(){
 function departPicksHTML(){
   return `${diffPickHTML()}
     ${trainPickHTML()}
-    <div class="pickrow"><span class="lab">${L('天氣與時段','Weather and time','天気と時間帯')}</span><div class="envpick" role="radiogroup">${ROUTE.envs.map(k=>ENVS[k]).map(e=>`<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}" data-env="${e.key}"><span>${e.icon}</span>${e.name}</button>`).join('')}</div></div>`;
+    <div class="pickrow"><span class="lab">${L('天氣與時段','Weather and time','天気と時間帯')}</span><div class="envpick" role="radiogroup">${ROUTE.envs.map(k=>ENVS[k]).map(e=>{ const ok=typeof envUnlocked!=='function'||envUnlocked(e); return `<button type="button" role="radio" aria-checked="${e===ENV}" class="envbtn${e===ENV?' on':''}${ok?'':' locked'}" data-env="${e.key}"${ok?'':` aria-disabled="true" title="${e.reqText}"`}><span>${ok?e.icon:'🔒'}</span>${e.name}${ok?'':`<small>${e.reqText}</small>`}</button>`; }).join('')}</div></div>`;
 }
 function collectHTML(){
   const best=load(bestKey(),null), runs=load('cabRuns',0), n=ACHS.filter(a=>ACH[a.id]).length, all=allStations(), ns=all.filter(x=>STAMPS[x.st.name]).length;
@@ -393,13 +394,14 @@ function bindTitleExtras(){
   document.querySelectorAll('.diffbtn:not(.stylebtn)').forEach(b=>b.addEventListener('click',()=>{ setDiff(b.dataset.diff); showOverlay('title'); }));
   document.querySelectorAll('.stylebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.style!==STYLE) setStyle(b.dataset.style); }));
   document.querySelectorAll('.trainbtn').forEach(b=>b.addEventListener('click',()=>{ const t=TRAINS[ROUTE.key].find(x=>x.key===b.dataset.train); if(!t || !trainUnlocked(t)) return; pickTrain(t); showOverlay('title'); }));
-  document.querySelectorAll('.envbtn').forEach(b=>b.addEventListener('click',()=>{ setEnv(b.dataset.env); showOverlay('title'); const nb=document.querySelector('.envbtn[data-env="'+b.dataset.env+'"]'); if(nb) nb.focus({preventScroll:true}); }));
+  document.querySelectorAll('.envbtn').forEach(b=>b.addEventListener('click',()=>{ if(b.classList.contains('locked')){ toast('🔒 '+(ENVS[b.dataset.env].reqText||'')); return; } setEnv(b.dataset.env); showOverlay('title'); const nb=document.querySelector('.envbtn[data-env="'+b.dataset.env+'"]'); if(nb) nb.focus({preventScroll:true}); }));
 }
 function endExtrasHTML(info,grade){
   const got=lastNew.map(id=>ACHS.find(a=>a.id===id)).filter(Boolean);
   return `${passengerSays(grade)}
     <div class="recs">${info.isBest?`<span class="nb">🎉 ${L('新紀錄！','New best!','自己ベスト更新！')}</span>`:`<span>${L('最佳紀錄','Best','ベスト')} <b>${info.best.score}${L(' 分（',' pts (',' 点（')}${info.best.grade}${L('）',')','）')}</b></span>`}<span>${L('第 ','Run #','')}<b>${info.runs}</b>${L(' 班','',' 回目')}</span></div>
     ${info.xp1!=null?rankHTML(info.xp1,info.gain):''}
+    ${typeof newEnvHTML==='function'?newEnvHTML():''}
     ${info.rankUp?`<div class="unlock rankup">${info.rankUp.icon} ${L('升級！','Promoted! ','昇格！')}<b>${info.rankUp.name}</b><small>${L('更高的等級會解鎖更多車種','Higher ranks unlock more trains','ランクが上がると車両が増えます')}</small></div>`:''}
     ${(info.newTrains||[]).length?`<div class="unlock">🎉 ${L('解鎖新列車','New trains unlocked','新しい車両を解除')}<b>${info.newTrains.map(t=>t.name).join('、')}</b><small>${L('回標題畫面的「出發」頁就能選（各路線分開）','Pick them under Depart on the title screen of each line','各路線のタイトル画面「出発」で選べます')}</small></div>`:''}
     ${got.length?`<div class="newach"><p class="eyebrow">${L('本班解鎖成就','Unlocked this run','今回解除した実績')}</p>${achGridHTML(lastNew).replace('class="achs"','class="achs only-new"')}</div>`:''}
