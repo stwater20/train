@@ -607,3 +607,11 @@ html[lang="en"] .ogcard{font-family:"Helvetica Neue",Arial,"Noto Sans TC",sans-s
 .drivestats em{font-style:normal;color:var(--amber);font-weight:700}
 @media (max-width:640px){ body.playing #bCall{display:none} body.playing .callcue{top:auto;bottom:172px;right:8px;padding:7px 10px} body.playing .callcue b{font-size:14px} }
 @media (max-height:500px) and (orientation:landscape){ body.playing #bCall{display:none} body.playing .callcue{top:8px;right:8px} }
+
+/* ---------- 駕駛室拍照 ---------- */
+.shotbtn{font-size:17px;min-width:38px}
+.photomodal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(4,6,8,.72);backdrop-filter:blur(4px)}
+.pm-card{width:min(760px,100%);max-height:calc(100dvh - 32px);overflow:auto;display:grid;gap:12px;padding:14px;border-radius:16px;background:var(--panel-2,#141b20);border:1px solid var(--line)}
+.pm-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pm-head b{font-size:16px}
+.pm-card img{width:100%;border-radius:10px;aspect-ratio:16/9;object-fit:cover;background:#0d1215}

@@ -143,3 +143,50 @@ if(OG_MODE){
 const OG_ENV={alishan:'clear'};
 let ogEnvDone=false;
 function ogTick(){ if(!OG_MODE) return; if(!ogEnvDone && typeof R3!=='undefined' && R3){ ogEnvDone=true; const w=OG_ENV[ROUTE.key]||'morning'; if(ENV.key!==w && ENVS[w] && typeof setEnv==='function') setEnv(w); } S.phase='title'; S.pos=OG_POS[ROUTE.key]||800; S.v=0; }
+
+/* ---------- 駕駛中拍照分享（📷 按鈕／K 鍵） ---------- */
+function makePhoto(){
+  const v=snap3D(); window.__snap=false;
+  const W=1280, H=720, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.fillStyle='#0d1215'; x.fillRect(0,0,W,H);
+  if(v && v.width){ const k=Math.max(W/v.width,H/v.height), w=v.width*k, h=v.height*k; try{ x.drawImage(v,(W-w)/2,(H-h)/2,w,h); }catch(e){} }
+  const g=x.createLinearGradient(0,H-170,0,H); g.addColorStop(0,'rgba(8,11,13,0)'); g.addColorStop(1,'rgba(8,11,13,.88)'); x.fillStyle=g; x.fillRect(0,H-170,W,170);
+  const LC=LINE_COLOR[ROUTE.key]||'#ffb23e', J=ROUTE.japan||ROUTE.jpSign;
+  x.fillStyle=LC; x.fillRect(40,H-104,8,64);
+  x.textAlign='left'; x.textBaseline='alphabetic';
+  x.fillStyle='#fff'; x.font=`800 38px ${SHARE_FONT}`; x.fillText(RNAME(),64,H-70);
+  const nx=STATIONS[S.next], dst=ROUTE.dest?(LANG==='en'?ROUTE.dest.en:J?ROUTE.dest.ja:ROUTE.dest.name):stName(STATIONS[STATIONS.length-1]);
+  x.fillStyle='#c9d3d6'; x.font=`500 24px ${SHARE_FONT}`;
+  x.fillText(`${L('往','for','行先')} ${dst}　${nx?L('下一站 ','Next ','次 ')+stName(nx):''}　${fmtClock(BASE_CLOCK+(S.t||0)).slice(0,5)}　${ENV.icon} ${ENV.name}`,64,H-38);
+  x.textAlign='right'; x.fillStyle='#fff'; x.font=`800 28px ${SHARE_FONT}`; x.fillText('train.sectools.tw',W-40,H-70);
+  x.fillStyle='#9fb0b8'; x.font=`500 18px ${SHARE_FONT}`; x.fillText(L('由 SecTools.tw 製作的免費 3D 火車駕駛遊戲','A free 3D train game by SecTools.tw','SecTools.tw 制作の無料 3D 電車ゲーム'),W-40,H-40);
+  return c;
+}
+let photoWasRunning=false;
+async function openPhoto(){
+  if(!R3) return;
+  const c=makePhoto();
+  photoWasRunning = S.phase==='run' && !S.paused; if(photoWasRunning) S.paused=true;
+  let m=document.getElementById('photoModal'); if(m) m.remove();
+  m=document.createElement('div'); m.id='photoModal'; m.className='photomodal';
+  const url=shareUrl({utm_source:'photo',utm_medium:'social'}), msg=L(`在「${RNAME()}」駕駛室拍的照片 📷 免安裝、瀏覽器就能開的 3D 火車駕駛遊戲`,`Snapped from the cab of the ${RNAME()} 📷 A free 3D train driving game in your browser`,`「${RNAME()}」の運転台から 📷 ブラウザで遊べる無料 3D 電車運転ゲーム`), enc=encodeURIComponent;
+  m.innerHTML=`<div class="pm-card"><div class="pm-head"><b>📷 ${L('駕駛室照片','Cab photo','運転台フォト')}</b><button class="btn" id="pmClose" type="button">${L('繼續駕駛','Back to driving','運転に戻る')}</button></div>
+    <img id="pmImg" alt="${L('駕駛室照片','Cab photo','運転台フォト')}">
+    <div class="sharebtns"><button class="btn share-native" id="pmShare" type="button">📤 ${L('分享照片','Share photo','写真をシェア')}</button><button class="btn" id="pmSave" type="button">⬇️ ${L('下載','Save','保存')}</button>
+      <a class="btn share-line" target="_blank" rel="noopener" href="https://social-plugins.line.me/lineit/share?url=${enc(url)}&text=${enc(msg)}">LINE</a>
+      <a class="btn share-x" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=${enc(msg)}&url=${enc(url)}">𝕏</a>
+      <a class="btn share-fb" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${enc(url)}">Facebook</a></div>
+    <p class="sharehint">${L('LINE／X／Facebook 會分享遊戲連結；要附上照片請用「分享照片」或先下載。','LINE / X / Facebook share the game link; use “Share photo” or Save to attach the picture.','LINE／X／Facebook はリンクのみ。写真は「写真をシェア」か保存してから。')}</p></div>`;
+  document.body.appendChild(m);
+  try{ m.querySelector('#pmImg').src=c.toDataURL('image/jpeg',0.88); }catch(e){}
+  const blob=await canvasBlob(c), file=blob?new File([blob],`train-${ROUTE.key}-photo.png`,{type:'image/png'}):null;
+  const sb=m.querySelector('#pmShare'); if(!navigator.share) sb.hidden=true;
+  sb.onclick=async()=>{ try{ if(file && navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],text:msg+'\n'+url}); else await navigator.share({text:msg,url}); }catch(e){} };
+  m.querySelector('#pmSave').onclick=()=>{ if(!blob) return; const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000); };
+  const close=()=>{ m.remove(); if(photoWasRunning && S.phase==='run'){ S.paused=false; } };
+  m.querySelector('#pmClose').onclick=close; m.addEventListener('click',e=>{ if(e.target===m) close(); });
+  if(typeof unlockAch==='function') unlockAch('photo');
+}
+if(typeof ACHS!=='undefined') ACHS.push({id:'photo', icon:'📷', name:L('鐵道攝影師','Rail photographer','鉄道カメラマン'), desc:L('在駕駛室拍一張照片','Take a photo from the cab','運転台から写真を撮る')});
+document.addEventListener('DOMContentLoaded',()=>{ const b=document.getElementById('bShot'); if(b) b.addEventListener('click',openPhoto); });
+window.addEventListener('keydown',e=>{ if(e.metaKey||e.ctrlKey||e.altKey) return; if(e.key.toLowerCase()==='k' && !e.repeat && document.activeElement?.tagName!=='INPUT'){ const m=document.getElementById('photoModal'); if(m) m.remove(); else openPhoto(); } });
