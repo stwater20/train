@@ -1271,7 +1271,8 @@ function render(dt){
   let jolt=0; for(const o of [0,2.1]){ const d=((S.pos-o)%25+25)%25; if(d<0.35) jolt+=(1-d/0.35)*0.012*vibA; }
   const cy=RT+CAMH+bob-jolt+f.y;
   cam.position.set(cx,cy,cz);
-  cam.lookAt(cx+dx*20,cy-1.05+(visElev(S.pos+20)-f.y),cz+dz*20);
+  R3x.yaw=(R3x.yaw||0)+((R3x.yawT||0)-(R3x.yaw||0))*Math.min(1,(dt||0.016)*3.5); const cyw=Math.cos(R3x.yaw), syw=Math.sin(R3x.yaw), lx=dx*cyw+f.rx*syw, lz=dz*cyw+f.rz*syw;
+  cam.lookAt(cx+lx*20,cy-(S.tour?0.55:1.05)+(visElev(S.pos+20)-f.y)*cyw,cz+lz*20);
   cam.rotateZ((Math.sin(S.t*1.7)*0.002+Math.sin(S.t*0.6)*0.0015)*vibA - kAt(S.pos)*S.v*S.v*0.002);
   sky.position.copy(cam.position); R3.stars.position.copy(cam.position);
   if(ENV.key==='dawn'){ R3.envT=(R3.envT||0)+dt; if(R3.envT>0.3){ R3.envT=0; applyEnv(); } }
@@ -1311,7 +1312,7 @@ function render(dt){
     placeTrain(t.cars,t.front);
   });
   // 駕駛台（手機直式時藏起來，避免和下方儀表重複）
-  R3.cabUI.group.visible = !((typeof OG_MODE!=='undefined' && OG_MODE) || window.__snap || (innerWidth<=640 && innerHeight>innerWidth && document.body.classList.contains('playing')));
+  R3.cabUI.group.visible = !((typeof OG_MODE!=='undefined' && OG_MODE) || window.__snap || S.tour || (innerWidth<=640 && innerHeight>innerWidth && document.body.classList.contains('playing')));
   { const C=R3.cabUI, n=S.phase==='run'?S.notch:-8; const target= n>0 ? -0.12*n : n===0 ? 0 : n===-9 ? 0.85 : 0.07*(-n);
     C.mcPivot.rotation.x += ((0.32+target)-C.mcPivot.rotation.x)*Math.min(1,dt*12);
     const A0=Math.PI*0.75, A1=Math.PI*2.25, a=A0+(A1-A0)*clamp(S.v*3.6/C.gaugeMax,0,1); C.needle.rotation.z=-(a+Math.PI/2);

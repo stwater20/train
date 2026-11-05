@@ -200,8 +200,8 @@ function extrasStart(){
 }
 function extrasStop(st,err){
   chime();
-  if(Math.abs(err)<=0.5) unlockAch('perfect');
-  if(Math.abs(err)<=3) giveStamp(st);
+  if(!S.tour && Math.abs(err)<=0.5) unlockAch('perfect');
+  if(!S.tour && Math.abs(err)<=3) giveStamp(st);
   const last=S.next>=STATIONS.length-1;
   if(voiceOn && 'speechSynthesis' in window) try{ speechSynthesis.cancel(); }catch(e){}
   showFact(st);

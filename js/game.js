@@ -16,7 +16,7 @@ const WORDS={'完美':['Perfect','パーフェクト'],'優秀':['Excellent','�
 const trWord=w=> WORDS[w] ? L(w,WORDS[w][0],WORDS[w][1]) : w;
 const toastEl=document.getElementById('toast'); let toastTimer=0;
 function toast(msg, kind){ toastEl.textContent=msg; toastEl.className='toast'+(kind?' '+kind:''); toastEl.removeAttribute('data-off'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.setAttribute('data-off',''), 2800); }
-function penal(p,key,msg){ p=Math.round(p*DIFF.penK); S.score-=p; S.pens[key]=(S.pens[key]||0)+p; toast(msg+' −'+p,'bad'); }
+function penal(p,key,msg){ if(S.tour) return; p=Math.round(p*DIFF.penK); S.score-=p; S.pens[key]=(S.pens[key]||0)+p; toast(msg+' −'+p,'bad'); }
 
 /* ---------- simulation ---------- */
 function currentLimit(){
@@ -45,7 +45,7 @@ function step(dt){
     }
     if(S.atpSig){ if(S.v<0.01 || sg.aspect!=='R') S.atpSig=false; else forced=-9; }
   }
-  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast(L('超過限速 ','Over the limit of ','制限速度超過 ')+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; const q=2*DIFF.penK; S.score-=q; S.pens.over+=q; } }
+  if(kmh>lim+1){ if(!S.overOn){ S.overOn=true; if(!S.atpOver) toast(L('超過限速 ','Over the limit of ','制限速度超過 ')+lim+' km/h','bad'); } S.overT+=dt; while(S.overT>=1){ S.overT-=1; if(S.tour) continue; const q=2*DIFF.penK; S.score-=q; S.pens.over+=q; } }
   else S.overOn=false;
 
   let n=S.notch;
@@ -135,7 +135,7 @@ function action(){
   S.doors=true; doorSound(true); S.dwell = S.next>=STATIONS.length-1 ? 3 : st.overtake ? 16 : 7.5; S.boarded[S.next]=S.t;
   if(S.notch>0) S.notch=-4;
   renderLever(); extrasStop(st,err);
-  if(typeof stopFX==='function') stopFX(rank,pp,trank,tp,err);
+  if(S.tour){} else if(typeof stopFX==='function') stopFX(rank,pp,trank,tp,err);
   else toast(stName(st)+L('｜誤差 ',' | error ','｜誤差 ')+fmtErr(err)+'・'+trWord(rank)+' +'+pp+'｜'+trWord(trank)+' +'+tp,'good');
 }
 let actx=null;
@@ -170,17 +170,18 @@ function togglePause(){
 }
 function startGame(tut){
   tutStop();
-  if(tut!==true && DIFF.guide && !tutSeen()) tut=true; // 新手模式：這條路線第一次開會自動帶教學
-  S=fresh(); S.phase='run'; S.tut = tut===true; hideOverlay(); renderLever(); setPlaying(true);
+  if(tut!==true && DIFF.guide && !tutSeen() && !window.__tourNext) tut=true; // 新手模式：這條路線第一次開會自動帶教學
+  S=fresh(); S.phase='run'; S.tut = tut===true; S.tour=!!window.__tourNext; window.__tourNext=false; hideOverlay(); renderLever(); setPlaying(true);
   if(typeof unlockSpeech==='function') unlockSpeech();
   extrasStart(); if(typeof driveStart==='function') driveStart();
-  if(S.tut) tutStart();
+  if(S.tour) tourBegin();
+  else if(S.tut) tutStart();
   else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));
 }
 const startTutorial=()=>startGame(true);
 /* 駕駛中：手機版鎖成一個畫面，不用上下捲動 */
 function setPlaying(on){ document.body.classList.toggle('playing',on); if(on) window.scrollTo(0,0); }
-function endGame(){ tutStop(); setPlaying(false); S.phase='end'; S.doors=false; if(typeof driveEnd==='function') driveEnd(); showOverlay('end'); }
+function endGame(){ if(S.tour){ tutStop(); tourEnd(); return; } tutStop(); setPlaying(false); S.phase='end'; S.doors=false; if(typeof driveEnd==='function') driveEnd(); showOverlay('end'); }
 
 /* ---------- overlay ---------- */
 const ov=document.getElementById('ov'), ovCard=document.getElementById('ovCard');
@@ -368,6 +369,7 @@ function showOverlay(kind){
         <li>${(w=>L('停妥後按 <kbd>空白鍵</kbd> 開門；經過「'+w+'」標時按 <kbd>H</kbd> 鳴笛有加分','Press <kbd>Space</kbd> to open the doors once stopped; press <kbd>H</kbd> after a 「'+w+'」 board to sound the horn for a bonus','停車後 <kbd>Space</kbd> でドア開扉。「'+w+'」標識の後で <kbd>H</kbd> の警笛を鳴らすと加点'))((JP||ROUTE.jpSign)?'笛':'鳴')}</li>
         <li>${L('關門後等車掌發車信號再起步；出現「👉 指差喚呼」提示時按 <kbd>C</kbd> 加分；煞車放輕、停下前放到 B3 以下，乘客比較舒服','After the doors close, wait for the conductor’s signal; press <kbd>C</kbd> when a “👉 Point & call” cue appears; brake gently and ease to B3 or less just before stopping for a smoother ride','ドア閉後は車掌の発車合図を待って起動。「👉 指差喚呼」が出たら <kbd>C</kbd> で加点。停止直前は B3 以下に緩めると乗り心地が良くなります')}</li>
       </ul></details>
+      <button class="btn big tourbtn" id="ovTour" type="button">🌄 ${L('觀光模式','Sightseeing mode','観光モード')}<small>${L('自動駕駛・沿線景點解說・左右看風景','Auto-drive, landmark guide, look around','自動運転・沿線ガイド・左右を眺める')}</small></button>
       <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       </section>`;
     document.querySelectorAll('.menutab').forEach(b=>b.addEventListener('click',()=>{ window.titleTab=b.dataset.tab; document.querySelectorAll('.menutab').forEach(x=>{ const on=x===b; x.classList.toggle('on',on); x.setAttribute('aria-selected',on); }); document.querySelectorAll('.tabpane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); ov.scrollTop=0; }));
@@ -375,6 +377,7 @@ function showOverlay(kind){
     const ib=document.getElementById('ovInstall'); if(ib && window.__installPrompt){ ib.hidden=false; ib.addEventListener('click',async()=>{ const e=window.__installPrompt; window.__installPrompt=null; e.prompt(); ib.hidden=true; }); }
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTut').addEventListener('click',startTutorial);
+    { const tb=document.getElementById('ovTour'); if(tb) tb.addEventListener('click',()=>{ if(typeof startTour==='function') startTour(); }); }
     document.querySelectorAll('.routebtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.route!==ROUTE.key) setRoute(b.dataset.route); }));
     document.querySelectorAll('.langbtn').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.lang!==LANG) setLang(b.dataset.lang); }));
     document.getElementById('ovHelp').addEventListener('click',openHelp);
@@ -442,6 +445,7 @@ window.addEventListener('keydown',e=>{
   if(S.coachHold && !S.paused){ if(k===' '||k==='enter'){ e.preventDefault(); if(!e.repeat) tutContinue(); } return; }
   if(k==='p'||k==='escape'){ e.preventDefault(); togglePause(); return; }
   if(S.paused) return;
+  if(S.tour){ if(k==='arrowleft'||k==='a'){ e.preventDefault(); tourLook(-1); } else if(k==='arrowright'||k==='d'){ e.preventDefault(); tourLook(1); } else if(k==='arrowup'||k==='w'||k==='arrowdown'||k==='s'){ e.preventDefault(); tourLook(0); } return; }
   if(k==='arrowup'||k==='w'){ e.preventDefault(); if(!e.repeat) notchUp(); }
   else if(k==='arrowdown'||k==='s'){ e.preventDefault(); if(!e.repeat) notchDown(); }
   else if(k==='e'){ e.preventDefault(); setNotch(-9); }

@@ -20,7 +20,7 @@ function driveStart(){
   S.calls={ok:0,tot:0}; S.cue=null; S.cueSeen={};
   S.comfort=100; S.cmfNote=0; S._pa=0; S._pv=0; S.ebSeen=false;
   S.obs=null;
-  if(!S.tut && CROSSINGS.length && Math.random()<0.3){
+  if(!S.tut && !S.tour && CROSSINGS.length && Math.random()<0.3){
     const cand=CROSSINGS.map((c,i)=>({c,i})).filter(x=>x.c>700);
     if(cand.length){ const p=cand[(Math.random()*cand.length)|0]; S.obs={i:p.i, c:p.c, state:'wait', timer:0}; }
   }
@@ -29,7 +29,7 @@ function driveStart(){
 
 /* 指差喚呼：顯示提示，在時間內按 C（或點提示）就加分 */
 function cueShow(key,c,until){
-  if(S.tut || S.cueSeen[key]) return; S.cueSeen[key]=true;
+  if(S.tut || S.tour || S.cueSeen[key]) return; S.cueSeen[key]=true;
   S.cue={key,c,until}; S.calls.tot++;
   DUI.innerHTML=`<span class="ci">👉</span><span class="ct"><small>${L('指差喚呼','Point & call','指差喚呼')}</small><b>${callText(c)}</b></span><kbd>C</kbd>`;
   DUI.hidden=false; DUI.classList.remove('done');
@@ -49,7 +49,7 @@ function driveCall(){
 
 /* 發車：關門後要等車掌的發車信號（日本：發車蜂鳴器；台灣：車掌哨音） */
 function driveCanPower(){
-  if(S.depOK || S.v>1) return true;
+  if(S.tour || S.depOK || S.v>1) return true;
   if(DIFF.guide){ toast(L('🔰 等車掌的發車信號再起步','🔰 Wait for the conductor’s departure signal','🔰 車掌の発車合図を待ちましょう')); return false; }
   if(!S.depPen){ S.depPen=true; penal(15,'dep',L('未等發車信號就起步','Moved off before the departure signal','発車合図の前に起動')); }
   S.depOK=true; return true;

@@ -6,9 +6,10 @@ let last=performance.now(), accum=0;
 function frame(now){
   const dt=Math.min(0.1,(now-last)/1000); last=now;
   if(S.phase==='title' && R3){ S.pos+=dt*11; S.v=11; S.t+=dt; if(S.pos>END-60) S.pos=-40; }
-  if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt; while(accum>=1/60){ step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
+  if(S.phase==='run' && !S.paused && !S.coachHold){ accum+=dt*(S.tour&&typeof tourSpeed!=='undefined'?tourSpeed:1); while(accum>=1/60){ if(S.tour) tourDrive(); step(1/60); accum-=1/60; if(S.phase!=='run') break; } }
   else accum=0;
   if(typeof ogTick==='function') ogTick();
+  if(S.tour && typeof tourTickPOI==='function') tourTickPOI();
   tutTick(); extrasTick(dt); audioTick(dt); render(dt); hud(now);
   requestAnimationFrame(frame);
 }
