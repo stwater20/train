@@ -606,7 +606,11 @@ function init3D(){
   /* clouds */
   const clouds=[];
   const cloudMat=()=> BLOCK ? new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.9,fog:false,depthWrite:false}) : new T.SpriteMaterial({map:cloudTex,fog:false,depthWrite:false,transparent:true,opacity:0.85});
-  const cloudObj=()=> BLOCK ? new T.Mesh(new T.BoxGeometry(1,0.12,0.55),cloudMat()) : new T.Sprite(cloudMat());
+  // 方塊雲：幾塊大小不同的方塊疊在一起，比較像蓬鬆的雲
+  const cloudGeos=[0,1,2].map(v=>{ const parts=[]; const n=3+v; for(let i=0;i<n;i++){ const w=0.42+((i*37+v*11)%7)/14, d=0.3+((i*23+v*5)%5)/12, h=0.07+((i*13+v)%4)*0.025; const b=new T.BoxGeometry(w,h,d); b.translate((i-(n-1)/2)*0.24+((i*7)%3-1)*0.05, h/2+(i%2)*0.035, ((i*5+v)%3-1)*0.1); parts.push(b); }
+    const base=new T.BoxGeometry(1,0.06,0.5); base.translate(0,0.03,0); parts.push(base); return mergeGeos(parts); });
+  let cloudN=0;
+  const cloudObj=()=> BLOCK ? new T.Mesh(cloudGeos[(cloudN++)%3],cloudMat()) : new T.Sprite(cloudMat());
   for(let i=0;i<16;i++){ const sp=cloudObj();
     const a=rnd(500+i)*Math.PI*2, d=3500+rnd(510+i)*4500, mid=fr(END/2);
     sp.position.set(mid.x+Math.cos(a)*(BLOCK?d*0.6:d), BLOCK?1700+rnd(520+i)*900:700+rnd(520+i)*1300, mid.z+Math.sin(a)*(BLOCK?d*0.6:d)); const sc=1200+rnd(530+i)*1500; sp.scale.set(sc,BLOCK?sc:sc*0.45,BLOCK?sc:1); scene.add(sp); clouds.push(sp); }
@@ -1048,10 +1052,18 @@ function init3D(){
     x.fillStyle='#1b2329'; x.fillRect(w*0.1,h*0.14,w*0.8,h*0.34); x.fillStyle='#111'; x.fillRect(w*0.3,h*0.04,w*0.4,h*0.08); x.fillStyle='#ffa31a'; x.font='700 22px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(ROUTE.oppDest||signName(STATIONS[0]),w/2,h*0.08);
     x.fillStyle='#f6f2df'; [[0.2,0.78],[0.8,0.78]].forEach(([a,b])=>{ x.beginPath(); x.arc(w*a,h*b,12,0,7); x.fill(); }); });
   const trainMats=[std({map:sideTex,roughness:0.45,metalness:0.2}),std({map:sideTex,roughness:0.45,metalness:0.2}),std({color:0x9aa1a6,roughness:0.6}),std({color:0x22272b}),std({color:new T.Color(LIVERY.body).getHex()}),std({map:frontTex,roughness:0.4})];
+  const trainRoofM=std({color:0x8c9297,roughness:0.55,metalness:0.3});
   function makeTrain(){
     const cars=[];
     for(let k=0;k<LIVERY.cars;k++){ const g=new T.Group(); const b=new T.Mesh(new T.BoxGeometry(LIVERY.w,LIVERY.h,LIVERY.len-0.7),trainMats); b.position.y=RT+0.35+LIVERY.h/2; b.castShadow=true; g.add(b);
       const bg=new T.Mesh(new T.BoxGeometry(LIVERY.w*0.8,0.5,2.4),M.dark); [-1,1].forEach(z=>{ const c=bg.clone(); c.position.set(0,RT+0.25,z*(LIVERY.len/2-2.4)); g.add(c); });
+      // 車頂：冷氣機組；有架空線的路線加上集電弓；車廂之間的貫通道
+      const roofY=RT+0.35+LIVERY.h;
+      if(!AL){ const ac=new T.Mesh(new T.BoxGeometry(LIVERY.w*0.55,0.32,LIVERY.len*0.18),trainRoofM); [-1,1].forEach(z=>{ const a=ac.clone(); a.position.set(0,roofY+0.16,z*LIVERY.len*0.22); g.add(a); }); }
+      if(ROUTE.electric && !ROUTE.thirdRail && k%2===0){ const pan=new T.Group(); const arm1=new T.Mesh(new T.BoxGeometry(0.06,0.06,1.5),M.dark); arm1.position.set(0,0.45,0.35); arm1.rotation.x=0.65; pan.add(arm1);
+        const arm2=arm1.clone(); arm2.position.set(0,0.45,-0.35); arm2.rotation.x=-0.65; pan.add(arm2); const shoe=new T.Mesh(new T.BoxGeometry(1.6,0.05,0.12),M.dark); shoe.position.y=0.92; pan.add(shoe);
+        const bse=new T.Mesh(new T.BoxGeometry(1.0,0.12,1.2),trainRoofM); bse.position.y=0.06; pan.add(bse); pan.position.set(0,roofY,-LIVERY.len*0.34); g.add(pan); }
+      if(k<LIVERY.cars-1){ const gw=new T.Mesh(new T.BoxGeometry(LIVERY.w*0.62,LIVERY.h*0.78,0.9),M.dark); gw.position.set(0,RT+0.35+LIVERY.h*0.45,LIVERY.len/2-0.2); g.add(gw); }
       if(k===0){ [-0.85,0.85].forEach(xx=>{ const gl=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:0xfff6d8,blending:T.AdditiveBlending,depthWrite:false,transparent:true,fog:false})); gl.position.set(xx*LIVERY.w/2.9,RT+1.1,-(LIVERY.len-0.7)/2-0.1); gl.scale.set(1.8,1.8,1); g.add(gl); }); }
       if(k===LIVERY.cars-1){ [-0.85,0.85].forEach(xx=>{ const gl=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:0xff3020,blending:T.AdditiveBlending,depthWrite:false,transparent:true,fog:false})); gl.position.set(xx*LIVERY.w/2.9,RT+1.1,(LIVERY.len-0.7)/2+0.1); gl.scale.set(0.9,0.9,1); g.add(gl); }); }
       g.visible=false; scene.add(g); cars.push(g); }
