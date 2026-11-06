@@ -350,8 +350,8 @@ function showOverlay(kind){
     ovCard.className='card menu';
     ovCard.innerHTML=`<header class="menu-hero"><p class="eyebrow">${L('火車駕駛模擬','TRAIN DRIVING SIMULATOR','電車運転シミュレーター')}</p><h2>${ROUTE.title}</h2><p class="sub">${TRAIN.name} · ${first} → ${last} · ${L(STATIONS.length+' 站',STATIONS.length+' stations',STATIONS.length+' 駅')}</p><button class="btn sharesite" id="ovShareSite" type="button">📣 ${L('推薦給朋友','Invite a friend','友だちに教える')}</button></header>${typeof challengeHTML==='function'?challengeHTML():''}
       <nav class="menu-tabs" role="tablist">${[['go','🚆',L('出發','Depart','出発')],['collect','🏅',L('收藏','Collection','コレクション')],['settings','⚙️',L('設定','Settings','設定')]].map(([k,ic,n])=>`<button type="button" role="tab" class="menutab${tab===k?' on':''}" aria-selected="${tab===k}" data-tab="${k}"><span>${ic}</span>${n}</button>`).join('')}</nav>
-      <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}</section>
-      <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}</section>
+      <section class="tabpane" data-pane="collect"${tab==='collect'?'':' hidden'}>${collectHTML()}${typeof adHTML==='function'?adHTML('collect'):''}</section>
+      <section class="tabpane" data-pane="settings"${tab==='settings'?'':' hidden'}>${settingsHTML()}${typeof adHTML==='function'?adHTML('settings'):''}</section>
       <section class="tabpane" data-pane="go"${tab==='go'?'':' hidden'}>
       <div class="routepick" role="radiogroup" aria-label="${L('選擇路線','Choose a route','路線を選ぶ')}">${Object.values(ROUTES).map(r=>`<button type="button" role="radio" aria-checked="${r===ROUTE}" class="routebtn${r===ROUTE?' on':''}" data-route="${r.key}"><b>${r.key==='alishan'?'🌲':r.japan?'🌊':r.key==='tamsui'?'🚇':r.key==='airport'?'✈️':r.key==='keiyo'?'🎡':r.key==='keikyu'?'🔴':'🚃'} ${r.name}</b><small>${stName(r.stations[0])} → ${stName(r.stations[r.stations.length-1])}</small></button>`).join('')}</div>
       <p class="story">${story}</p>
@@ -372,7 +372,7 @@ function showOverlay(kind){
       <button class="btn big tourbtn" id="ovTour" type="button">🌄 ${L('觀光模式','Sightseeing mode','観光モード')}<small>${L('自動駕駛・沿線景點解說・左右看風景','Auto-drive, landmark guide, look around','自動運転・沿線ガイド・左右を眺める')}</small></button>
       <div class="btnrow three"><button class="btn big" id="ovHelp" type="button">${L('操作說明','How to drive','操作説明')}</button><button class="btn big tut" id="ovTut" type="button">🔰 ${L('新手教學','Tutorial','入門ガイド')}<small>${L('可隨時跳過','skippable','いつでもスキップ可')}</small></button><button class="btn door big" id="ovGo" type="button">${L('開始駕駛','Start driving','運転開始')}</button></div>
       </section>`;
-    document.querySelectorAll('.menutab').forEach(b=>b.addEventListener('click',()=>{ window.titleTab=b.dataset.tab; document.querySelectorAll('.menutab').forEach(x=>{ const on=x===b; x.classList.toggle('on',on); x.setAttribute('aria-selected',on); }); document.querySelectorAll('.tabpane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); ov.scrollTop=0; }));
+    document.querySelectorAll('.menutab').forEach(b=>b.addEventListener('click',()=>{ window.titleTab=b.dataset.tab; document.querySelectorAll('.menutab').forEach(x=>{ const on=x===b; x.classList.toggle('on',on); x.setAttribute('aria-selected',on); }); document.querySelectorAll('.tabpane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab); if(typeof adFill==='function') setTimeout(adFill,60); ov.scrollTop=0; }));
     const h2b=document.getElementById('ovHelp2'); if(h2b) h2b.addEventListener('click',openHelp);
     const ib=document.getElementById('ovInstall'); if(ib && window.__installPrompt){ ib.hidden=false; ib.addEventListener('click',async()=>{ const e=window.__installPrompt; window.__installPrompt=null; e.prompt(); ib.hidden=true; }); }
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
@@ -403,10 +403,11 @@ function showOverlay(kind){
       ${endExtrasHTML(info,g)}
       <div class="btnrow"><button class="btn big sharebig" id="ovShare" type="button">📣 ${L('分享・挑戰朋友','Share & challenge','シェアして挑戦')}</button><button class="btn door big" id="ovGo" type="button">${L('再開一班','Drive again','もう一度運転')}</button></div>
       ${typeof sharePanelHTML==='function'?sharePanelHTML():''}
-      <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>`;
+      <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>
+      ${typeof adHTML==='function'?adHTML('end'):''}`;
     document.getElementById('ovGo').addEventListener('click',()=>startGame());
     document.getElementById('ovTitle').addEventListener('click',()=>{ S=fresh(); renderLever(); setPlaying(false); showOverlay('title'); });
-    bindEndExtras(g);
+    bindEndExtras(g); if(typeof adFill==='function') setTimeout(adFill,400);
     if(typeof endFX==='function') endFX(g,Math.round(sc));
   }
   const b=document.getElementById('ovGo'); if(b) setTimeout(()=>{ try{b.focus({preventScroll:true});}catch(e){} },30);

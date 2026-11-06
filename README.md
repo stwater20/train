@@ -188,3 +188,10 @@ js/main.js        主迴圈與啟動
 ---
 
 由 [SecTools.tw](https://sectools.tw/?utm_source=train-game&utm_medium=referral) 製作與維護。
+
+## 廣告（Google AdSense）
+
+- 在 `tools/build_pages.py` 填入 `ADSENSE_CLIENT`（`ca-pub-…`）與 `ADSENSE_SLOT`（回應式多媒體廣告單元的 ID），執行 `python3 tools/build_pages.py`，每頁 `<head>` 會加上 AdSense 程式碼，並自動產生 `ads.txt`。留空就完全不載入。
+- 只在休息的畫面顯示：結算畫面最下方、觀光模式結束畫面、標題的「收藏」與「設定」分頁、頁面下方的說明區。
+- 駕駛中、暫停、教學、「出發」分頁都不放廣告，避免誤觸或遮住操作按鈕；廣告在看得到時才請求。
+- 建議在 AdSense 後台關閉自動廣告的「錨定廣告」與「插頁式（小插頁）廣告」：錨定廣告會蓋住手機下方的操作按鈕，插頁式廣告會在切換路線時跳出。

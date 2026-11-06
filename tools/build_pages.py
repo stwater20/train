@@ -14,6 +14,9 @@ PATHS = {'zh': '/', 'en': '/en/', 'ja': '/ja/'}
 HTML_LANG = {'zh': 'zh-Hant', 'en': 'en', 'ja': 'ja'}
 OG_LOCALE = {'zh': 'zh_TW', 'en': 'en_US', 'ja': 'ja_JP'}
 OG_IMAGE = SITE + '/og.jpg'
+# Google AdSense：發布商 ID（ca-pub-…）與廣告單元 ID（data-ad-slot 的數字）。留空就完全不載入廣告。
+ADSENSE_CLIENT = ''
+ADSENSE_SLOT = ''
 
 TEXT = {
   'zh': {
@@ -149,6 +152,12 @@ def seo_block(lang, route=None):
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 <!--/SEO-->'''
 
+def ads_block():
+    if not ADSENSE_CLIENT:
+        return '<!--ADS--><!--/ADS-->'
+    return ('<!--ADS-->\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT + '" crossorigin="anonymous"></script>\n'
+            '<script>window.ADS={client:"' + ADSENSE_CLIENT + '",slot:"' + ADSENSE_SLOT + '"};</script>\n<!--/ADS-->')
+
 def between(s, tag, body):
     return re.sub(rf'<!--{tag}-->.*?<!--/{tag}-->', lambda m: body, s, flags=re.S)
 
@@ -160,6 +169,7 @@ def main():
             s = src
             s = re.sub(r'<html lang="[^"]*">', f'<html lang="{HTML_LANG[lang]}">', s, count=1)
             s = between(s, 'SEO', seo_block(lang, route))
+            s = between(s, 'ADS', ads_block())
             s = between(s, 'ABOUT', '<!--ABOUT-->\n  ' + TEXT[lang]['about'] + '\n  ' + nav_html(lang) + '\n  <!--/ABOUT-->')
             force = ''
             if lang != 'zh': force += f'<script>window.FORCE_LANG="{lang}";</script>\n'
@@ -174,6 +184,8 @@ def main():
             if not depth: src_out = s
             io.open(out, 'w', encoding='utf-8').write(s)
             pages.append(route)
+    if ADSENSE_CLIENT:
+        io.open(os.path.join(ROOT, 'ads.txt'), 'w', encoding='utf-8').write('google.com, ' + ADSENSE_CLIENT.replace('ca-', '') + ', DIRECT, f08c47fec0942fa0\n')
     today = datetime.date.today().isoformat()
     urls = ''
     for route in [None] + ROUTE_KEYS:

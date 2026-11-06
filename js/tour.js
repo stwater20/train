@@ -128,7 +128,9 @@ function tourEnd(){
     ${typeof rideRealHTML==='function'?rideRealHTML():''}
     <div class="btnrow"><button class="btn big" id="tourAgain" type="button">🌄 ${L('再坐一次','Ride again','もう一度乗る')}</button><button class="btn door big" id="ovGo" type="button">${L('換我來開','Drive it myself','自分で運転')}</button></div>
     <button class="btn" id="ovTitle" type="button">${L('回標題畫面','Back to title','タイトルへ')}</button>
-    ${typeof promoHTML==='function'?promoHTML(true):''}`;
+    ${typeof promoHTML==='function'?promoHTML(true):''}
+    ${typeof adHTML==='function'?adHTML('tour'):''}`;
+  if(typeof adFill==='function') setTimeout(adFill,400);
   document.getElementById('tourAgain').onclick=()=>startTour();
   document.getElementById('ovGo').onclick=()=>startGame();
   document.getElementById('ovTitle').onclick=()=>{ S=fresh(); renderLever(); setPlaying(false); showOverlay('title'); };
