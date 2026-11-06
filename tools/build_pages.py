@@ -14,8 +14,12 @@ PATHS = {'zh': '/', 'en': '/en/', 'ja': '/ja/'}
 HTML_LANG = {'zh': 'zh-Hant', 'en': 'en', 'ja': 'ja'}
 OG_LOCALE = {'zh': 'zh_TW', 'en': 'en_US', 'ja': 'ja_JP'}
 OG_IMAGE = SITE + '/og.jpg'
-# Google AdSense：發布商 ID（ca-pub-…）與廣告單元 ID（data-ad-slot 的數字）。留空就完全不載入廣告。
-ADSENSE_CLIENT = ''
+# Google AdSense
+# ADSENSE_CLIENT：發布商 ID，用來產生 ads.txt 和手動廣告版位。
+# ADSENSE_INJECT：False 表示 AdSense 主程式由 Cloudflare Zaraz 注入，這裡不重複加。
+# ADSENSE_SLOT：回應式多媒體廣告單元 ID（data-ad-slot），留空就只用自動廣告、不放手動版位。
+ADSENSE_CLIENT = 'ca-pub-1946121873919285'
+ADSENSE_INJECT = False
 ADSENSE_SLOT = ''
 
 TEXT = {
@@ -155,8 +159,8 @@ def seo_block(lang, route=None):
 def ads_block():
     if not ADSENSE_CLIENT:
         return '<!--ADS--><!--/ADS-->'
-    return ('<!--ADS-->\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT + '" crossorigin="anonymous"></script>\n'
-            '<script>window.ADS={client:"' + ADSENSE_CLIENT + '",slot:"' + ADSENSE_SLOT + '"};</script>\n<!--/ADS-->')
+    tag = ('<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT + '" crossorigin="anonymous"></script>\n') if ADSENSE_INJECT else ''
+    return '<!--ADS-->\n' + tag + '<script>window.ADS={client:"' + ADSENSE_CLIENT + '",slot:"' + ADSENSE_SLOT + '"};</script>\n<!--/ADS-->'
 
 def between(s, tag, body):
     return re.sub(rf'<!--{tag}-->.*?<!--/{tag}-->', lambda m: body, s, flags=re.S)
