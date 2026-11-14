@@ -141,6 +141,7 @@ function action(){
 let actx=null;
 function horn(){
   if(S.phase==='run') S.hornPos=S.pos;
+  if(typeof eggHorn==='function') eggHorn();
   if(!sfxOn) return;
   if(TRAIN.sound==='steam'){ whistle(); return; }
   try{
@@ -173,7 +174,7 @@ function startGame(tut){
   if(tut!==true && DIFF.guide && !tutSeen() && !window.__tourNext) tut=true; // 新手模式：這條路線第一次開會自動帶教學
   S=fresh(); S.phase='run'; S.tut = tut===true; S.tour=!!window.__tourNext; window.__tourNext=false; hideOverlay(); renderLever(); setPlaying(true);
   if(typeof unlockSpeech==='function') unlockSpeech();
-  extrasStart(); if(typeof driveStart==='function') driveStart();
+  extrasStart(); if(typeof driveStart==='function') driveStart(); if(typeof eggStart==='function') eggStart();
   if(S.tour) tourBegin();
   else if(S.tut) tutStart();
   else toast(fmtClock(BASE_CLOCK)+' '+L(STATIONS[0].name+'發車。把主控制器推到動力檔（W / ↑）','Departing '+stName(STATIONS[0])+'. Push the master controller into power (W / ↑)',stName(STATIONS[0])+'発車。マスコンを力行へ（W / ↑）'));

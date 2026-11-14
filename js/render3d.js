@@ -1172,6 +1172,7 @@ function init3D(){
   const LINEC={airport:'#8246af',hualien:'#2f6fb6',alishan:'#b3262b',tamsui:'#d9282f',keiyo:'#c9252f',keikyu:'#c8222c',enoden:'#2f7d4f'}[ROUTE.key]||'#2f6fb6';
   const KIND={airport:L('普通車','Commuter','普通車'),hualien:L('區間車','Local','区間車'),alishan:L('祝山線','Zhushan Line','祝山線'),tamsui:L('淡水信義線','Tamsui–Xinyi','淡水信義線'),keiyo:L('各站停車','Local','各駅停車'),keikyu:L('普通','Local','普通'),enoden:L('普通','Local','普通')}[ROUTE.key]||'';
   function drawMon(){ const x=monCv.getContext('2d'), w=384, h=224, J=ROUTE.japan||ROUTE.jpSign;
+    if(window.HACK && typeof drawHackMon==='function'){ drawHackMon(x,w,h); monTex.needsUpdate=true; return; }
     x.fillStyle='#05090c'; x.fillRect(0,0,w,h);
     x.fillStyle=LINEC; x.fillRect(0,0,w,52);
     const dst=ROUTE.dest?(J?ROUTE.dest.ja:LANG==='en'?ROUTE.dest.en:ROUTE.dest.name):signName(STATIONS[STATIONS.length-1]);
@@ -1371,7 +1372,7 @@ function render(dt){
     const A0=Math.PI*0.75, A1=Math.PI*2.25, a=A0+(A1-A0)*clamp(S.v*3.6/C.gaugeMax,0,1); C.needle.rotation.z=-(a+Math.PI/2);
     C.doorLamp.material.color.setHex(S.doors?0x46ff8a:0x163a22); C.atpLamp.material.color.setHex((S.atpOver||S.atpSig||S.spad)?0xff4a3d:0x3a1614);
     const key=DIFF.key+ENV.key+LANG; if(C.cardKey!==key){ C.cardKey=key; C.drawCard(); }
-    if(C.group.visible){ const mk=Math.floor(S.t||0)+'|'+S.next+'|'+LANG+'|'+TRAIN.key; if(C.monKey!==mk){ C.monKey=mk; C.drawMon(); } } }
+    if(C.group.visible){ const mk=Math.floor(S.t||0)+'|'+S.next+'|'+LANG+'|'+TRAIN.key+(window.HACK?'|h'+Math.round(S.v*3.6):''); if(C.monKey!==mk){ C.monKey=mk; C.drawMon(); } } }
   // 鳥群飛行與拍翅
   R3.birds.forEach(g=>{ const u=g.userData; g.position.x+=u.vx*dt; g.position.z+=u.vz*dt; g.rotation.y=Math.atan2(u.vx,u.vz); u.ph+=dt*7; g.children.forEach((l,k)=>{ l.scale.y=0.4+Math.abs(Math.sin(u.ph+k*0.6)); }); });
   // 太陽光暈：只在太陽夠亮、在地平線上時出現
@@ -1416,6 +1417,7 @@ function render(dt){
     const Lx=R3x.lander; if(Lx){ const ph=((S.t||0)+20)%75/75, fw=Lx.fw0+(Lx.fw1-Lx.fw0)*ph, td=0.62; const alt=ph<td?Math.max(0,260*(1-ph/td)):0;
       const F=Lx.F; Lx.g.position.set(F.x+F.rx*Lx.lat+F.dx*fw, Lx.PY+alt, F.z+F.rz*Lx.lat+F.dz*fw); Lx.g.rotation.set(ph<td?-0.05:0, -F.th, 0); Lx.light.visible=ph<td+0.1; } }
   if(typeof driveRender==='function') driveRender(dt);
+  if(typeof eggTick==='function') eggTick(dt);
   if(MODE==='hq'){ renderer.setRenderTarget(null); renderer.render(scene,cam); }
   else { R3.blitMat.uniforms.levels.value = MODE==='chunky'?5:7; renderer.setRenderTarget(R3.rt); renderer.render(scene,cam); renderer.setRenderTarget(null); renderer.render(R3.blitScene,R3.blitCam); }
 }

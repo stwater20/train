@@ -645,3 +645,5 @@ body.tour .meter:has(#score){visibility:hidden}
 .about+.adbox{max-width:980px;margin:16px auto}
 body.playing .adbox{display:none!important}
 .trainbtn .spec{display:block;font-size:10.5px;color:var(--muted);opacity:.85;margin-top:2px;font-family:var(--f-digit,inherit)}
+.ach.hid{opacity:.45;border-style:dashed}
+body.hack .meter b{color:#3dff7a;text-shadow:0 0 8px rgba(61,255,122,.5)}

@@ -62,8 +62,8 @@ function unlockAch(id){
   return true;
 }
 function achGridHTML(highlight){
-  return `<div class="achs">${ACHS.map(a=>`<div class="ach${ACH[a.id]?' on':''}${highlight&&highlight.includes(a.id)?' new':''}" title="${a.desc}">
-    <span class="ai">${ACH[a.id]?a.icon:'🔒'}</span><span class="an">${a.name}</span><span class="ad">${a.desc}</span>${!ACH[a.id]&&a.prog?(([c,m])=>`<span class="ap"><span class="trk"><i style="width:${Math.round(c/m*100)}%"></i></span><small>${c}/${m}</small></span>`)(a.prog()):''}</div>`).join('')}</div>`;
+  return `<div class="achs">${ACHS.map(a=>{ const hid=a.hidden&&!ACH[a.id], nm=hid?'？？？':a.name, ds=hid?L('隱藏成就：在路線上留意看看','Hidden — keep your eyes open','隠し実績：沿線をよく見て'):a.desc; return `<div class="ach${ACH[a.id]?' on':''}${hid?' hid':''}${highlight&&highlight.includes(a.id)?' new':''}" title="${ds}">
+    <span class="ai">${ACH[a.id]?a.icon:hid?'❔':'🔒'}</span><span class="an">${nm}</span><span class="ad">${ds}</span>${!ACH[a.id]&&a.prog?(([c,m])=>`<span class="ap"><span class="trk"><i style="width:${Math.round(c/m*100)}%"></i></span><small>${c}/${m}</small></span>`)(a.prog()):''}</div>`; }).join('')}</div>`;
 }
 
 /* ---------- sound & announcements ---------- */
@@ -201,6 +201,7 @@ function extrasStart(){
 function extrasStop(st,err){
   chime();
   if(!S.tour && Math.abs(err)<=0.5) unlockAch('perfect');
+  if(!S.tour && typeof eggStop==='function') eggStop(err);
   if(!S.tour && Math.abs(err)<=3) giveStamp(st);
   const last=S.next>=STATIONS.length-1;
   if(voiceOn && 'speechSynthesis' in window) try{ speechSynthesis.cancel(); }catch(e){}
