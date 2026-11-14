@@ -644,3 +644,4 @@ body.tour .meter:has(#score){visibility:hidden}
 .adbox .adlab{display:block;font-size:10.5px;letter-spacing:.12em;color:var(--muted);margin:0 0 4px 2px}
 .about+.adbox{max-width:980px;margin:16px auto}
 body.playing .adbox{display:none!important}
+.trainbtn .spec{display:block;font-size:10.5px;color:var(--muted);opacity:.85;margin-top:2px;font-family:var(--f-digit,inherit)}

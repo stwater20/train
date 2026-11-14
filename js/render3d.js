@@ -15,7 +15,13 @@ const AL = ROUTE.key==='alishan', JP = !!ROUTE.japan, TS = ROUTE.key==='tamsui',
 const signName = st => (JP||ROUTE.jpSign) ? st.ja : st.name;
 /* 會車用的側線：在右側 4.2 m，兩端 45 m 漸漸併回主線 */
 const LOOP_LAT=4.2;
-function loopLat(s){ for(const L of (ROUTE.loops||[])){ if(s>L.s && s<L.e) return LOOP_LAT*smooth(L.s,L.s+45,s)*(1-smooth(L.e-45,L.e,s)); } return ROUTE.double?LOOP_LAT:0; }
+const ISL_W=9.2, ISLANDS=STATIONS.filter(x=>x.plat==='I');
+/* 島式月台站：對向軌道在月台前後 100 m 內往外拉開 ISL_W */
+function islSpread(s){ let v=0; for(const st of ISLANDS){ const a=st.pos-(PL-25), b=st.pos+25; v=Math.max(v, smooth(a-130,a-25,s)*(1-smooth(b+25,b+130,s))); } return v; }
+/* 京急鮫洲：普通車停島式月台，快特走月台外側（左邊）的通過線 */
+const PASS_ST=STATIONS.find(x=>x.overtake && x.plat==='I'), PASS_LAT=-4.4;
+function passLat(s){ if(!PASS_ST) return LOOP_LAT; const a=PASS_ST.pos-(PL-25), b=PASS_ST.pos+25; return PASS_LAT*smooth(a-170,a-40,s)*(1-smooth(b+40,b+170,s)); }
+function loopLat(s){ for(const L of (ROUTE.loops||[])){ if(s>L.s && s<L.e) return LOOP_LAT*smooth(L.s,L.s+45,s)*(1-smooth(L.e-45,L.e,s)); } return ROUTE.double?LOOP_LAT+ISL_W*islSpread(s):0; }
 const inLoop=(s,pad)=> ROUTE.double || (ROUTE.loops||[]).some(L=>s>L.s-(pad||0) && s<L.e+(pad||0));
 /* 阿里山線地形：左側是往上的山壁，右側是往下的山谷；車站一帶整平 */
 function terrainH(s,lat){
@@ -282,7 +288,7 @@ function init3D(){
     const ground=s=>elevAt(s)<-6;
     // 高架橋：護牆與橋墩（只在高架段）
     const nearSt=p=>STATIONS.some(x=>p>x.pos-PL-8 && p<x.pos+30);
-    for(const wl of [-3.4, LOOP_LAT+3.4]){ let a=null; for(let sv=S0; sv<=S1; sv+=8){ const ok=!nearSt(sv) && !ground(sv); if(ok && a==null) a=sv; if((!ok||sv+8>S1) && a!=null){ ribbon(a,sv,2,[[wl,-0.2],[wl,1.05],[wl+Math.sign(wl)*0.25,1.05],[wl+Math.sign(wl)*0.25,-0.2]],M.concrete,{closed:true}); a=null; } } }
+    for(const wl of [-3.4, LOOP_LAT+3.4]){ let a=null; for(let sv=S0; sv<=S1; sv+=8){ const ok=!nearSt(sv) && !ground(sv) && !(wl<0 && passLat(sv)<-0.3) && !(wl>0 && islSpread(sv)>0.01); if(ok && a==null) a=sv; if((!ok||sv+8>S1) && a!=null){ ribbon(a,sv,2,[[wl,-0.2],[wl,1.05],[wl+Math.sign(wl)*0.25,1.05],[wl+Math.sign(wl)*0.25,-0.2]],M.concrete,{closed:true}); a=null; } } }
     const piers=[]; for(let sv=Math.ceil(S0/24)*24; sv<S1; sv+=24){ const e=elevAt(sv); if(e>-6) piers.push({s:sv,lat:LOOP_LAT/2,h:GY-e,sy:-GY+e-0.4}); }
     const pg=new T.BoxGeometry(2.4,1,2); pg.translate(0,0.5,0); inst(pg,M.concrete,piers,{cast:true});
     // 八ツ山橋：鋼樑側板，底下是 JR 的一大片軌道
@@ -466,7 +472,7 @@ function init3D(){
     [[820,460],[2480,190]].forEach(([sc,w])=>{ const f=fr(sc); const g=new T.PlaneGeometry(9000,w); g.rotateX(-Math.PI/2); const m=new T.Mesh(g,bayM); m.position.set(f.x,GY+0.3,f.z); m.rotation.y=-f.th; scene.add(m); });
     // 高架橋：兩側護牆與橋墩
     const nearSt=p=>STATIONS.some(x=>p>x.pos-PL-8 && p<x.pos+30);
-    for(const wl of [-3.4, LOOP_LAT+3.4]){ let a=null; for(let sv=S0; sv<=S1; sv+=10){ const ns=nearSt(sv); if(!ns && a==null) a=sv; if((ns||sv+10>S1) && a!=null){ ribbon(a,sv,2,[[wl,-0.2],[wl,1.1],[wl+Math.sign(wl)*0.25,1.1],[wl+Math.sign(wl)*0.25,-0.2]],M.concrete,{closed:true}); a=null; } } }
+    for(const wl of [-3.4, LOOP_LAT+3.4]){ let a=null; for(let sv=S0; sv<=S1; sv+=10){ const ns=nearSt(sv) || (wl>0 && islSpread(sv)>0.01); if(!ns && a==null) a=sv; if((ns||sv+10>S1) && a!=null){ ribbon(a,sv,2,[[wl,-0.2],[wl,1.1],[wl+Math.sign(wl)*0.25,1.1],[wl+Math.sign(wl)*0.25,-0.2]],M.concrete,{closed:true}); a=null; } } }
     ribbon(S0,S1,4,[[-3.65,-0.25],[LOOP_LAT+3.65,-0.25]],M.concrete,{});
     const piers=[]; for(let sv=Math.ceil(S0/32)*32; sv<S1; sv+=32){ const inRiver=[[820,460],[2480,190]].some(([c,w])=>Math.abs(sv-c)<w/2-10); if(inRiver && (Math.round(sv/32)%2)) continue; piers.push({s:sv,lat:LOOP_LAT/2,h:GY,sy:11.7}); }
     const pg=new T.BoxGeometry(2.6,1,2.2); pg.translate(0,0.5,0); inst(pg,M.concrete,piers,{cast:true});
@@ -709,6 +715,23 @@ function init3D(){
       for(let sv=Math.ceil(L.s/0.6)*0.6; sv<L.e; sv+=0.6){ if(CROSSINGS.some(c=>Math.abs(c-sv)<4.3)) continue; const lt=loopLat(sv); if(lt<2.2) continue; sl2.push({s:sv,lat:lt,h:0.34,c:AL?0x55432f:0xb0aea7}); }
     });
     inst(new T.BoxGeometry(AL?1.45:2.0,0.13,0.24),std({color:0xffffff}),sl2,{receive:true});
+    // 通過線（京急鮫洲）：從我們這條軌道分岔到左邊外側
+    if(PASS_ST){ const p0=PASS_ST.pos-(PL-25)-175, p1=PASS_ST.pos+25+175;
+      const ribbonP=(s0,s1,prof,mat)=>{ const ns=Math.max(2,Math.ceil(s1-s0)+1), pos=[], uv=[], idx=[]; let vi=0;
+        for(let j=0;j<prof.length-1;j++){ const a=prof[j], b=prof[j+1], base=vi;
+          for(let i=0;i<ns;i++){ const sv=s0+(s1-s0)*i/(ns-1), f=fr(sv), Lp=passLat(sv); pos.push(f.x+f.rx*(a[0]+Lp),a[1]+f.y,f.z+f.rz*(a[0]+Lp), f.x+f.rx*(b[0]+Lp),b[1]+f.y,f.z+f.rz*(b[0]+Lp)); uv.push(j,sv*0.6,j+1,sv*0.6); vi+=2; }
+          for(let i=0;i<ns-1;i++){ const k=base+i*2; idx.push(k,k+2,k+1,k+1,k+2,k+3); } }
+        const g=new T.BufferGeometry(); g.setAttribute('position',new T.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new T.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+        const m=new T.Mesh(g,mat); m.receiveShadow=true; scene.add(m); };
+      ribbonP(p0,p1,[[-1.9,0.0],[-1.6,0.29],[1.6,0.29],[1.9,0.0]],M.ballast);
+      for(const g of [-ROUTE.gauge/2,ROUTE.gauge/2]){ ribbonP(p0,p1,[[g-0.04,0.38],[g-0.04,RT-0.012],[g+0.04,RT-0.012],[g+0.04,0.38]],M.rust); ribbonP(p0,p1,[[g-0.034,RT],[g+0.034,RT]],M.steel); }
+      const sl3=[]; for(let sv=Math.ceil(p0/0.6)*0.6; sv<p1; sv+=0.6){ const lt=passLat(sv); if(lt>-2.2) continue; sl3.push({s:sv,lat:lt,h:0.34,c:0xb0aea7}); }
+      inst(new T.BoxGeometry(2.0,0.13,0.24),std({color:0xffffff}),sl3,{receive:true});
+      ribbon(p0,p1,4,[[PASS_LAT-3.65,-0.25],[-3.0,-0.25]],M.concrete,{}); ribbon(p0+60,p1-60,2,[[PASS_LAT-3.4,-0.2],[PASS_LAT-3.4,1.05],[PASS_LAT-3.65,1.05],[PASS_LAT-3.65,-0.2]],M.concrete,{closed:true}); }
+    // 島式月台站：對向軌道拉開的地方把橋面加寬、外側補護牆
+    if(KY||KK) ISLANDS.forEach(st=>{ const a=st.pos-(PL-25)-130, b=st.pos+25+130;
+      ribbon(a,b,4,[[LOOP_LAT+2,-0.25],[LOOP_LAT+ISL_W+3.65,-0.25]],M.concrete,{});
+      ribbon(a+70,b-70,2,[[LOOP_LAT+ISL_W+3.4,-0.2],[LOOP_LAT+ISL_W+3.4,1.05],[LOOP_LAT+ISL_W+3.65,1.05],[LOOP_LAT+ISL_W+3.65,-0.2]],M.concrete,{closed:true}); });
   }
 
   /* catenary */
@@ -877,23 +900,40 @@ function init3D(){
   const skin=std({color:0xe2b893}), hair=std({color:0x1d1b1a}), legsM=std({color:0x2b2d33});
   const stLights=[];
   const stations=STATIONS.map((st,i)=>{
-    const a=st.pos-(PL-25), b=st.pos+25;
-    ribbon(a,b,2,[[-1.75,0],[-1.75,PT],[-9,PT],[-9,0]],M.concrete,{closed:true,caps:true,cast:true});
+    const a=st.pos-(PL-25), b=st.pos+25, IS=st.plat==='I', m=v=>IS?-v:v, rr=IS?Math.PI:0;
+    if(IS){ // 島式月台：從我們這條軌道（右邊 1.75 m）到拉開後的對向軌道
+      const W=LOOP_LAT+ISL_W;
+      ribbon(a,b,2,[[1.75,0],[1.75,PT],[W-1.75,PT],[W-1.75,0]],M.concrete,{closed:true,caps:true,cast:true});
+      ribbon(a,b,2,[[2.45,PT+0.004],[W-2.45,PT+0.004]],M.tile,{u:0.5,v:0.5});
+      for(const [e0,e1,t0,t1] of [[1.75,1.88,2.25,2.45],[W-1.88,W-1.75,W-2.45,W-2.25]]){ ribbon(a,b,2,[[e0,PT+0.006],[e1,PT+0.006]],M.white,{}); ribbon(a,b,2,[[t0,PT+0.005],[t1,PT+0.005]],M.tact,{u:5,v:5}); }
+      // 雨棚：整片蓋住島式月台，柱子在中間一排
+      ribbon(st.pos-(PL-45),st.pos-10,2,[[2.2,PT+3.55],[W/2,PT+3.85],[W-2.2,PT+3.55],[W-2.2,PT+3.75],[W/2,PT+4.05],[2.2,PT+3.75]],M.roof,{closed:true,caps:true,cast:true});
+      const cpi=[]; for(let s=st.pos-(PL-49); s<=st.pos-14; s+=10) cpi.push({s,lat:W/2,h:PT+1.85}); inst(new T.CylinderGeometry(0.14,0.14,3.7,8),M.post,cpi,{cast:true});
+      ribbon(st.pos-(PL-49),st.pos-14,4,[[3.6,PT+3.6],[3.9,PT+3.62]],M.lampStrip,{receive:false}); ribbon(st.pos-(PL-49),st.pos-14,4,[[W-3.9,PT+3.62],[W-3.6,PT+3.6]],M.lampStrip,{receive:false});
+      // 樓梯／電扶梯口（往下到高架下的車站大廳）
+      const sw=new T.Group(); const glassS=new T.MeshStandardMaterial({color:0xcfe6ee,transparent:true,opacity:0.35,roughness:0.1,depthWrite:false});
+      const wallS=new T.Mesh(new T.BoxGeometry(3.2,1.25,18),std({color:0xd9dcd8})); wallS.position.y=0.62; sw.add(wallS); const gl=new T.Mesh(new T.BoxGeometry(3.25,0.9,18.05),glassS); gl.position.y=1.7; sw.add(gl);
+      const ex=signTex(256,96,(x,w,h)=>{ x.fillStyle='#ffd23a'; x.fillRect(0,0,w,h); x.fillStyle='#111'; x.font='800 54px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(LANG==='en'?'EXIT':'出口',w/2,h/2+3); });
+      const exs=new T.Mesh(new T.PlaneGeometry(1.4,0.52),new T.MeshBasicMaterial({map:ex,side:T.DoubleSide})); exs.position.set(0,2.75,-9.2); sw.add(exs);
+      sw.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); place(sw,st.pos-PL*0.52,W/2,PT,0); scene.add(sw);
+    } else {
+    ribbon(a,b,2,[[-1.75,0],[-1.75,PT],[-9,PT],[-9,0]],M.concrete,{closed:true,caps:true,cast:true});    ribbon(a,b,2,[[-1.75,0],[-1.75,PT],[-9,PT],[-9,0]],M.concrete,{closed:true,caps:true,cast:true});
     ribbon(a,b,2,[[-9,PT+0.004],[-2.45,PT+0.004]],M.tile,{u:0.5,v:0.5});
     ribbon(a,b,2,[[-2.45,PT+0.005],[-2.25,PT+0.005]],M.tact,{u:5,v:5});
     ribbon(a,b,2,[[-2.25,PT+0.004],[-1.88,PT+0.004]],M.gray,{});
     ribbon(a,b,2,[[-1.88,PT+0.006],[-1.75,PT+0.006]],M.white,{});
-    if(ROUTE.double && !st.overtake){ const o=LOOP_LAT;
+    }
+    if(ROUTE.double && !st.overtake && !IS){ const o=LOOP_LAT;
       ribbon(a,b,2,[[o+1.75,0],[o+1.75,PT],[o+9,PT],[o+9,0]],M.concrete,{closed:true,caps:true,cast:true});
       ribbon(a,b,2,[[o+2.45,PT+0.004],[o+9,PT+0.004]],M.tile,{u:0.5,v:0.5});
       ribbon(a,b,2,[[o+2.25,PT+0.005],[o+2.45,PT+0.005]],M.tact,{u:5,v:5});
       ribbon(a,b,2,[[o+1.75,PT+0.006],[o+1.88,PT+0.006]],M.white,{});
       ribbon(st.pos-(PL-45),st.pos-10,2,[[o+2.3,PT+3.5],[o+8.7,PT+3.3],[o+8.7,PT+3.5],[o+2.3,PT+3.68]],M.roof,{closed:true,caps:true,cast:true}); }
-    ribbon(st.pos-(PL-45),st.pos-10,2,[[-8.7,PT+3.3],[-2.3,PT+3.5],[-2.3,PT+3.68],[-8.7,PT+3.5]],M.roof,{closed:true,caps:true,cast:true});
+    if(!IS){ ribbon(st.pos-(PL-45),st.pos-10,2,[[-8.7,PT+3.3],[-2.3,PT+3.5],[-2.3,PT+3.68],[-8.7,PT+3.5]],M.roof,{closed:true,caps:true,cast:true});
     const cp=[]; for(let s=st.pos-(PL-49); s<=st.pos-14; s+=12) cp.push({s,lat:-5.6,h:PT+1.7});
     inst(new T.CylinderGeometry(0.11,0.11,3.4,8),M.post,cp,{cast:true});
-    ribbon(st.pos-(PL-49),st.pos-14,4,[[-4.2,PT+3.28],[-3.9,PT+3.3]],M.lampStrip,{receive:false});
-    const pl=new T.PointLight(0xfff0d0,0,70,1.6); place(pl,st.pos-PL*0.42,-4.5,PT+3.0); scene.add(pl); stLights.push(pl);
+    ribbon(st.pos-(PL-49),st.pos-14,4,[[-4.2,PT+3.28],[-3.9,PT+3.3]],M.lampStrip,{receive:false}); }
+    const pl=new T.PointLight(0xfff0d0,0,70,1.6); place(pl,st.pos-PL*0.42,m(-4.5),PT+3.0); scene.add(pl); stLights.push(pl);
     // station building
     const bld=new T.Group();
     const bx=new T.Mesh(new T.BoxGeometry(9,5,24),M.building); bx.position.y=2.5; bx.castShadow=bx.receiveShadow=true; bld.add(bx);
@@ -910,41 +950,41 @@ function init3D(){
       x.fillStyle='#141414'; x.textAlign='center'; x.textBaseline='middle'; x.font=(signName(st).length>4?'700 76px ':'700 104px ')+FONT; x.fillText(signName(st),w/2,70); x.font='500 30px '+FONT; x.fillStyle='#3a3a3a'; x.fillText(st.en,w/2,138);
       x.fillStyle='#fff'; x.font='500 32px '+FONT; if(prev){ x.textAlign='left'; x.fillText('◀ '+signName(prev),22,h-31); } if(nxt){ x.textAlign='right'; x.fillText(signName(nxt)+' ▶',w-22,h-31); } });
     const ng=new T.Group(); [-1.5,1.5].forEach(dx=>{ const p=postMesh(1.0,0.05); p.position.x=dx; ng.add(p); }); const nbm=board(3.8,1.15,0.06,nb); nbm.position.y=1.0+0.575; nbm.castShadow=true; ng.add(nbm);
-    place(ng,st.pos-PL*0.37,-4.6,PT); scene.add(ng);
+    place(ng,st.pos-PL*0.37,m(-4.6),PT,rr); scene.add(ng);
     // 停車位置牌：數字是這班車的輛數
     const sm=new T.Group(); sm.add(postMesh(1.3,0.035,M.white)); const smb=board(0.55,0.55,0.04,numTex(CARS(),'#1f5fbf','#ffffff','#ffffff')); smb.position.y=1.3+0.275; sm.add(smb);
-    place(sm,st.pos,-2.05,PT); scene.add(sm);
+    place(sm,st.pos,m(-2.05),PT,rr); scene.add(sm);
     // 觀光景點指示牌（咖啡底白字）
     (SIGHTS[st.name]||[]).forEach((txt,k)=>{ const t=signTex(420,110,(x,w,h)=>{ x.fillStyle='#6b3f22'; x.fillRect(0,0,w,h); x.strokeStyle='#fff'; x.lineWidth=5; x.strokeRect(7,7,w-14,h-14); x.fillStyle='#fff'; x.font='700 52px '+FONT; x.textAlign='center'; x.textBaseline='middle'; x.fillText(txt,w/2,h/2+3); });
       const g=new T.Group(); [-0.8,0.8].forEach(dx=>{ const p=postMesh(2.0,0.05); p.position.x=dx; g.add(p); }); const b=board(2.3,0.6,0.05,t); b.position.y=2.0+0.3+k*0.7; b.castShadow=true; g.add(b);
-      place(g,st.pos+42+k*14,-5.5,0); scene.add(g); });
-    ribbon(st.pos-0.07,st.pos+0.07,0.14,[[-2.25,PT+0.008],[-1.75,PT+0.008]],M.white,{});
+      place(g,st.pos+42+k*14,IS?LOOP_LAT+ISL_W+6:-5.5,0,rr); scene.add(g); });
+    ribbon(st.pos-0.07,st.pos+0.07,0.14,IS?[[1.75,PT+0.008],[2.25,PT+0.008]]:[[-2.25,PT+0.008],[-1.75,PT+0.008]],M.white,{});
     // 月台設施
     if(i>=0){
       const benchM=std({color:AL?0x7a5233:JP?0x3f6f8f:0x5f7f9a}), legM=M.post;
       for(let k=0;k<3;k++){ const bs=st.pos-PL*0.25-k*PL*0.18; const b=new T.Group();
         const seat=new T.Mesh(new T.BoxGeometry(0.5,0.08,1.8),benchM); seat.position.y=0.45; const back=new T.Mesh(new T.BoxGeometry(0.06,0.45,1.8),benchM); back.position.set(-0.24,0.7,0);
         [-0.75,0.75].forEach(z=>{ const l=new T.Mesh(new T.BoxGeometry(0.4,0.45,0.06),legM); l.position.set(0,0.22,z); b.add(l); }); b.add(seat,back); b.children.forEach(m=>m.castShadow=true);
-        place(b,bs,-6.6,PT,0); scene.add(b); }
+        place(b,bs,m(-6.6),PT,rr); scene.add(b); }
       // LED 列車資訊看板（掛在雨棚下）
       const nextSt=STATIONS[Math.min(i+1,STATIONS.length-1)], dest=STATIONS[STATIONS.length-1];
       const ledT=signTex(512,96,(x,w,h)=>{ x.fillStyle='#0b0b0b'; x.fillRect(0,0,w,h); x.fillStyle='#ffa31a'; x.font='700 40px '+FONT; x.textBaseline='middle';
         x.textAlign='left'; x.fillText((KK?'普通 ':(JP||ROUTE.jpSign)?'各停 ':TS?'往 ':AP?'普通車 往 ':'區間 ')+(ROUTE.dest?((JP||ROUTE.jpSign)?ROUTE.dest.ja:ROUTE.dest.name):signName(dest))+((JP||ROUTE.jpSign)?' 行':''),14,h/2+2); x.textAlign='right'; x.fillStyle='#7dff7a'; x.font='700 30px '+FONT; x.fillText((JP||ROUTE.jpSign)?'まもなく':TS?'即將進站':L('即將進站','Arriving','まもなく'),w-14,h/2+2); });
       const led=board(0.08,0.42,2.3,null,M.dark); led.material[0]=new T.MeshBasicMaterial({map:ledT}); led.material[1]=led.material[0];
       const lg=new T.Group(); led.position.y=PT+2.65; lg.add(led); [-0.9,0.9].forEach(z=>{ const r=new T.Mesh(new T.BoxGeometry(0.03,0.55,0.03),M.post); r.position.set(0,PT+3.1,z); lg.add(r); });
-      place(lg,st.pos-PL*0.55,-4.1,0,0); scene.add(lg);
+      place(lg,st.pos-PL*0.55,m(-4.1),0,rr); scene.add(lg);
       // 時鐘
       const clkT=signTex(128,128,(x,w,h)=>{ x.fillStyle='#fbfbf6'; x.beginPath(); x.arc(64,64,60,0,7); x.fill(); x.strokeStyle='#222'; x.lineWidth=6; x.stroke(); x.lineCap='round';
         for(let q=0;q<12;q++){ const a=q/12*Math.PI*2; x.lineWidth=q%3?3:6; x.beginPath(); x.moveTo(64+Math.sin(a)*46,64-Math.cos(a)*46); x.lineTo(64+Math.sin(a)*54,64-Math.cos(a)*54); x.stroke(); }
         const t=(BASE_CLOCK/3600)%12, mm=(BASE_CLOCK/60)%60; x.lineWidth=7; x.beginPath(); x.moveTo(64,64); x.lineTo(64+Math.sin(t/12*Math.PI*2)*28,64-Math.cos(t/12*Math.PI*2)*28); x.stroke();
         x.lineWidth=4; x.beginPath(); x.moveTo(64,64); x.lineTo(64+Math.sin(mm/60*Math.PI*2)*42,64-Math.cos(mm/60*Math.PI*2)*42); x.stroke(); });
       const clk=new T.Mesh(new T.CylinderGeometry(0.32,0.32,0.06,24),[M.dark,new T.MeshStandardMaterial({map:clkT}),M.dark]); clk.rotation.z=-Math.PI/2;
-      const cg=new T.Group(); clk.position.y=PT+2.75; cg.add(clk); place(cg,st.pos-PL*0.75,-4.1,0,0); scene.add(cg);
+      const cg=new T.Group(); clk.position.y=PT+2.75; cg.add(clk); place(cg,st.pos-PL*0.75,m(-4.1),0,rr); scene.add(cg);
       // 江之電月台的自動販賣機
       if(JP) for(let k=0;k<2;k++){ const vm=new T.Group(); const vt=signTex(128,256,(x,w,h)=>{ x.fillStyle=['#d8262e','#1f6fc4'][k]; x.fillRect(0,0,w,h); x.fillStyle='#f4f4f0'; x.fillRect(10,20,w-20,h*0.55);
           for(let r=0;r<3;r++) for(let c2=0;c2<4;c2++){ x.fillStyle=['#e94b3c','#2f8f4e','#f2c14e','#3f7fd6','#ffffff'][(r*4+c2)%5]; x.fillRect(16+c2*26,30+r*44,18,34); } x.fillStyle='#222'; x.fillRect(20,h*0.72,w-40,22); });
         const body=new T.Mesh(new T.BoxGeometry(0.75,1.8,1.0),[std({color:0xdddddd}),new T.MeshStandardMaterial({map:vt,emissive:0x222222,emissiveMap:vt}),std({color:0xdddddd}),std({color:0xdddddd}),std({color:0xdddddd}),std({color:0xdddddd})]);
-        body.position.y=PT+0.9; body.castShadow=true; vm.add(body); place(vm,st.pos-PL*0.62+k*1.1,-8.3,0,0); scene.add(vm); }
+        body.position.y=PT+0.9; body.castShadow=true; vm.add(body); place(vm,st.pos-PL*0.62+k*1.1,m(-8.3),0,rr); scene.add(vm); }
     }
     // passengers
     const pax=[];
@@ -956,7 +996,7 @@ function init3D(){
       [lg,bd,hd,hr].forEach(m=>{ m.castShadow=true; g.add(m); });
       if(surfer){ const sb=new T.Mesh(new T.BoxGeometry(0.5,2.0,0.07),std({color:[0xf2c14e,0x4fb3d9,0xe86a5c,0xf4f4f0][j%4],roughness:0.4})); sb.position.set(0.42,1.0,0.05); sb.rotation.z=-0.12; sb.castShadow=true; g.add(sb); }
       if(hiker){ const bp=new T.Mesh(new T.BoxGeometry(0.34,0.46,0.2),std({color:[0x2f6b45,0xb3492f,0x2f4f7f][j%3]})); bp.position.set(0,1.2,-0.2); bp.castShadow=true; g.add(bp); }
-      const p={g,s:st.pos-PL*0.7+rnd(i*31+j)*PL*0.63,lat:-3.1-rnd(i*17+j)*3.4,face:(rnd(i*5+j)-0.5)*1.5+Math.PI/2};
+      const isl=st.plat==='I'; const p={g,s:st.pos-PL*0.7+rnd(i*31+j)*PL*0.63,lat:(isl?1:-1)*(3.1+rnd(i*17+j)*3.4),face:(rnd(i*5+j)-0.5)*1.5+(isl?-Math.PI/2:Math.PI/2),isl};
       place(g,p.s,p.lat,PT,p.face); scene.add(g); pax.push(p);
     }
     return {pax};
@@ -1309,7 +1349,7 @@ function render(dt){
     if(S.phase!=='run'){ OT.state='wait'; OT.cars.forEach(g=>g.visible=false); }
     else if(OT.state==='wait' && S.boarded[OT.idx]!==undefined && S.t-S.boarded[OT.idx]>4){ OT.state='go'; OT.front=st.pos-350; OT.v=28; OT.passed=false; }
     if(OT.state==='go'){ const prev=OT.front; OT.front+=OT.v*dt; if(!OT.passed && prev<S.pos && OT.front>=S.pos){ OT.passed=true; if(typeof whoosh==='function') whoosh(0.9); }
-      OT.cars.forEach((g,k)=>{ const sc=OT.front-k*R3.LIVERY.len-R3.LIVERY.len/2; g.visible=sc>S.pos-600 && sc<S.pos+1600; if(g.visible) place(g,sc,LOOP_LAT,0,0); });
+      OT.cars.forEach((g,k)=>{ const sc=OT.front-k*R3.LIVERY.len-R3.LIVERY.len/2; g.visible=sc>S.pos-600 && sc<S.pos+1600; if(g.visible) place(g,sc,passLat(sc),0,0); });
       if(OT.front-R3.LIVERY.len*R3.LIVERY.cars>S.pos+1600) { OT.state='done'; OT.cars.forEach(g=>g.visible=false); } } }
   R3.streams.forEach((t,i)=>{
     if(OT && OT.state==='go'){ t.cars.forEach(g=>g.visible=false); t.front=1e9; t.wait=20; return; }
@@ -1365,7 +1405,7 @@ function render(dt){
       if(bt===undefined){ p.g.visible=true; place(p.g,p.s,p.lat,PT,p.face); return; }
       const el=S.t-bt-j*0.55;
       if(el<0){ p.g.visible=true; place(p.g,p.s,p.lat,PT,p.face); }
-      else if(el<1.5){ const k=el/1.5; p.g.visible=true; place(p.g,p.s,p.lat+(-1.9-p.lat)*k,PT,Math.PI/2); p.g.position.y=PT+Math.abs(Math.sin(el*9))*0.04; }
+      else if(el<1.5){ const k=el/1.5; p.g.visible=true; place(p.g,p.s,p.lat+((p.isl?1.9:-1.9)-p.lat)*k,PT,p.isl?-Math.PI/2:Math.PI/2); p.g.position.y=PT+Math.abs(Math.sin(el*9))*0.04; }
       else p.g.visible=false;
     });
   });

@@ -27,10 +27,10 @@ const ROUTES = {
     envs:['morning','dusk','night','rain'],
     stations:[
       {name:'花蓮', en:'Hualien', ja:'花蓮', pos:0},
-      {name:'吉安', en:"Ji'an", ja:'吉安', pos:1150, leg:125},
-      {name:'志學', en:'Zhixue', ja:'志学', pos:2650, leg:135},
-      {name:'平和', en:'Pinghe', ja:'平和', pos:3850, leg:135},
-      {name:'壽豐', en:'Shoufeng', ja:'寿豊', pos:5550, leg:140},
+      {name:'吉安', en:"Ji'an", ja:'吉安', pos:1150, leg:112},
+      {name:'志學', en:'Zhixue', ja:'志学', pos:2650, leg:119},
+      {name:'平和', en:'Pinghe', ja:'平和', pos:3850, leg:119},
+      {name:'壽豐', en:'Shoufeng', ja:'寿豊', pos:5550, leg:125},
     ],
     limits:[ {s:0,e:300,v:45}, {s:1700,e:2050,v:65}, {s:2650,e:2900,v:50}, {s:4300,e:4750,v:70}, {s:5300,e:5600,v:60} ],
     curves:[ {s:850,e:1050,k:0.0016}, {s:1700,e:2050,k:0.0032}, {s:2250,e:2450,k:-0.0020}, {s:3150,e:3400,k:0.0018}, {s:4300,e:4750,k:-0.0030}, {s:5000,e:5200,k:0.0012} ],
@@ -64,10 +64,10 @@ const ROUTES = {
     envs:['morning','dusk','night','rain'],
     stations:[
       {name:'稻村崎',   en:'Inamuragasaki',    ja:'稲村ヶ崎',   pos:0},
-      {name:'七里濱',   en:'Shichirigahama',   ja:'七里ヶ浜',   pos:1100, leg:150},
-      {name:'鎌倉高校前', en:'Kamakura-Kōkōmae', ja:'鎌倉高校前', pos:2000, leg:118},
-      {name:'腰越',     en:'Koshigoe',         ja:'腰越',       pos:3000, leg:128},
-      {name:'江之島',   en:'Enoshima',         ja:'江ノ島',     pos:3750, leg:158},
+      {name:'七里濱',   en:'Shichirigahama',   ja:'七里ヶ浜',   pos:1100, leg:146},
+      {name:'鎌倉高校前', en:'Kamakura-Kōkōmae', ja:'鎌倉高校前', pos:2000, leg:108},
+      {name:'腰越',     en:'Koshigoe',         ja:'腰越',       pos:3000, leg:119},
+      {name:'江之島',   en:'Enoshima',         ja:'江ノ島',     pos:3750, leg:156},
     ],
     limits:[ {s:0,e:160,v:25}, {s:560,e:800,v:35}, {s:1880,e:2080,v:30}, {s:2880,e:3080,v:30}, {s:3120,e:3600,v:25}, {s:3600,e:3780,v:15} ],
     curves:[ {s:560,e:800,k:-0.0035}, {s:1450,e:1650,k:0.0025}, {s:2350,e:2550,k:-0.003}, {s:3600,e:3700,k:0.008} ],
@@ -84,12 +84,12 @@ const ROUTES = {
     envs:['morning','dusk','night','rain'],
     stations:[
       {name:'北投',   en:'Beitou',     ja:'北投',   pos:0},
-      {name:'復興崗', en:'Fuxinggang', ja:'復興崗', pos:900,  leg:106},
-      {name:'忠義',   en:'Zhongyi',    ja:'忠義',   pos:1700, leg:88},
-      {name:'關渡',   en:'Guandu',     ja:'関渡',   pos:2500, leg:86},
-      {name:'竹圍',   en:'Zhuwei',     ja:'竹囲',   pos:3500, leg:98},
-      {name:'紅樹林', en:'Hongshulin', ja:'紅樹林', pos:4400, leg:91},
-      {name:'淡水',   en:'Tamsui',     ja:'淡水',   pos:5400, leg:102},
+      {name:'復興崗', en:'Fuxinggang', ja:'復興崗', pos:900,  leg:95},
+      {name:'忠義',   en:'Zhongyi',    ja:'忠義',   pos:1700, leg:75},
+      {name:'關渡',   en:'Guandu',     ja:'関渡',   pos:2500, leg:73},
+      {name:'竹圍',   en:'Zhuwei',     ja:'竹囲',   pos:3500, leg:86},
+      {name:'紅樹林', en:'Hongshulin', ja:'紅樹林', pos:4400, leg:78},
+      {name:'淡水',   en:'Tamsui',     ja:'淡水',   pos:5400, leg:91},
     ],
     limits:[ {s:0,e:200,v:45}, {s:2300,e:2620,v:60}, {s:5200,e:5450,v:35} ],
     curves:[ {s:1150,e:1400,k:-0.002}, {s:2300,e:2620,k:0.0028}, {s:3800,e:4100,k:-0.0022}, {s:4850,e:5150,k:0.0018} ],
@@ -122,11 +122,11 @@ const ROUTES = {
     power:1.05, ebDecel:1.45, brakeStep:0.14, platLen:215, sunMap:'east',
     envs:['morning','dusk','night','rain'],
     stations:[
-      {name:'新木場',     en:'Shin-Kiba',         ja:'新木場',     pos:0},
-      {name:'葛西臨海公園', en:'Kasai-Rinkai-Kōen', ja:'葛西臨海公園', pos:1800, leg:140},
-      {name:'舞濱',       en:'Maihama',           ja:'舞浜',       pos:2900, leg:99},
-      {name:'新浦安',     en:'Shin-Urayasu',      ja:'新浦安',     pos:4100, leg:103},
-      {name:'市川鹽濱',   en:'Ichikawashiohama',  ja:'市川塩浜',   pos:5200, leg:99},
+      {name:'新木場', plat:'I',     en:'Shin-Kiba',         ja:'新木場',     pos:0},
+      {name:'葛西臨海公園', plat:'I', en:'Kasai-Rinkai-Kōen', ja:'葛西臨海公園', pos:1800, leg:131},
+      {name:'舞濱', plat:'I',       en:'Maihama',           ja:'舞浜',       pos:2900, leg:88},
+      {name:'新浦安', plat:'I',     en:'Shin-Urayasu',      ja:'新浦安',     pos:4100, leg:92},
+      {name:'市川鹽濱',   en:'Ichikawashiohama',  ja:'市川塩浜',   pos:5200, leg:89},
     ],
     limits:[ {s:0,e:260,v:55}, {s:2650,e:3060,v:75}, {s:5000,e:5240,v:70} ],
     curves:[ {s:450,e:800,k:0.0014}, {s:2650,e:3000,k:-0.0024}, {s:4350,e:4700,k:0.0014} ],
@@ -142,11 +142,11 @@ const ROUTES = {
     envs:['morning','dusk','night','rain'],
     stations:[
       {name:'品川',   en:'Shinagawa',      ja:'品川',   no:'KK02', pos:0},
-      {name:'北品川', en:'Kita-shinagawa', ja:'北品川', no:'KK03', pos:700,  leg:99},
-      {name:'新馬場', en:'Shimbamba',      ja:'新馬場', no:'KK04', pos:1400, leg:86},
-      {name:'青物橫丁', en:'Aomono-yokochō', ja:'青物横丁', no:'KK05', pos:2200, leg:88},
-      {name:'鮫洲',   en:'Samezu',         ja:'鮫洲',   no:'KK06', pos:2800, leg:77, overtake:true},
-      {name:'立會川', en:'Tachiaigawa',    ja:'立会川', no:'KK07', pos:3600, leg:100},
+      {name:'北品川', en:'Kita-shinagawa', ja:'北品川', no:'KK03', pos:700,  leg:87},
+      {name:'新馬場', en:'Shimbamba',      ja:'新馬場', no:'KK04', pos:1400, leg:73},
+      {name:'青物橫丁', en:'Aomono-yokochō', ja:'青物横丁', no:'KK05', pos:2200, leg:75},
+      {name:'鮫洲',   en:'Samezu',         ja:'鮫洲',   no:'KK06', pos:2800, leg:63, overtake:true, plat:'I'},
+      {name:'立會川', en:'Tachiaigawa',    ja:'立会川', no:'KK07', pos:3600, leg:85},
     ],
     limits:[ {s:0,e:420,v:45}, {s:560,e:880,v:55}, {s:1640,e:1880,v:70}, {s:3080,e:3320,v:70} ],
     curves:[ {s:120,e:380,k:0.0048}, {s:1640,e:1880,k:-0.0022}, {s:3080,e:3320,k:0.0022} ],
@@ -280,6 +280,22 @@ const TRAINS = {
      req:'rank2', reqText:L('司機員等級達到「司機員」','Reach driver rank “Driver”','運転士ランク「運転士」に到達')},
   ],
 };
+/* ---------- 車種的真實性能（m/s²）：[起動加速度, 定扭矩區上限速度 m/s, 常用最大減速度, 緊急減速度, 是否為估計值]
+   來源：日文／英文維基百科的車輛規格欄（km/h/s ÷ 3.6 = m/s²）。查不到的以同系統車種推估，畫面上標「估計」。 */
+const SPECS={
+  emu800:[0.7,13.9,1.2,1.3,0], emu900:[0.7,13.9,1.2,1.3,1], emu500:[0.6,11,1.0,1.2,1], emu3000:[0.7,8.3,1.0,1.2,0],
+  c381:[1.0,10,1.0,1.3,0], c301:[1.0,10,1.0,1.3,0], c321:[1.0,10,1.0,1.3,0], c371:[1.0,10,1.0,1.3,0],
+  ap1000:[1.1,12,1.0,1.3,0], ap2000:[1.1,12,1.0,1.3,1],
+  e233:[2.5/3.6,11,4.2/3.6,4.5/3.6,1], k209:[2.5/3.6,10,3.6/3.6,4.7/3.6,0], k205:[2.4/3.6,9,3.5/3.6,4.5/3.6,1], k201:[2.5/3.6,9,3.5/3.6,5.0/3.6,0],
+  kk1000:[3.5/3.6,11,4.0/3.6,4.5/3.6,0], kk2100:[3.5/3.6,11,4.0/3.6,4.5/3.6,0], kk800:[3.5/3.6,10,4.0/3.6,4.5/3.6,0], kk600:[3.5/3.6,11,4.0/3.6,4.5/3.6,0],
+  e1000:[2.0/3.6,8,3.5/3.6,4.0/3.6,0], e10:[2.0/3.6,8,3.5/3.6,4.0/3.6,0], e300:[2.0/3.6,8,3.5/3.6,4.0/3.6,1], e500:[2.0/3.6,8,3.5/3.6,4.0/3.6,1],
+};
+Object.values(TRAINS).flat().forEach(t=>{ const sp=SPECS[t.key];
+  if(sp){ [t.acc,t.vb,t.svc,t.eb]=sp; t.est=!!sp[4]; t.power=t.acc; t.brakeStep=t.svc/8; t.ebDecel=t.eb; }
+  else { t.acc=t.power; t.vb=9; t.svc=t.brakeStep*8; t.eb=t.ebDecel; t.est=true; } });
+const specText=t=>{ const J=ROUTES[Object.keys(TRAINS).find(k=>TRAINS[k].includes(t))]; const kmh=J&&(J.japan||J.jpSign);
+  const f=v=>kmh?(v*3.6).toFixed(1):v.toFixed(2), u=kmh?' km/h/s':' m/s²';
+  return L(`起動 ${f(t.acc)}・常用 ${f(t.svc)}・緊急 ${f(t.eb)}${u}${t.est?'（估計）':''}`,`Start ${f(t.acc)} · service ${f(t.svc)} · emergency ${f(t.eb)}${u}${t.est?' (est.)':''}`,`起動 ${f(t.acc)}・常用 ${f(t.svc)}・非常 ${f(t.eb)}${u}${t.est?'（推定）':''}`); };
 let TRAIN = TRAINS[ROUTE.key][0];
 try{ const k=JSON.parse(localStorage.getItem('cabTrain_'+ROUTE.key)); const t=TRAINS[ROUTE.key].find(x=>x.key===k); if(t) TRAIN=t; }catch(e){}
 Object.assign(ROUTE,{power:TRAIN.power, brakeStep:TRAIN.brakeStep, ebDecel:TRAIN.ebDecel});

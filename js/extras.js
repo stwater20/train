@@ -129,7 +129,7 @@ const ANN = {
     if(ROUTE.key==='keikyu') return st.overtake
       ? {ja:`まもなく${n.ja}です。この電車は、快特の待ち合わせのため、しばらく停車いたします。`, en:`We will soon arrive at ${n.en}. This train will wait here for a limited express to pass.`, zh:`即將抵達${n.zh}。本列車在此等候快特通過，將停車一段時間。`}
       : {ja:`まもなく${n.ja}、${n.ja}です。`, en:`We will soon arrive at ${n.en}.`, zh:`即將抵達${n.zh}。`};
-    if(ROUTE.key==='keiyo') return {ja:`まもなく、${n.ja}、${n.ja}。お出口は左側です。${st.name==='新木場'?'':''}`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
+    if(ROUTE.key==='keiyo'){ const R=st.plat==='I'; return {ja:`まもなく、${n.ja}、${n.ja}。お出口は${R?'右':'左'}側です。`, en:`We will soon arrive at ${n.en}. The doors on the ${R?'right':'left'} side will open.`, zh:`即將抵達${n.zh}，${R?'右':'左'}側車門開啟。`}; }
     if(ROUTE.japan) return (last && !ROUTE.continues)
       ? {ja:`まもなく終点、${n.ja}です。湘南モノレールはお乗り換えです。お出口は左側です。お忘れ物のないようご注意ください。`, en:`We will soon arrive at ${n.en}, the last stop. Please change here for the Shonan Monorail. The doors on the left side will open. Please take all your belongings with you.`, zh:`即將抵達終點${n.zh}，轉乘湘南單軌電車的旅客請在本站下車。左側車門開啟，請別忘了隨身物品。`}
       : {ja:`まもなく、${n.ja}です。お出口は左側です。`, en:`We will soon arrive at ${n.en}. The doors on the left side will open.`, zh:`即將抵達${n.zh}，左側車門開啟。`};
@@ -446,7 +446,7 @@ function diffPickHTML(){
 }
 function trainPickHTML(){
   return `<div class="pickrow"><span class="lab">${L('車種','Train','車両')}</span><div class="trainpick" role="radiogroup">${TRAINS[ROUTE.key].map(t=>{ const ok=trainUnlocked(t);
-    return `<button type="button" role="radio" aria-checked="${t===TRAIN}" class="trainbtn${t===TRAIN?' on':''}${ok?'':' locked'}" data-train="${t.key}"${ok?'':' aria-disabled="true"'}><b>${ok?'':'🔒 '}${t.name}</b><small>${ok?(t.req?L('已解鎖','Unlocked','解除済み'):L('標準車種','Standard','標準車両')):t.reqText}</small></button>`; }).join('')}</div></div>`;
+    return `<button type="button" role="radio" aria-checked="${t===TRAIN}" class="trainbtn${t===TRAIN?' on':''}${ok?'':' locked'}" data-train="${t.key}"${ok?'':' aria-disabled="true"'}><b>${ok?'':'🔒 '}${t.name}</b><small>${ok?(t.req?L('已解鎖','Unlocked','解除済み'):L('標準車種','Standard','標準車両')):t.reqText}</small><small class="spec">${specText(t)}</small></button>`; }).join('')}</div></div>`;
 }
 
 /* ---------- 車站紀念章（在地特色） ---------- */

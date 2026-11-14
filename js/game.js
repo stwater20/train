@@ -53,7 +53,7 @@ function step(dt){
   if(S.doors && n>0) n=-4;
   S.eff=n;
   let target; S.slip=false;
-  if(n>0){ const amax=ROUTE.power*n/5; target=amax*Math.min(1,9/Math.max(S.v,0.01));
+  if(n>0){ const amax=ROUTE.power*n/5; target=amax*Math.min(1,(TRAIN.vb||9)/Math.max(S.v,0.01));
     // 雨天軌面濕滑：低速大檔位容易空轉
     if(ENV.rain && DIFF.slip && n>=4 && S.v<12){ S.slip = Math.sin(S.t*5.3)+Math.sin(S.t*2.1)>0.6; target*=S.slip?0.55:0.8; } }
   else if(n===0) target=0;
